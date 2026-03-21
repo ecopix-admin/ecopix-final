@@ -4,7 +4,7 @@ import telebot
 import threading
 from flask import Flask, request, jsonify, render_template_string
 
-TOKEN = os.environ.get("TOKEN") or "TOKEN"
+TOKEN = os.environ.get("TOKEN") or "8762924552:AAGenxs765-lHcljpclwNSFx-DvRBJAWPY0"
 ADMIN_ID = 5073661002
 
 bot = telebot.TeleBot(TOKEN)
