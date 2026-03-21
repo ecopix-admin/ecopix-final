@@ -1,214 +1,164 @@
 import os
+import sqlite3
 import telebot
-import multiprocessing
-from flask import Flask, render_template_string, request, jsonify
+import threading
+from flask import Flask, request, jsonify, render_template_string
 
-TOKEN = os.environ.get("TOKEN") or "8762924552:AAGLDCtEuj7YVMOdTdlqtRO5uyljws3XHGo"
-ADMIN_ID = 5073661002
-
+TOKEN = os.environ.get("TOKEN") or "8762924552:AAGenxs765-lHcljpclwNSFx-DvRBJAWPY0"
 bot = telebot.TeleBot(TOKEN)
 app = Flask(__name__)
 
 # DATABASE
-videos = []
-users = {}
+conn = sqlite3.connect("db.sqlite3", check_same_thread=False)
+c = conn.cursor()
+
+c.execute("CREATE TABLE IF NOT EXISTS users (username TEXT PRIMARY KEY, stars INT)")
+c.execute("CREATE TABLE IF NOT EXISTS videos (id INTEGER PRIMARY KEY AUTOINCREMENT, url TEXT, caption TEXT, views INT)")
+c.execute("CREATE TABLE IF NOT EXISTS saved (user TEXT, video_id INT)")
+c.execute("CREATE TABLE IF NOT EXISTS messages (sender TEXT, receiver TEXT, text TEXT)")
+conn.commit()
 
 # HTML
 HTML = """
-<!DOCTYPE html>
-<html>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EcoPix</title>
+<body style="background:black;color:white">
 
-<style>
-body{margin:0;background:black;color:white;font-family:sans-serif}
-.video{height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center}
-video{height:70vh}
-button{padding:8px;margin:3px}
-.top{position:fixed;top:10px;left:10px}
-</style>
-
-</head>
-<body>
-
-<div class="top">
-<input id="user" placeholder="Ad yaz">
+<input id="u" placeholder="Ad">
 <button onclick="login()">Login</button>
 <button onclick="profile()">Profil</button>
-</div>
+
+<hr>
+
+<h3>Chat</h3>
+<input id="to" placeholder="Kimə">
+<input id="msg" placeholder="Mesaj">
+<button onclick="send()">Göndər</button>
+
+<hr>
 
 <div id="feed"></div>
 
 <script>
-let videos=[]
 let user=""
 
 function login(){
- user=document.getElementById("user").value
+ user=document.getElementById("u").value
  fetch("/login",{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify({user})})
- alert("Login olundu")
 }
 
 function profile(){
  fetch("/profile",{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify({user})})
  .then(r=>r.json()).then(d=>{
-  alert("Saved video sayı: "+d.saved.length)
+  alert("⭐ Ulduz: "+d.stars+" | Saved: "+d.saved)
  })
 }
 
-fetch("/get_videos").then(r=>r.json()).then(d=>{
- videos=d
- show()
-})
+function send(){
+ let to=document.getElementById("to").value
+ let text=document.getElementById("msg").value
+ fetch("/send",{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify({user,to,text})})
+}
 
-function show(){
- let html=""
- videos.forEach((v,i)=>{
-  html+=`
-  <div class="video">
-    <video src="${v.url}" controls autoplay loop></video>
-    <div>${v.caption}</div>
-    <div>👁 ${v.views} | ❤️ ${v.likes}</div>
-    
-    <button onclick="like(${i})">❤️ Like</button>
-    <button onclick="comment(${i})">💬 Comment</button>
-    <button onclick="save(${i})">💾 Save</button>
-  </div>`
+function load(){
+ fetch("/videos").then(r=>r.json()).then(v=>{
+  let h=""
+  v.forEach(x=>{
+   h+=`
+   <div>
+   <video src="${x.url}" width="300" controls autoplay></video>
+   <p>${x.caption}</p>
+   👁 ${x.views}
+   </div>`
+  })
+  document.getElementById("feed").innerHTML=h
  })
- document.getElementById("feed").innerHTML=html
 }
 
-function like(i){
- fetch("/like",{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify({i})})
- .then(()=>location.reload())
-}
-
-function comment(i){
- let text=prompt("Şərh yaz")
- fetch("/comment",{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify({i,text})})
- .then(()=>alert("Yazıldı"))
-}
-
-function save(i){
- fetch("/save",{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify({i,user})})
- .then(()=>alert("Saved"))
-}
+load()
 </script>
-
-</body>
-</html>
 """
 
-# ROUTES
 @app.route("/")
 def home():
     return render_template_string(HTML)
 
-@app.route("/get_videos")
-def get_videos():
-    return jsonify(videos)
-
-# PROFIL LOGIN
+# LOGIN
 @app.route("/login", methods=["POST"])
 def login():
-    user = request.json["user"]
-    if user not in users:
-        users[user] = {"saved": []}
+    u = request.json["user"]
+    c.execute("INSERT OR IGNORE INTO users VALUES (?,?)",(u,0))
+    conn.commit()
     return "ok"
 
-# PROFIL DATA
+# PROFILE
 @app.route("/profile", methods=["POST"])
 def profile():
-    user = request.json["user"]
-    return jsonify(users.get(user, {"saved": []}))
+    u = request.json["user"]
 
-# SAVE VIDEO
-@app.route("/save", methods=["POST"])
-def save():
-    user = request.json["user"]
-    i = request.json["i"]
-    if user in users:
-        users[user]["saved"].append(i)
+    c.execute("SELECT stars FROM users WHERE username=?",(u,))
+    stars = c.fetchone()[0]
+
+    c.execute("SELECT COUNT(*) FROM saved WHERE user=?",(u,))
+    saved = c.fetchone()[0]
+
+    return jsonify({"stars":stars,"saved":saved})
+
+# VIDEOS
+@app.route("/videos")
+def videos():
+    c.execute("SELECT * FROM videos")
+    rows = c.fetchall()
+
+    res=[]
+    for r in rows:
+        res.append({"id":r[0],"url":r[1],"caption":r[2],"views":r[3]})
+    return jsonify(res)
+
+# VIEW + QAZANC
+@app.route("/view/<int:id>")
+def view(id):
+    c.execute("UPDATE videos SET views=views+1 WHERE id=?",(id,))
+    
+    # hər 3000 view = 10 star
+    c.execute("SELECT views FROM videos WHERE id=?",(id,))
+    views = c.fetchone()[0]
+
+    if views % 3000 == 0:
+        # video sahibinə ulduz vermək (sadə versiya)
+        c.execute("UPDATE users SET stars=stars+10")
+    
+    conn.commit()
     return "ok"
 
-# LIKE
-@app.route("/like", methods=["POST"])
-def like():
-    i = request.json["i"]
-    videos[i]["likes"] += 1
-    return "ok"
-
-# COMMENT
-@app.route("/comment", methods=["POST"])
-def comment():
-    i = request.json["i"]
+# CHAT
+@app.route("/send", methods=["POST"])
+def send():
+    u = request.json["user"]
+    to = request.json["to"]
     text = request.json["text"]
-    videos[i]["comments"].append(text)
+
+    c.execute("INSERT INTO messages VALUES (?,?,?)",(u,to,text))
+    conn.commit()
     return "ok"
 
-# TELEGRAM
-@bot.message_handler(commands=['start'])
-def start(m):
-    bot.reply_to(m, "Video göndər → sayta düşəcək 🚀")
-
-@bot.message_handler(commands=['admin'])
-def admin(m):
-    if m.from_user.id != ADMIN_ID:
-        return
-    
-    for i,v in enumerate(videos):
-        kb = telebot.types.InlineKeyboardMarkup()
-        kb.add(telebot.types.InlineKeyboardButton("❌ Sil", callback_data=f"del_{i}"))
-        bot.send_message(m.chat.id, f"{i+1}. {v['caption']}", reply_markup=kb)
-
-@bot.callback_query_handler(func=lambda c: c.data.startswith("del_"))
-def delete(c):
-    if c.from_user.id != ADMIN_ID:
-        return
-    
-    i = int(c.data.split("_")[1])
-    if i < len(videos):
-        videos.pop(i)
-        bot.answer_callback_query(c.id, "Silindi")
-
-# VIDEO
+# TELEGRAM VIDEO
 @bot.message_handler(content_types=['video'])
 def video(m):
-    try:
-        file = bot.get_file(m.video.file_id)
-        url = f"https://api.telegram.org/file/bot{TOKEN}/{file.file_path}"
-        
-        videos.append({
-            "url": url,
-            "caption": m.caption or "Video",
-            "likes": 0,
-            "views": 0,
-            "comments": []
-        })
-        
-        bot.reply_to(m, "Paylaşıldı ✅")
-        
-    except:
-        bot.reply_to(m, "Xəta ❌")
+    file = bot.get_file(m.video.file_id)
+    url = f"https://api.telegram.org/file/bot{TOKEN}/{file.file_path}"
 
-# VIEW
-@app.before_request
-def count_views():
-    if request.path == "/":
-        for v in videos:
-            v["views"] += 1
+    c.execute("INSERT INTO videos(url,caption,views) VALUES (?,?,0)",
+              (url, m.caption or "Video"))
+    conn.commit()
 
-# SERVER
-def run_web():
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    bot.reply_to(m,"Video əlavə olundu")
 
+# RUN
 def run_bot():
     bot.infinity_polling()
 
 if __name__ == "__main__":
-    p = multiprocessing.Process(target=run_web)
-    p.start()
-    print("EcoPix FULL işləyir 🚀")
-    run_bot()
+    t = threading.Thread(target=run_bot)
+    t.start()
+
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
