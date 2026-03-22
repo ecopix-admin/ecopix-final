@@ -1,5 +1,3 @@
 flask
-flask-pymongo
 pyTelegramBotAPI
-requests
-dnspython
+pymongo[srv]
