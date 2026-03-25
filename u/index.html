@@ -8,46 +8,45 @@
     <style>
         * { box-sizing: border-box; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Segoe UI', sans-serif; background-color: #fff; }
-        
         .main-wrapper { width: 100%; min-height: 100vh; display: flex; flex-direction: column; }
-
-        /* Video Sahəsi */
         .video-container { width: 100%; height: 250px; background: #000; overflow: hidden; position: relative; }
         .video-container video { width: 100%; height: 100%; object-fit: cover; }
-
-        /* Reklam Info (Videonun altında tam oxunaqlı) */
         .ad-info { width: 100%; padding: 15px; background: #f8f9fa; border-bottom: 1px solid #eee; text-align: center; }
         .ad-info p { margin: 0 0 10px; font-size: 16px; font-weight: bold; color: #333; }
-        .btn-contact { display: inline-block; background: #007bff; color: white; padding: 10px 30px; border-radius: 25px; text-decoration: none; font-size: 14px; font-weight: bold; transition: 0.2s; }
-        .btn-contact:active { transform: scale(0.95); }
-
-        /* Profil Sahəsi */
+        .btn-contact { display: inline-block; background: #007bff; color: white; padding: 10px 30px; border-radius: 25px; text-decoration: none; font-size: 14px; font-weight: bold; }
         .profile-box { text-align: center; padding: 20px 0; flex-grow: 1; }
-        .avatar { width: 100px; height: 100px; background: #007bff; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: white; font-size: 40px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 10px; border: 4px solid white; }
+        .avatar { width: 100px; height: 100px; background: #007bff; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: white; font-size: 40px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 4px solid white; margin-bottom: 10px; }
         h1 { margin: 5px 0 20px; font-size: 24px; color: #222; }
-
-        /* Düymələr - Tam Ekran Enində */
         .links-container { width: 100%; padding: 0 20px; }
         .social-btn { display: none; align-items: center; justify-content: center; width: 100%; padding: 16px; margin-bottom: 12px; border-radius: 15px; text-decoration: none; color: white; font-weight: 600; font-size: 17px; }
+        .tiktok { background: #000; } .insta { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+        .yt { background: #ff0000; } .wa { background: #25d366; } .fb { background: #1877f2; } .web { background: #444; }
         
-        .tiktok { background: #000; }
-        .insta { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
-        .yt { background: #ff0000; }
-        .wa { background: #25d366; }
-        .fb { background: #1877f2; }
-        .web { background: #444; }
-
-        /* Footer və Məxfilik */
         .bottom-nav { padding: 30px 20px; text-align: center; background: #fff; }
-        .create-btn { display: block; width: 100%; padding: 16px; border: 2px dashed #007bff; color: #007bff; text-decoration: none; font-weight: bold; border-radius: 15px; margin-bottom: 20px; font-size: 16px; }
-        .privacy-text { font-size: 11px; color: #999; line-height: 1.5; text-align: justify; padding: 0 10px; }
+        .create-btn { display: block; width: 100%; padding: 16px; border: 2px dashed #007bff; color: #007bff; text-decoration: none; font-weight: bold; border-radius: 15px; margin-bottom: 20px; }
+        .privacy-link { font-size: 12px; color: #007bff; text-decoration: underline; cursor: pointer; font-weight: 600; }
 
-        #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:white; display:flex; align-items:center; justify-content:center; z-index:999; }
+        /* Modal (Pop-up) Sətri */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background: #fff; padding: 20px; border-radius: 15px; max-width: 500px; max-height: 80vh; overflow-y: auto; position: relative; }
+        .modal-header { font-weight: bold; margin-bottom: 15px; font-size: 18px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .modal-body { font-size: 13px; color: #555; line-height: 1.6; text-align: left; }
+        .close-btn { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 8px; margin-top: 20px; cursor: pointer; width: 100%; font-weight: bold; }
+
+        #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:white; display:flex; align-items:center; justify-content:center; z-index:2000; text-align: center; }
     </style>
 </head>
 <body>
 
-<div id="loader"><i class="fas fa-circle-notch fa-spin fa-3x" style="color:#007bff"></i></div>
+<div id="loader"><i class="fas fa-circle-notch fa-spin fa-3x" style="color:#007bff"></i><br><span id="loadText">...</span></div>
+
+<div id="privacyModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header" id="modalHeader">Məxfilik Siyasəti</div>
+        <div class="modal-body" id="modalBody">...</div>
+        <button class="close-btn" onclick="closeModal()">BAĞLA</button>
+    </div>
+</div>
 
 <div class="main-wrapper">
     <div class="video-container">
@@ -57,33 +56,70 @@
     </div>
 
     <div class="ad-info">
-        <p>Reklamınız burada ola bilər!</p>
-        <a href="https://t.me/shamkhal_h" class="btn-contact">MÜRACİƏT ET</a>
+        <p id="adText">Reklamınız burada ola bilər!</p>
+        <a href="https://t.me/shamkhal_h" class="btn-contact" id="adBtn">MÜRACİƏT ET</a>
     </div>
 
     <div class="profile-box">
         <div class="avatar" id="userInitial">?</div>
-        <h1 id="displayName">Yüklənir...</h1>
-        
+        <h1 id="displayName">...</h1>
         <div class="links-container">
             <a id="tiktok" class="social-btn tiktok" href="#"><i class="fab fa-tiktok"></i> &nbsp; TikTok</a>
             <a id="insta" class="social-btn insta" href="#"><i class="fab fa-instagram"></i> &nbsp; Instagram</a>
             <a id="yt" class="social-btn yt" href="#"><i class="fab fa-youtube"></i> &nbsp; YouTube</a>
             <a id="wa" class="social-btn wa" href="#"><i class="fab fa-whatsapp"></i> &nbsp; WhatsApp</a>
             <a id="fb" class="social-btn fb" href="#"><i class="fab fa-facebook"></i> &nbsp; Facebook</a>
-            <a id="web" class="social-btn web" href="#"><i class="fas fa-globe"></i> &nbsp; Vebsayt</a>
+            <a id="web" class="social-btn web" href="#"><i class="fas fa-globe"></i> &nbsp; Website</a>
         </div>
     </div>
 
     <div class="bottom-nav">
-        <a href="https://t.me/BioPanelBot" class="create-btn">🚀 Özünə Bio Panel yarat!</a>
-        <div class="privacy-text">
-            <b>Məxfilik siyasəti:</b> Bu xidmət yalnız istifadəçilərin ictimai sosial media profillərini bir mərkəzdən paylaşmaq üçün alətdir. BioPanel heç bir şəxsi şifrə və ya gizli məlumat tələb etmir. Paylaşılan linklərin məzmununa görə birbaşa istifadəçi məsuliyyət daşıyır.
-        </div>
+        <a href="https://t.me/BioPanelBot" class="create-btn" id="createBtn">🚀 Özünə Bio Panel yarat!</a>
+        <div class="privacy-link" onclick="openModal()" id="privacyLink">Məxfilik Siyasəti</div>
     </div>
 </div>
 
 <script>
+    const lang = navigator.language || navigator.userLanguage;
+    const texts = {
+        az: { 
+            load: "Yüklənir...", create: "Özünə Bio Panel yarat!", apply: "MÜRACİƏT ET", ad: "Reklamınız burada ola bilər!", 
+            header: "Hüquqi Xəbərdarlıq və Məxfilik Siyasəti",
+            body: "1. BioPanel xidməti yalnız istifadəçilər tərəfindən təqdim edilən ictimai sosial media keçidlərini bir mərkəzdən nümayiş etdirmək üçün nəzərdə tutulmuş texniki alətdir.<br>2. Xidmət istifadəçilərdən heç bir şəxsi şifrə, bank məlumatı və ya gizli giriş detalları tələb etmir.<br>3. Paylaşılan keçidlərin (linklərin) məzmununa, qanuniliyinə və həmin keçidlərin yönləndirdiyi saytlardakı fəaliyyətlərə görə BioPanel və onun rəhbərliyi heç bir hüquqi və ya mənəvi məsuliyyət daşımır. Bütün məsuliyyət birbaşa paneli yaradan istifadəçinin üzərinə düşür.<br>4. BioPanel administrasiyası istənilən vaxt qeyri-qanuni və ya etik normalara zidd məzmun paylaşan panelləri xəbərdarlıq etmədən silmək hüququnu özündə saxlayır.<br>5. İstifadəçi bu xidmətdən istifadə etməklə yuxarıdakı bütün şərtləri qəbul etmiş sayılır."
+        },
+        tr: { 
+            load: "Yükleniyor...", create: "Kendi Bio Panelini oluştur!", apply: "BAŞVURU YAP", ad: "Reklamınız burada olabilir!", 
+            header: "Yasal Uyarı ve Gizlilik Politikası",
+            body: "1. BioPanel hizmeti, kullanıcılar tarafından sağlanan genel sosyal medya bağlantılarını görüntülemek için tasarlanmış teknik bir araçtır.<br>2. Hizmet, kullanıcılardan herhangi bir şifre veya gizli bilgi talep etmez.<br>3. Paylaşılan bağlantıların içeriğinden ve yasallığından tamamen kullanıcı sorumludur; BioPanel yönetimi bu konuda sorumluluk kabul etmez.<br>4. Uygunsuz içerikler haber verilmeksizin silinebilir.<br>5. Hizmeti kullanarak bu şartları kabul etmiş sayılırsınız."
+        },
+        ru: { 
+            load: "Загрузка...", create: "Создай свой Bio Panel!", apply: "ПОДАТЬ ЗАЯВКУ", ad: "Ваша реклама может быть здесь!", 
+            header: "Юридическая информация",
+            body: "1. Сервис BioPanel является техническим инструментом для размещения публичных ссылок пользователей.<br>2. Мы никогда не запрашиваем пароли или личные данные доступа.<br>3. Вся ответственность за содержание и законность размещенных ссылок лежит исключительно на пользователе, созданном данный профиль. Администрация не несет ответственности за действия пользователей.<br>4. Мы оставляем за собой право удалять любой контент, нарушающий правила или закон.<br>5. Использование сервиса означает полное согласие с данными условиями."
+        },
+        en: { 
+            load: "Loading...", create: "Create your Bio Panel!", apply: "APPLY NOW", ad: "Your ad could be here!", 
+            header: "Legal Disclaimer & Privacy Policy",
+            body: "1. BioPanel is a technical tool for displaying public social media links provided by users.<br>2. We never ask for passwords or private login credentials.<br>3. Users are solely responsible for the content and legality of the links they share. BioPanel and its administration hold no liability for user-generated content.<br>4. We reserve the right to remove any content that violates legal or ethical standards without notice.<br>5. By using this service, you agree to these terms."
+        }
+    };
+
+    let t = texts.az;
+    if (lang.startsWith('tr')) t = texts.tr;
+    else if (lang.startsWith('ru')) t = texts.ru;
+    else if (lang.startsWith('en')) t = texts.en;
+
+    document.getElementById('loadText').innerText = t.load;
+    document.getElementById('createBtn').innerText = "🚀 " + t.create;
+    document.getElementById('adBtn').innerText = t.apply;
+    document.getElementById('adText').innerText = t.ad;
+    document.getElementById('privacyLink').innerText = t.header;
+    document.getElementById('modalHeader').innerText = t.header;
+    document.getElementById('modalBody').innerHTML = t.body;
+
+    function openModal() { document.getElementById('privacyModal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('privacyModal').style.display = 'none'; }
+
     const params = new URLSearchParams(window.location.search);
     const username = params.get('user');
 
@@ -94,25 +130,18 @@
                 document.getElementById('loader').style.display = 'none';
                 document.getElementById('displayName').innerText = data.name;
                 document.getElementById('userInitial').innerText = data.name.charAt(0).toUpperCase();
-
                 const sites = ['tiktok', 'insta', 'yt', 'wa', 'fb', 'web'];
                 sites.forEach(s => {
                     if (data[s] && data[s] !== 'yox') {
                         let l = data[s];
                         if (s === 'wa' && !l.startsWith('http')) l = `https://wa.me/${l.replace(/\D/g,'')}`;
                         const btn = document.getElementById(s);
-                        btn.href = l;
-                        btn.style.display = 'flex';
+                        btn.href = l; btn.style.display = 'flex';
                     }
                 });
             })
-            .catch(() => {
-                document.getElementById('loader').innerHTML = "<b style='color:red'>İstifadəçi tapılmadı!</b>";
-            });
-    } else {
-        document.getElementById('loader').innerHTML = "<b>Düzgün link daxil edin.</b>";
+            .catch(() => { document.getElementById('loader').innerHTML = "<b>User Not Found</b>"; });
     }
 </script>
-
 </body>
 </html>
