@@ -3,110 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bio Panel Pro</title>
+    <title>Bio Panel Professional</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #ffffff; margin: 0; padding: 0; display: flex; justify-content: center; min-height: 100vh; }
+        * { box-sizing: border-box; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Segoe UI', sans-serif; background-color: #fff; }
         
-        .container { width: 100%; max-width: 500px; background: white; min-height: 100vh; display: flex; flex-direction: column; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.05); }
+        .main-wrapper { width: 100%; min-height: 100vh; display: flex; flex-direction: column; }
 
-        /* Reklam Video Sahəsi */
-        .ad-box { width: 100%; height: 220px; background: #000; position: relative; overflow: hidden; border-bottom: 3px solid #007bff; }
-        .ad-box video { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; }
-        .ad-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; }
-        .ad-overlay p { margin: 0 0 10px; font-size: 14px; font-weight: bold; text-shadow: 1px 1px 4px rgba(0,0,0,0.5); }
-        .apply-btn { background: #ffffff; color: #007bff; padding: 6px 15px; border-radius: 20px; text-decoration: none; font-size: 12px; font-weight: bold; transition: 0.3s; }
+        /* Video Sahəsi */
+        .video-container { width: 100%; height: 250px; background: #000; overflow: hidden; position: relative; }
+        .video-container video { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Reklam Info (Videonun altında tam oxunaqlı) */
+        .ad-info { width: 100%; padding: 15px; background: #f8f9fa; border-bottom: 1px solid #eee; text-align: center; }
+        .ad-info p { margin: 0 0 10px; font-size: 16px; font-weight: bold; color: #333; }
+        .btn-contact { display: inline-block; background: #007bff; color: white; padding: 10px 30px; border-radius: 25px; text-decoration: none; font-size: 14px; font-weight: bold; transition: 0.2s; }
+        .btn-contact:active { transform: scale(0.95); }
 
         /* Profil Sahəsi */
-        .profile-section { margin-top: -55px; z-index: 10; text-align: center; flex-grow: 1; }
-        .profile-pic { width: 110px; height: 110px; background: #007bff; border: 5px solid white; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: white; font-size: 40px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.15); margin-bottom: 10px; }
-        h1 { margin: 5px 0; color: #1c1e21; font-size: 24px; }
+        .profile-box { text-align: center; padding: 20px 0; flex-grow: 1; }
+        .avatar { width: 100px; height: 100px; background: #007bff; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: white; font-size: 40px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 10px; border: 4px solid white; }
+        h1 { margin: 5px 0 20px; font-size: 24px; color: #222; }
 
-        /* Link Düymələri */
-        .links { padding: 20px 10%; }
-        .btn { display: none; align-items: center; justify-content: center; padding: 15px; margin-bottom: 12px; border-radius: 12px; text-decoration: none; color: white; font-weight: 600; font-size: 16px; transition: transform 0.1s; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .btn:active { transform: scale(0.97); }
-        .tiktok { background: #000000; } .insta { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
-        .yt { background: #ff0000; } .wa { background: #25d366; } .fb { background: #1877f2; } .web { background: #444; }
+        /* Düymələr - Tam Ekran Enində */
+        .links-container { width: 100%; padding: 0 20px; }
+        .social-btn { display: none; align-items: center; justify-content: center; width: 100%; padding: 16px; margin-bottom: 12px; border-radius: 15px; text-decoration: none; color: white; font-weight: 600; font-size: 17px; }
+        
+        .tiktok { background: #000; }
+        .insta { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+        .yt { background: #ff0000; }
+        .wa { background: #25d366; }
+        .fb { background: #1877f2; }
+        .web { background: #444; }
 
         /* Footer və Məxfilik */
-        .footer { padding: 20px; text-align: center; background: #f9f9f9; border-top: 1px solid #eee; }
-        .bot-link { display: inline-block; margin-bottom: 15px; color: #007bff; text-decoration: none; font-weight: bold; font-size: 15px; border: 1px dashed #007bff; padding: 8px 15px; border-radius: 8px; }
-        .privacy { font-size: 10px; color: #999; line-height: 1.4; padding: 0 15px; }
+        .bottom-nav { padding: 30px 20px; text-align: center; background: #fff; }
+        .create-btn { display: block; width: 100%; padding: 16px; border: 2px dashed #007bff; color: #007bff; text-decoration: none; font-weight: bold; border-radius: 15px; margin-bottom: 20px; font-size: 16px; }
+        .privacy-text { font-size: 11px; color: #999; line-height: 1.5; text-align: justify; padding: 0 10px; }
 
-        #loading { position: fixed; top:0; left:0; width:100%; height:100%; background:white; display:flex; align-items:center; justify-content:center; z-index:100; flex-direction: column; }
+        #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:white; display:flex; align-items:center; justify-content:center; z-index:999; }
     </style>
 </head>
 <body>
 
-<div id="loading"><i class="fas fa-spinner fa-spin fa-2x" style="color:#007bff"></i><br>Yüklənir...</div>
+<div id="loader"><i class="fas fa-circle-notch fa-spin fa-3x" style="color:#007bff"></i></div>
 
-<div class="container">
-    <div class="ad-box">
+<div class="main-wrapper">
+    <div class="video-container">
         <video autoplay muted loop playsinline>
-            <source src="https://assets.mixkit.co/videos/preview/mixkit-beautiful-aerial-view-of-the-sea-and-waves-1264-large.mp4" type="video/mp4">
+            <source src="https://v1.mixkit.co/videos/preview/mixkit-top-view-of-a-shore-with-gentle-waves-34441-large.mp4" type="video/mp4">
         </video>
-        <div class="ad-overlay">
-            <p>Reklamınız burada ola bilər!</p>
-            <a href="https://t.me/BioPanelCreatorBot" class="apply-btn">MÜRACİƏT ET</a>
-        </div>
     </div>
 
-    <div class="profile-section">
-        <div class="profile-pic" id="initials">..</div>
-        <h1 id="userName">İstifadəçi</h1>
+    <div class="ad-info">
+        <p>Reklamınız burada ola bilər!</p>
+        <a href="https://t.me/shamkhal_h" class="btn-contact">MÜRACİƏT ET</a>
+    </div>
+
+    <div class="profile-box">
+        <div class="avatar" id="userInitial">?</div>
+        <h1 id="displayName">Yüklənir...</h1>
         
-        <div class="links" id="linkBox">
-            <a id="tiktok" class="btn tiktok" href="#"><i class="fab fa-tiktok"></i> &nbsp; TikTok</a>
-            <a id="insta" class="btn insta" href="#"><i class="fab fa-instagram"></i> &nbsp; Instagram</a>
-            <a id="yt" class="btn yt" href="#"><i class="fab fa-youtube"></i> &nbsp; YouTube</a>
-            <a id="wa" class="btn wa" href="#"><i class="fab fa-whatsapp"></i> &nbsp; WhatsApp</a>
-            <a id="fb" class="btn fb" href="#"><i class="fab fa-facebook"></i> &nbsp; Facebook</a>
-            <a id="web" class="btn web" href="#"><i class="fas fa-globe"></i> &nbsp; Vebsayt</a>
+        <div class="links-container">
+            <a id="tiktok" class="social-btn tiktok" href="#"><i class="fab fa-tiktok"></i> &nbsp; TikTok</a>
+            <a id="insta" class="social-btn insta" href="#"><i class="fab fa-instagram"></i> &nbsp; Instagram</a>
+            <a id="yt" class="social-btn yt" href="#"><i class="fab fa-youtube"></i> &nbsp; YouTube</a>
+            <a id="wa" class="social-btn wa" href="#"><i class="fab fa-whatsapp"></i> &nbsp; WhatsApp</a>
+            <a id="fb" class="social-btn fb" href="#"><i class="fab fa-facebook"></i> &nbsp; Facebook</a>
+            <a id="web" class="social-btn web" href="#"><i class="fas fa-globe"></i> &nbsp; Vebsayt</a>
         </div>
     </div>
 
-    <div class="footer">
-        <a href="https://t.me/BioPanelCreatorBot" class="bot-link">🚀 Özünə Bio Panel yarat! @BioPanelCreatorBot</a>
-        <div class="privacy">
-            Məxfilik Siyasəti: Bu panel istifadəçilərin sosial media linklərini paylaşmaq üçün nəzərdə tutulub. Paylaşılan məlumatların doğruluğuna görə istifadəçi məsuliyyət daşıyır. Sistem heç bir şəxsi şifrə tələb etmir.
+    <div class="bottom-nav">
+        <a href="https://t.me/BioPanelBot" class="create-btn">🚀 Özünə Bio Panel yarat!</a>
+        <div class="privacy-text">
+            <b>Məxfilik siyasəti:</b> Bu xidmət yalnız istifadəçilərin ictimai sosial media profillərini bir mərkəzdən paylaşmaq üçün alətdir. BioPanel heç bir şəxsi şifrə və ya gizli məlumat tələb etmir. Paylaşılan linklərin məzmununa görə birbaşa istifadəçi məsuliyyət daşıyır.
         </div>
     </div>
 </div>
 
 <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const user = urlParams.get('user');
+    const params = new URLSearchParams(window.location.search);
+    const username = params.get('user');
 
-    if (user) {
-        fetch(`https://raw.githubusercontent.com/ecopix-admin/ecopix-final/main/u/data/${user}.json`)
-            .then(res => {
-                if(!res.ok) throw new Error('Yoxdur');
-                return res.json();
-            })
+    if (username) {
+        fetch(`https://raw.githubusercontent.com/ecopix-admin/ecopix-final/main/u/data/${username}.json`)
+            .then(r => r.json())
             .then(data => {
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('userName').innerText = data.name;
-                document.getElementById('initials').innerText = data.name.charAt(0).toUpperCase();
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('displayName').innerText = data.name;
+                document.getElementById('userInitial').innerText = data.name.charAt(0).toUpperCase();
 
-                const platforms = ['tiktok', 'insta', 'yt', 'wa', 'fb', 'web'];
-                platforms.forEach(p => {
-                    if (data[p] && data[p].toLowerCase() !== 'yox') {
-                        let link = data[p];
-                        if (p === 'wa' && !link.startsWith('http')) {
-                            link = `https://wa.me/${link.replace(/[^0-9]/g, '')}`;
-                        }
-                        const el = document.getElementById(p);
-                        el.href = link;
-                        el.style.display = 'flex';
+                const sites = ['tiktok', 'insta', 'yt', 'wa', 'fb', 'web'];
+                sites.forEach(s => {
+                    if (data[s] && data[s] !== 'yox') {
+                        let l = data[s];
+                        if (s === 'wa' && !l.startsWith('http')) l = `https://wa.me/${l.replace(/\D/g,'')}`;
+                        const btn = document.getElementById(s);
+                        btn.href = l;
+                        btn.style.display = 'flex';
                     }
                 });
             })
-            .catch(err => {
-                document.getElementById('loading').innerHTML = "<b style='color:red'>İstifadəçi tapılmadı!</b>";
+            .catch(() => {
+                document.getElementById('loader').innerHTML = "<b style='color:red'>İstifadəçi tapılmadı!</b>";
             });
     } else {
-        document.getElementById('loading').innerHTML = "<b>Düzgün link daxil edin.</b>";
+        document.getElementById('loader').innerHTML = "<b>Düzgün link daxil edin.</b>";
     }
 </script>
 
