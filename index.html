@@ -7,31 +7,43 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --glass: rgba(255, 255, 255, 0.1); --border: rgba(255, 255, 255, 0.2); }
-        body { background: #000; color: #fff; font-family: 'Inter', sans-serif; margin: 0; text-align: center; }
-        .bg-video { position: fixed; top: 0; left: 0; width: 100%; height: 300px; z-index: -1; filter: brightness(0.4); }
+        body { background: #000; color: #fff; font-family: 'Inter', sans-serif; margin: 0; text-align: center; overflow-x: hidden; }
+        /* Arxa fon videosu */
+        .bg-video { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; z-index: -1; filter: brightness(0.3); }
         video { width: 100%; height: 100%; object-fit: cover; }
-        .ad-section { background: rgba(0,0,0,0.85); padding: 15px; border-bottom: 1px solid #333; position: sticky; top: 0; z-index: 100; }
-        .ad-text { font-size: 13px; color: #aaa; margin-bottom: 8px; }
-        .ad-btn { background: #ff9800; color: #000; padding: 7px 18px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 13px; }
-        .container { margin-top: 150px; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .card { background: var(--glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 35px; width: 100%; max-width: 400px; padding: 75px 20px 30px; position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
-        .pfp { width: 130px; height: 130px; border-radius: 50%; object-fit: cover; position: absolute; top: -65px; left: 50%; transform: translateX(-50%); border: 6px solid #000; }
+        
+        .ad-section { background: rgba(0,0,0,0.8); padding: 15px; border-bottom: 1px solid #333; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); }
+        .ad-btn { background: #ff9800; color: #000; padding: 8px 20px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 13px; display: inline-block; }
+        
+        .container { margin-top: 120px; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 80vh; }
+        .card { background: var(--glass); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid var(--border); border-radius: 40px; width: 100%; max-width: 380px; padding: 70px 20px 30px; position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
+        
+        .pfp { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; position: absolute; top: -60px; left: 50%; transform: translateX(-50%); border: 5px solid #000; background: #222; }
+        
         .links { width: 100%; display: grid; gap: 12px; margin-top: 20px; }
-        .btn { display: flex; align-items: center; padding: 16px; border-radius: 18px; text-decoration: none; color: #fff; font-weight: 600; border: 1px solid var(--border); background: rgba(255,255,255,0.05); transition: 0.3s; }
-        .btn i { width: 30px; font-size: 20px; margin-right: 15px; }
-        .tiktok { border-left: 5px solid #ff0050; } .insta { border-left: 5px solid #e1306c; } .yt { border-left: 5px solid #f00; } .wa { border-left: 5px solid #25d366; }
-        .footer { margin-top: 30px; padding-bottom: 50px; }
-        .create-btn { background: #0088cc; color: #fff; padding: 15px 35px; border-radius: 50px; text-decoration: none; font-weight: bold; display: inline-block; }
-        .privacy-link { font-size: 11px; color: #555; margin-top: 25px; cursor: pointer; text-decoration: underline; }
-        #legal-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:999; padding:20px; box-sizing:border-box; overflow-y:auto; }
+        .btn { display: flex; align-items: center; padding: 16px; border-radius: 20px; text-decoration: none; color: #fff; font-weight: 600; border: 1px solid var(--border); background: rgba(255,255,255,0.05); transition: 0.3s; }
+        .btn i { width: 35px; font-size: 22px; margin-right: 10px; }
+        
+        /* Rəngli kənarlar */
+        .tiktok { border-left: 5px solid #ff0050; } .insta { border-left: 5px solid #e1306c; } 
+        .yt { border-left: 5px solid #f00; } .wa { border-left: 5px solid #25d366; } 
+        .fb { border-left: 5px solid #1877f2; } .web { border-left: 5px solid #0088cc; }
+        
+        .footer { margin: 40px 0; }
+        .create-btn { background: #0088cc; color: #fff; padding: 15px 30px; border-radius: 50px; text-decoration: none; font-weight: bold; }
+        .privacy-link { font-size: 12px; color: #666; margin-top: 20px; display: block; text-decoration: underline; cursor: pointer; }
     </style>
 </head>
 <body>
-    <div class="bg-video"><video autoplay muted loop playsinline><source src="https://cdn.pixabay.com/video/2021/04/12/70817-537442111_tiny.mp4"></video></div>
+    <div class="bg-video">
+        <video autoplay muted loop playsinline>
+            <source src="https://assets.mixkit.co/videos/preview/mixkit-abstract-technology-connection-lines-in-dark-blue-background-30046-large.mp4" type="video/mp4">
+        </video>
+    </div>
     
     <div class="ad-section">
-        <div id="ad-txt" class="ad-text">Bura reklam yerləşdirə bilərsiz</div>
-        <a href="https://t.me/shamkhal_h" id="ad-link" class="ad-btn"><i class="fa fa-paper-plane"></i> Müraciət et</a>
+        <div style="font-size: 12px; color: #ccc; margin-bottom: 5px;">Bura reklam yerləşdirə bilərsiz</div>
+        <a href="https://t.me/shamkhal_h" class="ad-btn">Müraciət et</a>
     </div>
 
     <div class="container">
@@ -41,37 +53,49 @@
             <div class="links" id="links-box"></div>
         </div>
         <div class="footer">
-            <p id="footer-txt" style="color:#888; font-size:14px; margin-bottom:15px;">Öz Bio Panelinizi yaratmaq istəyirsiz?</p>
-            <a href="https://t.me/BioPanelBot" class="create-btn"><i class="fab fa-telegram-plane"></i> @BioPanelBot</a>
-            <div id="priv-txt" class="privacy-link" onclick="showPrivacy()">Məxfilik Siyasəti və Şərtlər</div>
-        </div>
-    </div>
-
-    <div id="legal-modal">
-        <div style="background:#111; padding:25px; border-radius:25px; text-align:left; max-width:500px; margin:40px auto; border:1px solid #333;">
-            <h3 id="modal-title">Hüquqi Qaydalar</h3>
-            <div id="modal-body" style="font-size:14px; color:#ccc; line-height:1.7;">
-                • Bio panel yaratmaq tamamilə könüllüdür.<br>
-                • Şəxsi məlumatlarınız 3-cü tərəflərə satılmır.<br>
-                • İstifadəçinin yerləşdirdiyi məzmuna görə Bio Panel rəhbərliyi məsuliyyət daşımır.<br>
-                • Hər bir məzmun məsuliyyəti istifadəçinin üzərinə düşür.<br>
-                • Bio panel yaratmaqla siz bu şərtlərlə razılaşırsınız.<br><br>
-                <b>Bizi seçdiyiniz üçün təşəkkürlər!</b>
-            </div>
-            <button onclick="document.getElementById('legal-modal').style.display='none'" style="background:#0088cc; color:#fff; border:none; padding:12px; border-radius:12px; margin-top:25px; width:100%; font-weight:bold; cursor:pointer;">OK</button>
+            <p style="color:#aaa; font-size:14px;">Öz Bio Panelinizi yaratmaq istəyirsiz?</p>
+            <a href="https://t.me/BioPanelCreatorBot" class="create-btn"><i class="fab fa-telegram-plane"></i> @BioPanelCreatorBot</a>
+            <span class="privacy-link" onclick="alert('1. Panel yaratmaq könüllüdür.\n2. Məlumatlarınız qorunur.\n3. Məzmun məsuliyyəti istifadəçidədir.')">Məxfilik Siyasəti</span>
         </div>
     </div>
 
     <script>
-        function showPrivacy() { document.getElementById('legal-modal').style.display = 'block'; }
         const hash = decodeURIComponent(window.location.hash.substring(1));
         if (hash) {
             const p = hash.split('|');
-            document.getElementById('name').innerText = p[0].replace(/[<>]/g, "");
-            document.getElementById('pfp').src = p[1] || 'https://ui-avatars.com/api/?name=' + p[0];
+            const name = p[0] || "İstifadəçi";
+            const photo = p[1];
+            
+            document.getElementById('name').innerText = name;
+            
+            // Şəkil linkini yoxlayırıq
+            const pfpImg = document.getElementById('pfp');
+            if (!photo || photo.toLowerCase() === 'yox' || !photo.startsWith('http')) {
+                pfpImg.src = `https://ui-avatars.com/api/?name=${name}&background=random&color=fff&size=128`;
+            } else {
+                pfpImg.src = photo;
+                pfpImg.onerror = function() {
+                    this.src = `https://ui-avatars.com/api/?name=${name}&background=random&color=fff&size=128`;
+                };
+            }
+
             let html = '';
-            const labels = [{v:p[2],c:'tiktok',i:'fa-brands fa-tiktok',n:'TikTok'},{v:p[3],c:'insta',i:'fa-brands fa-instagram',n:'Instagram'},{v:p[4],c:'yt',i:'fa-brands fa-youtube',n:'YouTube'},{v:p[5],c:'fb',i:'fa-brands fa-facebook',n:'Facebook'},{v:p[6],c:'wa',i:'fa-brands fa-whatsapp',n:'WhatsApp'},{v:p[7],c:'web',i:'fa-solid fa-globe',n:'Website'}];
-            labels.forEach(l => { if(l.v && l.v.toLowerCase()!=='yox') html += `<a href="${l.n==='WhatsApp'?'https://wa.me/'+l.v:l.v}" target="_blank" class="btn ${l.c}"><i class="${l.i}"></i> ${l.n}</a>`; });
+            const labels = [
+                {v:p[2], c:'tiktok', i:'fa-brands fa-tiktok', n:'TikTok'},
+                {v:p[3], c:'insta', i:'fa-brands fa-instagram', n:'Instagram'},
+                {v:p[4], c:'yt', i:'fa-brands fa-youtube', n:'YouTube'},
+                {v:p[5], c:'fb', i:'fa-brands fa-facebook', n:'Facebook'},
+                {v:p[6], c:'wa', i:'fa-brands fa-whatsapp', n:'WhatsApp'},
+                {v:p[7], c:'web', i:'fa-solid fa-globe', n:'Website'}
+            ];
+            
+            labels.forEach(l => {
+                if(l.v && l.v.toLowerCase() !== 'yox') {
+                    let url = l.v;
+                    if(l.n === 'WhatsApp') url = 'https://wa.me/' + l.v.replace(/\D/g,'');
+                    html += `<a href="${url}" target="_blank" class="btn ${l.c}"><i class="${l.i}"></i> ${l.n}</a>`;
+                }
+            });
             document.getElementById('links-box').innerHTML = html;
         }
     </script>
