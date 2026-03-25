@@ -30,8 +30,8 @@
     <div class="bg-video"><video autoplay muted loop playsinline><source src="https://cdn.pixabay.com/video/2021/04/12/70817-537442111_tiny.mp4"></video></div>
     
     <div class="ad-section">
-        <div id="ad-txt" class="ad-text">...</div>
-        <a href="https://t.me/shamkhal_h" id="ad-link" class="ad-btn"><i class="fa fa-paper-plane"></i> ...</a>
+        <div id="ad-txt" class="ad-text">Bura reklam yerləşdirə bilərsiz</div>
+        <a href="https://t.me/shamkhal_h" id="ad-link" class="ad-btn"><i class="fa fa-paper-plane"></i> Müraciət et</a>
     </div>
 
     <div class="container">
@@ -41,51 +41,29 @@
             <div class="links" id="links-box"></div>
         </div>
         <div class="footer">
-            <p id="footer-txt" style="color:#888; font-size:14px; margin-bottom:15px;">...</p>
-            <a href="https://t.me/BioPanelBot" id="bot-btn" class="create-btn"><i class="fab fa-telegram-plane"></i> @BioPanelBot</a>
-            <div id="priv-txt" class="privacy-link" onclick="showPrivacy()">...</div>
+            <p id="footer-txt" style="color:#888; font-size:14px; margin-bottom:15px;">Öz Bio Panelinizi yaratmaq istəyirsiz?</p>
+            <a href="https://t.me/BioPanelBot" class="create-btn"><i class="fab fa-telegram-plane"></i> @BioPanelBot</a>
+            <div id="priv-txt" class="privacy-link" onclick="showPrivacy()">Məxfilik Siyasəti və Şərtlər</div>
         </div>
     </div>
 
     <div id="legal-modal">
         <div style="background:#111; padding:25px; border-radius:25px; text-align:left; max-width:500px; margin:40px auto; border:1px solid #333;">
-            <h3 id="modal-title">...</h3>
-            <div id="modal-body" style="font-size:14px; color:#ccc; line-height:1.7;"></div>
+            <h3 id="modal-title">Hüquqi Qaydalar</h3>
+            <div id="modal-body" style="font-size:14px; color:#ccc; line-height:1.7;">
+                • Bio panel yaratmaq tamamilə könüllüdür.<br>
+                • Şəxsi məlumatlarınız 3-cü tərəflərə satılmır.<br>
+                • İstifadəçinin yerləşdirdiyi məzmuna görə Bio Panel rəhbərliyi məsuliyyət daşımır.<br>
+                • Hər bir məzmun məsuliyyəti istifadəçinin üzərinə düşür.<br>
+                • Bio panel yaratmaqla siz bu şərtlərlə razılaşırsınız.<br><br>
+                <b>Bizi seçdiyiniz üçün təşəkkürlər!</b>
+            </div>
             <button onclick="document.getElementById('legal-modal').style.display='none'" style="background:#0088cc; color:#fff; border:none; padding:12px; border-radius:12px; margin-top:25px; width:100%; font-weight:bold; cursor:pointer;">OK</button>
         </div>
     </div>
 
     <script>
-        const uLang = (navigator.language || 'az').toLowerCase();
-        const lang = uLang.startsWith('ru')?'ru':uLang.startsWith('tr')?'tr':uLang.startsWith('de')?'de':uLang.startsWith('az')?'az':'en';
-        
-        const dict = {
-            az: { 
-                ad: "Bura reklam yerləşdirə bilərsiz", 
-                call: "Müraciət et", 
-                foot: "Öz Bio Panelinizi yaratmaq istəyirsiz?", 
-                priv: "Məxfilik Siyasəti və Şərtlər", 
-                title: "Hüquqi Qaydalar", 
-                body: "• Bio panel yaratmaq tamamilə könüllüdür.<br>• Şəxsi məlumatlarınız heç bir halda 3-cü tərəflərə satılmır.<br>• İstifadəçinin yerləşdirdiyi məzmuna görə Bio Panel rəhbərliyi məsuliyyət daşımır.<br>• Hər bir məzmun məsuliyyəti istifadəçinin üzərinə düşür.<br>• Bio panel yaratmaqla siz bu şərtlərlə razılaşırsınız.<br><br><b>Bizi seçdiyiniz üçün təşəkkürlər!</b>" 
-            },
-            ru: { ad: "Здесь может быть ваша реклама", call: "Связаться", foot: "Хотите свой Bio Panel?", priv: "Политика конфиденциальности", title: "Правила", body: "Создание панели добровольно. Мы не продаем ваши данные. Пользователь несет полную ответственность за свой контент." },
-            tr: { ad: "Buraya reklam verebilirsiniz", call: "İletişime geç", foot: "Kendi Bio Panelinizi oluşturun", priv: "Gizlilik Politikası", title: "Yasal Şartlar", body: "Bio panel oluşturmak isteğe bağlıdır. Verileriniz satılmaz. İçerik sorumluluğu tamamen kullanıcıya aittir." },
-            de: { ad: "Ihre Werbung hier", call: "Kontakt", foot: "Eigene Bio Panel erstellen?", priv: "Datenschutz", title: "Rechtliche Hinweise", body: "Die Erstellung ist freiwillig. Ihre Daten werden nicht verkauft. Nutzer haften für ihre eigenen Inhalte." },
-            en: { ad: "Your ad here", call: "Contact us", foot: "Want your own Bio Panel?", priv: "Privacy Policy", title: "Legal Terms", body: "Creating a bio panel is voluntary. Your data is not sold to 3rd parties. Users are responsible for their own content." }
-        };
-
-        const t = dict[lang];
-        document.getElementById('ad-txt').innerText = t.ad;
-        document.getElementById('ad-link').innerHTML += t.call;
-        document.getElementById('footer-txt').innerText = t.foot;
-        document.getElementById('priv-txt').innerText = t.priv;
-
-        function showPrivacy() {
-            document.getElementById('modal-title').innerText = t.title;
-            document.getElementById('modal-body').innerHTML = t.body;
-            document.getElementById('legal-modal').style.display = 'block';
-        }
-
+        function showPrivacy() { document.getElementById('legal-modal').style.display = 'block'; }
         const hash = decodeURIComponent(window.location.hash.substring(1));
         if (hash) {
             const p = hash.split('|');
@@ -93,7 +71,7 @@
             document.getElementById('pfp').src = p[1] || 'https://ui-avatars.com/api/?name=' + p[0];
             let html = '';
             const labels = [{v:p[2],c:'tiktok',i:'fa-brands fa-tiktok',n:'TikTok'},{v:p[3],c:'insta',i:'fa-brands fa-instagram',n:'Instagram'},{v:p[4],c:'yt',i:'fa-brands fa-youtube',n:'YouTube'},{v:p[5],c:'fb',i:'fa-brands fa-facebook',n:'Facebook'},{v:p[6],c:'wa',i:'fa-brands fa-whatsapp',n:'WhatsApp'},{v:p[7],c:'web',i:'fa-solid fa-globe',n:'Website'}];
-            labels.forEach(l => { if(l.v && l.v.toLowerCase()!=='yox') html += `<a href="${l.n==='WhatsApp'?'https://wa.me/'+l.v:l.v}" target="_blank" class="btn ${l.class}"><i class="${l.i}"></i> ${l.n}</a>`; });
+            labels.forEach(l => { if(l.v && l.v.toLowerCase()!=='yox') html += `<a href="${l.n==='WhatsApp'?'https://wa.me/'+l.v:l.v}" target="_blank" class="btn ${l.c}"><i class="${l.i}"></i> ${l.n}</a>`; });
             document.getElementById('links-box').innerHTML = html;
         }
     </script>
