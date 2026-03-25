@@ -10,9 +10,9 @@
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Segoe UI', sans-serif; background-color: #fff; }
         .main-wrapper { width: 100%; min-height: 100vh; display: flex; flex-direction: column; }
         
-        /* Video Sahəsi - Avtomatik Oynama Üçün */
+        /* Video Sahəsi */
         .video-container { width: 100%; height: 250px; background: #000; overflow: hidden; position: relative; }
-        .video-container video { width: 100%; height: 100%; object-fit: cover; }
+        .video-container video { width: 100%; height: 100%; object-fit: cover; display: block; }
         
         .ad-info { width: 100%; padding: 15px; background: #f8f9fa; border-bottom: 1px solid #eee; text-align: center; }
         .ad-info p { margin: 0 0 10px; font-size: 16px; font-weight: bold; color: #333; }
@@ -28,11 +28,13 @@
         .tiktok { background: #000; } .insta { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
         .yt { background: #ff0000; } .wa { background: #25d366; } .fb { background: #1877f2; } .web { background: #444; }
         
+        /* Yeni Bildiriş Sahəsi Stili */
+        .info-notice { background: #fff3cd; color: #856404; padding: 12px; border-radius: 12px; margin-bottom: 15px; font-size: 13px; font-weight: 500; border: 1px solid #ffeeba; line-height: 1.4; }
+
         .bottom-nav { padding: 30px 20px; text-align: center; background: #fff; }
         .create-btn { display: block; width: 100%; padding: 16px; border: 2px dashed #007bff; color: #007bff; text-decoration: none; font-weight: bold; border-radius: 15px; margin-bottom: 20px; }
         .privacy-link { font-size: 12px; color: #007bff; text-decoration: underline; cursor: pointer; font-weight: 600; }
 
-        /* Modallar */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; padding: 20px; }
         .modal-content { background: #fff; padding: 25px; border-radius: 20px; max-width: 450px; width: 100%; text-align: center; max-height: 85vh; overflow-y: auto; }
         .close-btn { background: #007bff; color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 15px; }
@@ -48,7 +50,7 @@
     <div class="modal-content">
         <div style="font-size: 45px; color: #ff0050; margin-bottom: 15px;"><i class="fab fa-tiktok"></i></div>
         <h3 id="ttHeader">TikTok Bloku Aktivdir</h3>
-        <p id="ttBody" style="font-size: 14px; color: #555;">Bu tətbiqi açmaq üçün brauzerə keçid edin:</p>
+        <p id="ttBody" style="font-size: 14px; color: #555;">Keçid üçün brauzerə keçin:</p>
         <div id="step1" style="background:#f0f2f5; padding:12px; border-radius:10px; margin-bottom:8px; font-weight:bold;">1. Sağ yuxarıdakı (•••) basın</div>
         <div id="step2" style="background:#f0f2f5; padding:12px; border-radius:10px; margin-bottom:15px; font-weight:bold;">2. "Brauzerdə aç" seçin</div>
         <button id="ttClose" class="close-btn">ANLADIM</button>
@@ -65,7 +67,7 @@
 
 <div class="main-wrapper">
     <div class="video-container">
-        <video id="myVideo" autoplay muted loop playsinline poster="https://via.placeholder.com/400x250/000?text=Yüklənir...">
+        <video id="myVideo" preload="auto" autoplay muted loop playsinline poster="https://via.placeholder.com/400x250/000?text=Yükleniyor...">
             <source src="https://v1.mixkit.co/videos/preview/mixkit-top-view-of-a-shore-with-gentle-waves-34441-large.mp4" type="video/mp4">
         </video>
     </div>
@@ -89,6 +91,10 @@
     </div>
 
     <div class="bottom-nav">
+        <div class="info-notice" id="mainNotice">
+            <i class="fas fa-info-circle"></i> Diqqət: Sosial şəbəkə tətbiqlərinin birbaşa açılması üçün yuxarıdakı menyudan brauzerə keçid edin.
+        </div>
+
         <a href="https://t.me/BioPanelBot" class="create-btn" id="createBtn">🚀 Özünə Bio Panel yarat!</a>
         <div class="privacy-link" onclick="document.getElementById('privacyModal').style.display='flex'" id="privacyLink">Məxfilik Siyasəti</div>
     </div>
@@ -101,23 +107,27 @@
     const texts = {
         az: { 
             create: "Özünə Bio Panel yarat!", apply: "MÜRACİƏT ET", ad: "Reklamınız burada ola bilər!",
-            ttHead: "TikTok Bloku Aktivdir", ttBody: "Tətbiqləri aça bilmək üçün:", step1: "1. Sağ yuxarıdakı (•••) basın", step2: "2. 'Brauzerdə aç' seçin", ok: "ANLADIM",
+            notice: "Sosial şəbəkələrin birbaşa açılması üçün sağ yuxarıdakı 3 nöqtəyə vurub 'Brauzerdə aç' seçin.",
+            ttHead: "TikTok Bloku Aktivdir", ttBody: "Tətbiqi açmaq üçün brauzerə keçin:", step1: "1. Sağ yuxarıdakı (•••) basın", step2: "2. 'Brauzerdə aç' seçin", ok: "ANLADIM",
             header: "Hüquqi Xəbərdarlıq və Məxfilik Siyasəti",
-            body: "1. BioPanel xidməti yalnız istifadəçilər tərəfindən təqdim edilən ictimai sosial media keçidlərini bir mərkəzdən nümayiş etdirmək üçün nəzərdə tutulmuş texniki alətdir.<br>2. Xidmət istifadəçilərdən heç bir şəxsi şifrə, bank məlumatı və ya gizli giriş detalları tələb etmir.<br>3. Paylaşılan keçidlərin məzmununa və həmin keçidlərin yönləndirdiyi saytlardakı fəaliyyətlərə görə BioPanel heç bir hüquqi məsuliyyət daşımır.<br>4. BioPanel administrasiyası qeyri-qanuni məzmun paylaşan panelləri xəbərdarlıq etmədən silmək hüququnu saxlayır.<br>5. İstifadəçi bu xidmətdən istifadə etməklə yuxarıdakı bütün şərtləri qəbul etmiş sayılır."
+            body: "1. BioPanel istifadəçi linklərini paylaşan texniki vasitədir.<br>2. Şifrə tələb olunmur.<br>3. Məzmuna görə BioPanel məsuliyyət daşımır.<br>4. Qeyri-qanuni panellər xəbərdarlıqsız silinir.<br>5. İstifadəçi bu şərtləri qəbul etmiş sayılır."
         },
         tr: { 
             create: "Kendi Bio Panelini oluştur!", apply: "BAŞVURU YAP", ad: "Reklamınız burada olabilir!",
-            ttHead: "TikTok Bloku Aktif", ttBody: "Bağlantılar için tarayıcıya geçin:", step1: "1. Sağ üstteki (•••) basın", step2: "2. 'Tarayıcıda aç' seçin", ok: "ANLADIM",
+            notice: "Uygulamaların açılması için sağ üstteki 3 noktadan 'Tarayıcıda aç'ı seçin.",
+            ttHead: "TikTok Bloku Aktif", ttBody: "Tarayıcıya geçin:", step1: "1. Sağ üstteki (•••) basın", step2: "2. 'Tarayıcıda aç' seçin", ok: "ANLADIM",
             header: "Gizlilik Politikası", body: "1. BioPanel teknik bir araçtır.<br>2. Şifre istenmez.<br>3. İçerik sorumluluğu kullanıcıya aittir."
         },
         ru: { 
             create: "Создай свой Bio Panel!", apply: "ПОДАТЬ ЗАЯВКУ", ad: "Ваша реклама может быть здесь!",
+            notice: "Для открытия приложений выберите 'Открыть в браузере' в верхнем меню.",
             ttHead: "Блок TikTok Активен", ttBody: "Откройте в браузере:", step1: "1. Нажмите на (•••)", step2: "2. Выберите 'Открыть в браузере'", ok: "ПОНЯТНО",
-            header: "Конфиденциальность", body: "1. BioPanel - технический сервис ссылок.<br>2. Пароли не требуются.<br>3. Ответственность несет пользователь."
+            header: "Конфиденциальность", body: "1. BioPanel - сервис ссылок.<br>2. Пароли не нужны.<br>3. Ответственность несет пользователь."
         },
         en: { 
             create: "Create your Bio Panel!", apply: "APPLY NOW", ad: "Your ad could be here!",
-            ttHead: "TikTok Block Active", ttBody: "To open apps, use browser:", step1: "1. Click (•••) on top right", step2: "2. Select 'Open in Browser'", ok: "GOT IT",
+            notice: "For a better experience, select 'Open in browser' from the top menu.",
+            ttHead: "TikTok Block Active", ttBody: "Use browser to open apps:", step1: "1. Click (•••) on top right", step2: "2. Select 'Open in Browser'", ok: "GOT IT",
             header: "Privacy Policy", body: "1. BioPanel is a link tool.<br>2. No passwords required.<br>3. User is responsible for links."
         }
     };
@@ -130,6 +140,7 @@
     document.getElementById('createBtn').innerText = "🚀 " + t.create;
     document.getElementById('adBtn').innerText = t.apply;
     document.getElementById('adText').innerText = t.ad;
+    document.getElementById('mainNotice').innerHTML = `<i class="fas fa-info-circle"></i> ${t.notice}`;
     document.getElementById('ttHeader').innerText = t.ttHead;
     document.getElementById('ttBody').innerText = t.ttBody;
     document.getElementById('step1').innerText = t.step1;
@@ -139,11 +150,17 @@
     document.getElementById('modalBody').innerHTML = t.body;
     document.getElementById('privacyLink').innerText = t.header;
 
-    // Video avtomatik oynasın deyə mütləq əlavə (Hər ehtimala qarşı)
-    window.addEventListener('load', function() {
+    function playVideo() {
         const video = document.getElementById('myVideo');
-        video.play().catch(e => console.log("Video auto-play blocked by browser."));
-    });
+        video.muted = true;
+        let promise = video.play();
+        if (promise !== undefined) {
+            promise.catch(error => {
+                document.body.addEventListener('click', () => video.play(), {once: true});
+            });
+        }
+    }
+    window.addEventListener('load', playVideo);
 
     const params = new URLSearchParams(window.location.search);
     const username = params.get('user');
