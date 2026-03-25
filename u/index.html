@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bio Panel Pro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        
+        /* Reklam Sahəsi - Tam rəsmdəki kimi */
+        .ad-card-wrapper { width: 95%; max-width: 400px; background: #fff; border-radius: 15px; margin: 15px auto; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid #e0e0e0; }
+        .ad-status-bar { background: #fff; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; border-bottom: 1px solid #f0f0f0; }
+        .ad-status-bar a { color: #007bff; text-decoration: none; font-weight: 600; }
+        .ad-content-area { width: 100%; height: 200px; background: #000; display: flex; align-items: center; justify-content: center; position: relative; }
+        .ad-media { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Profil Sahəsi */
+        .profile-section { width: 95%; max-width: 400px; background: #fff; border-radius: 25px; padding: 30px 20px; text-align: center; margin-top: -30px; position: relative; z-index: 2; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .avatar { width: 100px; height: 100px; background: #007bff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: bold; margin: -80px auto 15px; border: 5px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.1); text-transform: uppercase; }
+        h2 { margin: 0 0 20px; color: #333; font-size: 24px; }
+
+        /* Link Düymələri */
+        .links { display: flex; flex-direction: column; gap: 12px; }
+        .btn { display: flex; align-items: center; justify-content: center; padding: 16px; border-radius: 12px; text-decoration: none; color: #fff; font-weight: 600; font-size: 16px; transition: 0.3s; }
+        .btn i { margin-right: 10px; font-size: 20px; }
+        .tiktok { background: #000; } .insta { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+        .yt { background: #ff0000; } .wa { background: #25d366; } .fb { background: #1877f2; } .web { background: #444; }
+
+        /* Footer və Məxfilik */
+        .footer { margin: 30px 0; text-align: center; color: #777; font-size: 13px; }
+        .bot-link { color: #0088cc; text-decoration: none; font-weight: bold; display: block; margin-bottom: 10px; font-size: 15px; }
+        .privacy-btn { cursor: pointer; text-decoration: underline; color: #999; }
+    </style>
+</head>
+<body>
+
+    <div class="ad-card-wrapper">
+        <div class="ad-status-bar">
+            <span>📢 Sizin reklamınız burada?</span>
+            <a href="https://t.me/shamkhal_h">Müraciət et</a>
+        </div>
+        <div class="ad-content-area" id="ad-box">
+            <video autoplay muted loop playsinline class="ad-media">
+                <source src="SƏNİN_VİDEO_LİNKİN.mp4" type="video/mp4">
+            </video>
+        </div>
+    </div>
+
+    <div class="profile-section">
+        <div id="avatar" class="avatar">..</div>
+        <h2 id="name">Yüklənir...</h2>
+        <div class="links" id="links-box"></div>
+    </div>
+
+    <div class="footer">
+        <p>Dəstək və Reklam üçün:</p>
+        <a href="https://t.me/BioPanelCreatorBot" target="_blank" class="bot-link">✈️ Telegram: @BioPanelCreatorBot</a>
+        <div style="font-size: 10px; margin-bottom: 10px;">POWERED BY BIOPANEL CREATOR</div>
+        <span class="privacy-btn" onclick="showPrivacy()">Məxfilik Siyasəti</span>
+    </div>
+
+    <script>
+        function showPrivacy() {
+            alert("Məxfilik Siyasəti:\n1. Məlumatlar yalnız panel üçün istifadə olunur.\n2. Şəxsi məlumatlar 3-cü tərəfə ötürülmür.\n3. İstədiyiniz vaxt bot vasitəsilə məlumatları silə bilərsiniz.");
+        }
+
+        fetch('data.json').then(r => r.json()).then(data => {
+            document.getElementById('name').innerText = data.name;
+            document.getElementById('avatar').innerText = data.name[0];
+            
+            let html = '';
+            const sites = [
+                {k:'tiktok', n:'TikTok', i:'fa-brands fa-tiktok'},
+                {k:'insta', n:'Instagram', i:'fa-brands fa-instagram'},
+                {k:'yt', n:'YouTube', i:'fa-brands fa-youtube'},
+                {k:'wa', n:'WhatsApp', i:'fa-brands fa-whatsapp'},
+                {k:'fb', n:'Facebook', i:'fa-brands fa-facebook'},
+                {k:'web', n:'Website', i:'fa-solid fa-globe'}
+            ];
+
+            sites.forEach(s => {
+                if(data[s.k] && data[s.k].toLowerCase() !== 'yox') {
+                    let url = data[s.k];
+                    if(s.k === 'wa') url = "https://wa.me/" + url.replace(/\D/g,'');
+                    else if(!url.startsWith('http')) url = "https://" + url;
+                    html += `<a href="${url}" target="_blank" class="btn ${s.k}"><i class="${s.i}"></i> ${s.n}</a>`;
+                }
+            });
+            document.getElementById('links-box').innerHTML = html || 'Link əlavə edilməyib.';
+        });
+    </script>
+</body>
+</html>
