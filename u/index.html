@@ -2,201 +2,141 @@
 <html lang="az">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bio Panel Professional</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BioPanel Pro</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        * { box-sizing: border-box; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Segoe UI', sans-serif; background-color: #fff; }
-        .main-wrapper { width: 100%; min-height: 100vh; display: flex; flex-direction: column; }
+        :root { --neon-blue: #00f2ff; --neon-purple: #bc13fe; }
+        body { font-family: 'Inter', sans-serif; background: #050505; color: white; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; padding: 10px; overflow-x: hidden; }
         
-        /* Video Sahəsi */
-        .video-container { width: 100%; height: 250px; background: #000; overflow: hidden; position: relative; }
-        .video-container video { width: 100%; height: 100%; object-fit: cover; display: block; }
-        
-        .ad-info { width: 100%; padding: 15px; background: #f8f9fa; border-bottom: 1px solid #eee; text-align: center; }
-        .ad-info p { margin: 0 0 10px; font-size: 16px; font-weight: bold; color: #333; }
-        .btn-contact { display: inline-block; background: #007bff; color: white; padding: 10px 30px; border-radius: 25px; text-decoration: none; font-size: 14px; font-weight: bold; }
-        
-        .profile-box { text-align: center; padding: 20px 0; flex-grow: 1; }
-        .avatar { width: 100px; height: 100px; background: #007bff; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: white; font-size: 40px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 4px solid white; margin-bottom: 10px; }
-        h1 { margin: 5px 0 20px; font-size: 24px; color: #222; }
-        
-        .links-container { width: 100%; padding: 0 20px; }
-        .social-btn { display: none; align-items: center; justify-content: center; width: 100%; padding: 16px; margin-bottom: 12px; border-radius: 15px; text-decoration: none; color: white; font-weight: 600; font-size: 17px; cursor: pointer; border: none; }
-        
-        .tiktok { background: #000; } .insta { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
-        .yt { background: #ff0000; } .wa { background: #25d366; } .fb { background: #1877f2; } .web { background: #444; }
-        
-        /* Yeni Bildiriş Sahəsi Stili */
-        .info-notice { background: #fff3cd; color: #856404; padding: 12px; border-radius: 12px; margin-bottom: 15px; font-size: 13px; font-weight: 500; border: 1px solid #ffeeba; line-height: 1.4; }
+        /* Sarı Bildiriş */
+        .alert-bar { background: #ffcc00; color: black; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: bold; text-align: center; margin-bottom: 15px; width: 90%; max-width: 400px; box-shadow: 0 0 15px rgba(255, 204, 0, 0.4); }
 
-        .bottom-nav { padding: 30px 20px; text-align: center; background: #fff; }
-        .create-btn { display: block; width: 100%; padding: 16px; border: 2px dashed #007bff; color: #007bff; text-decoration: none; font-weight: bold; border-radius: 15px; margin-bottom: 20px; }
-        .privacy-link { font-size: 12px; color: #007bff; text-decoration: underline; cursor: pointer; font-weight: 600; }
+        /* Video / Reklam Sahəsi */
+        .promo-video { width: 100%; max-width: 400px; border-radius: 15px; border: 1px solid var(--neon-blue); overflow: hidden; position: relative; box-shadow: 0 0 20px rgba(0, 242, 255, 0.2); }
+        video { width: 100%; display: block; }
+        .ad-text { font-size: 12px; margin-top: 5px; color: #888; }
+        .ad-btn { background: none; border: 1px solid #444; color: #aaa; padding: 5px 10px; border-radius: 20px; font-size: 11px; cursor: pointer; text-decoration: none; display: inline-block; margin-bottom: 15px; }
 
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; padding: 20px; }
-        .modal-content { background: #fff; padding: 25px; border-radius: 20px; max-width: 450px; width: 100%; text-align: center; max-height: 85vh; overflow-y: auto; }
-        .close-btn { background: #007bff; color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 15px; }
-        
-        #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:white; display:flex; align-items:center; justify-content:center; z-index:2000; }
+        /* Profil Kartı */
+        .profile-card { background: rgba(15, 15, 15, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); padding: 25px; border-radius: 30px; width: 90%; max-width: 380px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
+        h1 { font-size: 26px; margin-bottom: 20px; text-shadow: 0 0 10px var(--neon-blue); }
+
+        /* Sosial Düymələr */
+        .links-container { display: flex; flex-direction: column; gap: 12px; }
+        .link-btn { display: flex; align-items: center; justify-content: center; padding: 14px; border-radius: 15px; text-decoration: none; color: white; font-weight: 600; transition: 0.3s; font-size: 15px; }
+        .link-btn i { margin-right: 10px; font-size: 18px; }
+        .link-btn:hover { transform: scale(1.03); filter: brightness(1.2); }
+
+        /* Rənglər */
+        .tiktok { background: #000; border: 1px solid #fff; }
+        .instagram { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+        .youtube { background: #FF0000; }
+        .whatsapp { background: #25D366; }
+        .facebook { background: #1877F2; }
+        .telegram { background: #0088cc; }
+        .vkontakte { background: #0077FF; }
+        .rutube { background: #000; border: 1px solid #4E4E4E; }
+        .odnoklassniki { background: #ee8208; }
+        .website { background: #444; }
+
+        /* Bot Düyməsi və Ox */
+        .bot-section { margin-top: 30px; position: relative; }
+        .create-btn { background: var(--neon-purple); color: white; padding: 15px 25px; border-radius: 50px; text-decoration: none; font-weight: bold; display: inline-block; box-shadow: 0 0 20px var(--neon-purple); animation: pulse 2s infinite; }
+        .hand-icon { display: inline-block; font-size: 24px; animation: pointing 1s infinite alternate; vertical-align: middle; margin-right: 10px; }
+
+        @keyframes pointing { from { transform: translateX(0); } to { transform: translateX(-10px); } }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(188, 19, 254, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(188, 19, 254, 0); } 100% { box-shadow: 0 0 0 0 rgba(188, 19, 254, 0); } }
+
+        /* Məxfilik Modal */
+        #policy-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; padding: 20px; box-sizing: border-box; overflow-y: auto; }
+        .modal-content { background: #111; border: 1px solid var(--neon-blue); padding: 20px; border-radius: 15px; color: #ccc; line-height: 1.6; }
+        .close-btn { background: var(--neon-blue); color: black; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 20px; font-weight: bold; }
+        .policy-trigger { margin-top: 20px; font-size: 12px; color: #555; cursor: pointer; text-decoration: underline; }
     </style>
 </head>
 <body>
 
-<div id="loader"><i class="fas fa-circle-notch fa-spin fa-3x" style="color:#007bff"></i></div>
+    <div class="alert-bar" id="alert-text">Yüklənir...</div>
 
-<div id="ttModal" class="modal">
-    <div class="modal-content">
-        <div style="font-size: 45px; color: #ff0050; margin-bottom: 15px;"><i class="fab fa-tiktok"></i></div>
-        <h3 id="ttHeader">TikTok Bloku Aktivdir</h3>
-        <p id="ttBody" style="font-size: 14px; color: #555;">Keçid üçün brauzerə keçin:</p>
-        <div id="step1" style="background:#f0f2f5; padding:12px; border-radius:10px; margin-bottom:8px; font-weight:bold;">1. Sağ yuxarıdakı (•••) basın</div>
-        <div id="step2" style="background:#f0f2f5; padding:12px; border-radius:10px; margin-bottom:15px; font-weight:bold;">2. "Brauzerdə aç" seçin</div>
-        <button id="ttClose" class="close-btn">ANLADIM</button>
-    </div>
-</div>
-
-<div id="privacyModal" class="modal">
-    <div class="modal-content">
-        <div style="font-weight:bold; border-bottom:1px solid #eee; padding-bottom:10px; margin-bottom:15px; font-size: 18px;" id="modalHeader">Məxfilik Siyasəti</div>
-        <div style="font-size:13px; text-align:left; line-height: 1.6; color: #444;" id="modalBody">...</div>
-        <button class="close-btn" onclick="document.getElementById('privacyModal').style.display='none'">BAĞLA</button>
-    </div>
-</div>
-
-<div class="main-wrapper">
-    <div class="video-container">
-        <video id="myVideo" preload="auto" autoplay muted loop playsinline poster="https://via.placeholder.com/400x250/000?text=Yükleniyor...">
-            <source src="https://v1.mixkit.co/videos/preview/mixkit-top-view-of-a-shore-with-gentle-waves-34441-large.mp4" type="video/mp4">
+    <div class="promo-video">
+        <video autoplay muted loop playsinline>
+            <source src="https://assets.mixkit.co/videos/preview/mixkit-beautiful-landscape-of-mountains-and-lakes-2022-large.mp4" type="video/mp4">
         </video>
     </div>
+    <div class="ad-text" id="ad-info">Reklamınız burada ola bilər!</div>
+    <a href="https://t.me/shamkhal_h" class="ad-btn" id="ad-btn">Müraciət edin</a>
 
-    <div class="ad-info">
-        <p id="adText">Reklamınız burada ola bilər!</p>
-        <a href="https://t.me/shamkhal_h" class="btn-contact" id="adBtn">MÜRACİƏT ET</a>
+    <div class="profile-card">
+        <h1 id="user-name">...</h1>
+        <div class="links-container" id="links"></div>
+
+        <div class="bot-section">
+            <span class="hand-icon">👉</span>
+            <a href="https://t.me/BioPanelBot" class="create-btn" id="create-btn">Öz Bio Panelini Yarat</a>
+        </div>
+
+        <div class="policy-trigger" onclick="openPolicy()" id="policy-label">Məxfilik Siyasəti</div>
     </div>
 
-    <div class="profile-box">
-        <div class="avatar" id="userInitial">?</div>
-        <h1 id="displayName">...</h1>
-        <div class="links-container">
-            <a id="tiktok" class="social-btn tiktok"><i class="fab fa-tiktok"></i> &nbsp; TikTok</a>
-            <a id="insta" class="social-btn insta"><i class="fab fa-instagram"></i> &nbsp; Instagram</a>
-            <a id="yt" class="social-btn yt"><i class="fab fa-youtube"></i> &nbsp; YouTube</a>
-            <a id="wa" class="social-btn wa"><i class="fab fa-whatsapp"></i> &nbsp; WhatsApp</a>
-            <a id="fb" class="social-btn fb"><i class="fab fa-facebook"></i> &nbsp; Facebook</a>
-            <a id="web" class="social-btn web"><i class="fas fa-globe"></i> &nbsp; Website</a>
+    <div id="policy-modal">
+        <div class="modal-content">
+            <h2 id="policy-title">...</h2>
+            <div id="policy-text">...</div>
+            <button class="close-btn" onclick="closePolicy()" id="close-label">Bağla</button>
         </div>
     </div>
 
-    <div class="bottom-nav">
-        <div class="info-notice" id="mainNotice">
-            <i class="fas fa-info-circle"></i> Diqqət: Sosial şəbəkə tətbiqlərinin birbaşa açılması üçün yuxarıdakı menyudan brauzerə keçid edin.
-        </div>
+    <script>
+        const translations = {
+            'az': { alert: "⚠ Əgər birbaşa açılmırsa, sağdakı ( • • • ) klikləyin və 'Brauzerdə aç' seçin.", ad_info: "Reklamınız burada ola bilər!", ad_btn: "Müraciət edin", create: "Öz Bio Panelini Yarat", policy: "Məxfilik Siyasəti", close: "Bağla", policy_t: "Hüquqi Qorunma və Məxfilik", policy_b: "1. Bu xidmət fərdi məlumatların qorunması qanunvericiliyinə uyğun fəaliyyət göstərir. 2. İstifadəçi tərəfindən daxil edilən bütün linklər açıq mənbə hesab olunur. 3. BioPanel administrasiyası yerləşdirilən keçidlərin məzmununa görə məsuliyyət daşımır. 4. Qeyri-qanuni və ya etik olmayan məzmunlar aşkar edildikdə dərhal silinir. 5. Xidmətdən istifadə etməklə siz bütün şərtləri qəbul etmiş olursunuz." },
+            'tr': { alert: "⚠ Doğrudan açılmıyorsa, sağ üstteki ( • • • ) dokunun ve 'Tarayıcıda aç' deyin.", ad_info: "Reklamınız burada olabilir!", ad_btn: "Başvuru yapın", create: "Kendi Bio Panelinizi Oluşturun", policy: "Gizlilik Politikası", close: "Kapat", policy_t: "Yasal Koruma ve Gizlilik", policy_b: "Bu hizmet gönüllü kullanım içindir. Tüm sorumluluk kullanıcıya aittir." },
+            'ru': { alert: "⚠ Если не открывается, нажмите ( • • • ) и выберите 'Открыть в браузере'.", ad_info: "Ваша реклама может быть здесь!", ad_btn: "Связаться", create: "Создать свой Био Панель", policy: "Политика конфиденциальности", close: "Закрыть", policy_t: "Юридическая защита", policy_b: "Пользуясь сервисом, вы принимаете условия хранения ссылок." },
+            'en': { alert: "⚠ If it doesn't open, click ( • • • ) and select 'Open in Browser'.", ad_info: "Your ad could be here!", ad_btn: "Contact us", create: "Create Your Own Bio Panel", policy: "Privacy Policy", close: "Close", policy_t: "Legal Notice", policy_b: "By using this service, you agree to the terms and conditions." },
+            'de': { alert: "⚠ Wenn es nicht öffnet, klicken Sie auf ( • • • ) und wählen Sie 'Im Browser öffnen'.", ad_info: "Ihre Werbung hier!", ad_btn: "Kontakt", create: "Erstellen Sie Ihr Bio-Panel", policy: "Datenschutz", close: "Schließen", policy_t: "Rechtliche Hinweise", policy_b: "Nutzung erfolgt auf eigene Gefahr." }
+        };
 
-        <a href="https://t.me/BioPanelBot" class="create-btn" id="createBtn">🚀 Özünə Bio Panel yarat!</a>
-        <div class="privacy-link" onclick="document.getElementById('privacyModal').style.display='flex'" id="privacyLink">Məxfilik Siyasəti</div>
-    </div>
-</div>
+        const lang = navigator.language.split('-')[0] || 'en';
+        const t = translations[lang] || translations['en'];
 
-<script>
-    const isTikTok = /TikTok/i.test(navigator.userAgent);
-    const lang = navigator.language || navigator.userLanguage;
-    
-    const texts = {
-        az: { 
-            create: "Özünə Bio Panel yarat!", apply: "MÜRACİƏT ET", ad: "Reklamınız burada ola bilər!",
-            notice: "Sosial şəbəkələrin birbaşa açılması üçün sağ yuxarıdakı 3 nöqtəyə vurub 'Brauzerdə aç' seçin.",
-            ttHead: "TikTok Bloku Aktivdir", ttBody: "Tətbiqi açmaq üçün brauzerə keçin:", step1: "1. Sağ yuxarıdakı (•••) basın", step2: "2. 'Brauzerdə aç' seçin", ok: "ANLADIM",
-            header: "Hüquqi Xəbərdarlıq və Məxfilik Siyasəti",
-            body: "1. BioPanel istifadəçi linklərini paylaşan texniki vasitədir.<br>2. Şifrə tələb olunmur.<br>3. Məzmuna görə BioPanel məsuliyyət daşımır.<br>4. Qeyri-qanuni panellər xəbərdarlıqsız silinir.<br>5. İstifadəçi bu şərtləri qəbul etmiş sayılır."
-        },
-        tr: { 
-            create: "Kendi Bio Panelini oluştur!", apply: "BAŞVURU YAP", ad: "Reklamınız burada olabilir!",
-            notice: "Uygulamaların açılması için sağ üstteki 3 noktadan 'Tarayıcıda aç'ı seçin.",
-            ttHead: "TikTok Bloku Aktif", ttBody: "Tarayıcıya geçin:", step1: "1. Sağ üstteki (•••) basın", step2: "2. 'Tarayıcıda aç' seçin", ok: "ANLADIM",
-            header: "Gizlilik Politikası", body: "1. BioPanel teknik bir araçtır.<br>2. Şifre istenmez.<br>3. İçerik sorumluluğu kullanıcıya aittir."
-        },
-        ru: { 
-            create: "Создай свой Bio Panel!", apply: "ПОДАТЬ ЗАЯВКУ", ad: "Ваша реклама может быть здесь!",
-            notice: "Для открытия приложений выберите 'Открыть в браузере' в верхнем меню.",
-            ttHead: "Блок TikTok Активен", ttBody: "Откройте в браузере:", step1: "1. Нажмите на (•••)", step2: "2. Выберите 'Открыть в браузере'", ok: "ПОНЯТНО",
-            header: "Конфиденциальность", body: "1. BioPanel - сервис ссылок.<br>2. Пароли не нужны.<br>3. Ответственность несет пользователь."
-        },
-        en: { 
-            create: "Create your Bio Panel!", apply: "APPLY NOW", ad: "Your ad could be here!",
-            notice: "For a better experience, select 'Open in browser' from the top menu.",
-            ttHead: "TikTok Block Active", ttBody: "Use browser to open apps:", step1: "1. Click (•••) on top right", step2: "2. Select 'Open in Browser'", ok: "GOT IT",
-            header: "Privacy Policy", body: "1. BioPanel is a link tool.<br>2. No passwords required.<br>3. User is responsible for links."
-        }
-    };
+        document.getElementById('alert-text').innerText = t.alert;
+        document.getElementById('ad-info').innerText = t.ad_info;
+        document.getElementById('ad-btn').innerText = t.ad_btn;
+        document.getElementById('create-btn').innerText = t.create;
+        document.getElementById('policy-label').innerText = t.policy;
+        document.getElementById('policy-title').innerText = t.policy_t;
+        document.getElementById('policy-text').innerText = t.policy_b;
+        document.getElementById('close-label').innerText = t.close;
 
-    let t = texts.az;
-    if (lang.startsWith('tr')) t = texts.tr;
-    else if (lang.startsWith('ru')) t = texts.ru;
-    else if (lang.startsWith('en')) t = texts.en;
+        const urlParams = new URLSearchParams(window.location.search);
+        const user = urlParams.get('user');
 
-    document.getElementById('createBtn').innerText = "🚀 " + t.create;
-    document.getElementById('adBtn').innerText = t.apply;
-    document.getElementById('adText').innerText = t.ad;
-    document.getElementById('mainNotice').innerHTML = `<i class="fas fa-info-circle"></i> ${t.notice}`;
-    document.getElementById('ttHeader').innerText = t.ttHead;
-    document.getElementById('ttBody').innerText = t.ttBody;
-    document.getElementById('step1').innerText = t.step1;
-    document.getElementById('step2').innerText = t.step2;
-    document.getElementById('ttClose').innerText = t.ok;
-    document.getElementById('modalHeader').innerText = t.header;
-    document.getElementById('modalBody').innerHTML = t.body;
-    document.getElementById('privacyLink').innerText = t.header;
-
-    function playVideo() {
-        const video = document.getElementById('myVideo');
-        video.muted = true;
-        let promise = video.play();
-        if (promise !== undefined) {
-            promise.catch(error => {
-                document.body.addEventListener('click', () => video.play(), {once: true});
-            });
-        }
-    }
-    window.addEventListener('load', playVideo);
-
-    const params = new URLSearchParams(window.location.search);
-    const username = params.get('user');
-
-    if (username) {
-        fetch(`https://raw.githubusercontent.com/ecopix-admin/ecopix-final/main/u/data/${username}.json`)
-            .then(r => r.json())
-            .then(data => {
-                document.getElementById('loader').style.display = 'none';
-                document.getElementById('displayName').innerText = data.name;
-                document.getElementById('userInitial').innerText = data.name.charAt(0).toUpperCase();
-                
-                ['tiktok', 'insta', 'yt', 'wa', 'fb', 'web'].forEach(s => {
-                    if (data[s] && data[s] !== 'yox') {
-                        let l = data[s];
-                        if (s === 'wa' && !l.startsWith('http')) l = `https://wa.me/${l.replace(/\D/g,'')}`;
-                        const btn = document.getElementById(s);
-                        btn.style.display = 'flex';
-                        
-                        btn.onclick = function(e) {
-                            if (isTikTok) {
-                                e.preventDefault();
-                                document.getElementById('ttModal').style.display = 'flex';
-                                document.getElementById('ttClose').onclick = function() {
-                                    window.location.href = l;
-                                    document.getElementById('ttModal').style.display = 'none';
-                                };
-                            } else {
-                                window.open(l, '_blank', 'noopener,noreferrer');
-                            }
-                        };
+        if (user) {
+            fetch(`data/${user}.json`).then(r => r.json()).then(data => {
+                document.getElementById('user-name').innerText = data.name;
+                const container = document.getElementById('links');
+                const platforms = [
+                    {id:'tiktok', n:'TikTok', i:'fa-tiktok'}, {id:'instagram', n:'Instagram', i:'fa-instagram'},
+                    {id:'youtube', n:'YouTube', i:'fa-youtube'}, {id:'whatsapp', n:'WhatsApp', i:'fa-whatsapp'},
+                    {id:'facebook', n:'Facebook', i:'fa-facebook'}, {id:'telegram', n:'Telegram', i:'fa-telegram'},
+                    {id:'vkontakte', n:'VKontakte', i:'fa-vk'}, {id:'rutube', n:'RuTube', i:'fa-play'},
+                    {id:'odnoklassniki', n:'Odnoklassniki', i:'fa-odnoklassniki'}, {id:'website', n:'Website', i:'fa-globe'}
+                ];
+                platforms.forEach(p => {
+                    if (data[p.id] && data[p.id].toLowerCase() !== 'no') {
+                        const a = document.createElement('a');
+                        a.href = data[p.id].startsWith('http') ? data[p.id] : `https://${data[p.id]}`;
+                        a.className = `link-btn ${p.id}`;
+                        a.innerHTML = `<i class="fab ${p.icon}"></i> ${p.n}`;
+                        a.target = "_blank";
+                        container.appendChild(a);
                     }
                 });
-            })
-            .catch(() => { document.getElementById('loader').innerHTML = "User Not Found"; });
-    }
-</script>
+            });
+        }
+
+        function openPolicy() { document.getElementById('policy-modal').style.display = 'block'; }
+        function closePolicy() { document.getElementById('policy-modal').style.display = 'none'; }
+    </script>
 </body>
 </html>
