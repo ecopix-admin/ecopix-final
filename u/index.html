@@ -18,6 +18,9 @@
         .ad-text { font-size: 12px; margin-top: 5px; color: #888; }
         .ad-btn { background: none; border: 1px solid #444; color: #aaa; padding: 5px 10px; border-radius: 20px; font-size: 11px; cursor: pointer; text-decoration: none; display: inline-block; margin-bottom: 15px; }
 
+        /* Səs Düyməsi Dizaynı */
+        .sound-btn { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; border: 1px solid var(--neon-blue); border-radius: 50%; width: 35px; height: 35px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; box-shadow: 0 0 10px rgba(0, 242, 255, 0.5); }
+
         /* Profil Kartı */
         .profile-card { background: rgba(15, 15, 15, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); padding: 25px; border-radius: 30px; width: 90%; max-width: 380px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
         h1 { font-size: 26px; margin-bottom: 20px; text-shadow: 0 0 10px var(--neon-blue); }
@@ -60,9 +63,12 @@
     <div class="alert-bar" id="alert-text">Yüklənir...</div>
 
     <div class="promo-video">
-        <video autoplay muted loop playsinline>
-            <source src="https://assets.mixkit.co/videos/preview/mixkit-beautiful-landscape-of-mountains-and-lakes-2022-large.mp4" type="video/mp4">
+        <video id="promoVid" autoplay muted loop playsinline poster="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=400&auto=format&fit=crop">
+            <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
         </video>
+        <button onclick="toggleSound()" class="sound-btn">
+            <i class="fas fa-volume-mute" id="soundIcon"></i>
+        </button>
     </div>
     <div class="ad-text" id="ad-info">Reklamınız burada ola bilər!</div>
     <a href="https://t.me/shamkhal_h" class="ad-btn" id="ad-btn">Müraciət edin</a>
@@ -88,6 +94,21 @@
     </div>
 
     <script>
+        // Səs funksiyası
+        function toggleSound() {
+            const vid = document.getElementById("promoVid");
+            const icon = document.getElementById("soundIcon");
+            if (vid.muted) {
+                vid.muted = false;
+                icon.classList.remove("fa-volume-mute");
+                icon.classList.add("fa-volume-up");
+            } else {
+                vid.muted = true;
+                icon.classList.remove("fa-volume-up");
+                icon.classList.add("fa-volume-mute");
+            }
+        }
+
         const translations = {
             'az': { alert: "⚠ Əgər birbaşa açılmırsa, sağdakı ( • • • ) klikləyin və 'Brauzerdə aç' seçin.", ad_info: "Reklamınız burada ola bilər!", ad_btn: "Müraciət edin", create: "Öz Bio Panelini Yarat", policy: "Məxfilik Siyasəti", close: "Bağla", policy_t: "Hüquqi Qorunma və Məxfilik", policy_b: "1. Bu xidmət fərdi məlumatların qorunması qanunvericiliyinə uyğun fəaliyyət göstərir. 2. İstifadəçi tərəfindən daxil edilən bütün linklər açıq mənbə hesab olunur. 3. BioPanel administrasiyası yerləşdirilən keçidlərin məzmununa görə məsuliyyət daşımır. 4. Qeyri-qanuni və ya etik olmayan məzmunlar aşkar edildikdə dərhal silinir. 5. Xidmətdən istifadə etməklə siz bütün şərtləri qəbul etmiş olursunuz." },
             'tr': { alert: "⚠ Doğrudan açılmıyorsa, sağ üstteki ( • • • ) dokunun ve 'Tarayıcıda aç' deyin.", ad_info: "Reklamınız burada olabilir!", ad_btn: "Başvuru yapın", create: "Kendi Bio Panelinizi Oluşturun", policy: "Gizlilik Politikası", close: "Kapat", policy_t: "Yasal Koruma ve Gizlilik", policy_b: "Bu hizmet gönüllü kullanım içindir. Tüm sorumluluk kullanıcıya aittir." },
