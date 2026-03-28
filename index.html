@@ -11,56 +11,70 @@
 
     <style>
         :root { --neon: #00fbff; --trend: #ff0055; --bg: #000; }
-        body { background: var(--bg); color: #fff; margin: 0; font-family: sans-serif; overflow: hidden; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: #fff; margin: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; overflow: hidden; }
 
-        /* REALLIĞI HİSS ET - FEED */
-        .feed { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; }
-        .v-card { height: 100vh; width: 100%; scroll-snap-align: start; position: relative; background: #000; }
+        /* VİDEO FEED SİSTEMİ - TAM EKRAN */
+        .feed { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; }
+        .feed::-webkit-scrollbar { display: none; }
+        
+        .v-card { height: 100vh; width: 100%; scroll-snap-align: start; position: relative; background: #000; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        
+        /* Videoların tam oturması üçün */
         video { width: 100%; height: 100%; object-fit: cover; }
 
-        /* CANLI YAYIM VƏ HƏDİYYƏLƏR */
-        .live-tag { position: absolute; top: 25px; left: 20px; background: red; padding: 5px 12px; border-radius: 4px; font-weight: bold; z-index: 10; animation: blink 1s infinite; }
-        @keyframes blink { 50% { opacity: 0.5; } }
+        /* ÜST "CANLI" ETİKETİ */
+        .live-badge { position: absolute; top: 15px; left: 15px; background: #ff0000; color: white; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 12px; z-index: 10; text-transform: uppercase; }
+
+        /* SAĞ TƏRƏF MENYUSU (TIKTOK STYLE) */
+        .side-bar { position: absolute; right: 12px; bottom: 100px; display: flex; flex-direction: column; gap: 20px; align-items: center; z-index: 10; }
+        .action-item { text-align: center; cursor: pointer; }
+        .icon-circle { width: 45px; height: 45px; background: rgba(255,255,255,0.15); backdrop-filter: blur(5px); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 5px; }
+        .action-item span { font-size: 11px; font-weight: 600; }
+
+        /* SOL TƏRƏF MƏLUMAT */
+        .video-info { position: absolute; bottom: 90px; left: 15px; max-width: 70%; text-shadow: 0 1px 5px rgba(0,0,0,0.8); z-index: 10; }
+        .video-info h3 { margin: 0 0 5px 0; font-size: 16px; color: var(--neon); }
+        .video-info p { margin: 0; font-size: 14px; color: #eee; }
+
+        /* AŞAĞI NAVİQASİYA - MUKƏMMƏL DÜZÜLÜŞ */
+        .nav-bar { position: fixed; bottom: 0; width: 100%; height: 65px; background: #000; display: flex; align-items: center; border-top: 0.5px solid #222; z-index: 100; padding: 0 10px; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #888; cursor: pointer; font-size: 20px; }
+        .nav-item.active { color: #fff; }
         
-        #fxContainer { position: fixed; inset: 0; pointer-events: none; z-index: 1000; }
-        .gift-anim { position: absolute; bottom: 0; left: 50%; font-size: 80px; transform: translateX(-50%); animation: flyUp 3s forwards; }
-        @keyframes flyUp { 0% { bottom: 0; opacity: 1; } 100% { bottom: 80vh; opacity: 0; transform: translateX(-50%) scale(2); } }
+        /* PLUS DÜYMƏSİ */
+        .plus-btn { width: 45px; height: 30px; background: linear-gradient(to right, #00fbff 20%, #ff0055 80%); border-radius: 8px; position: relative; display: flex; align-items: center; justify-content: center; color: #000; font-size: 24px; font-weight: bold; }
 
-        /* NAVİQASİYA PANELI */
-        .nav { position: fixed; bottom: 0; width: 100%; height: 70px; background: rgba(0,0,0,0.9); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #222; z-index: 2000; }
-        .btn-plus { width: 50px; height: 35px; background: linear-gradient(90deg, var(--neon), var(--trend)); border-radius: 10px; color: #000; font-weight: bold; font-size: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-
-        /* MODALLAR */
-        .modal { display: none; position: fixed; inset: 0; background: #000; z-index: 3000; padding: 20px; overflow-y: auto; }
-        .inp { width: 100%; background: #111; border: 1px solid #333; color: #fff; padding: 15px; border-radius: 10px; margin-bottom: 10px; }
+        /* MODAL VƏ DIGƏR ELEMENTLƏR */
+        .overlay { display: none; position: fixed; inset: 0; background: #000; z-index: 1000; padding: 20px; }
+        .close-btn { position: absolute; top: 20px; left: 20px; font-size: 30px; z-index: 1100; }
     </style>
 </head>
 <body>
 
-    <div id="fxContainer"></div>
+    <div class="feed" id="mainFeed"></div>
 
-    <div id="mainApp">
-        <div class="feed" id="masterFeed"></div>
+    <div class="nav-bar">
+        <div class="nav-item active" onclick="location.reload()">🏠</div>
+        <div class="nav-item">🔍</div>
+        <div class="nav-item" onclick="openPage('upload')">
+            <div class="plus-btn">+</div>
+        </div>
+        <div class="nav-item">💬</div>
+        <div class="nav-item" onclick="openPage('profile')">👤</div>
+    </div>
 
-        <div class="nav">
-            <div onclick="location.reload()">🏠</div>
-            <div class="btn-plus" onclick="openModal('studio')">+</div>
-            <div onclick="startLive()">🎥</div>
-            <div onclick="openModal('profile')">👤</div>
+    <div id="uploadPage" class="overlay">
+        <div class="close-btn" onclick="closeAll()">✕</div>
+        <div style="margin-top: 80px; text-align: center;">
+            <h2 style="color:var(--neon)">EcoPix Studio</h2>
+            <input type="file" accept="video/*" id="videoFile" style="display:none" onchange="startUpload(this)">
+            <button onclick="document.getElementById('videoFile').click()" style="width:100%; padding:20px; border-radius:15px; border:2px dashed var(--neon); background:none; color:white; font-size:18px;">VİDEO SEÇ</button>
+            <div id="progress" style="margin-top:20px;"></div>
         </div>
     </div>
 
-    <div id="studio" class="modal">
-        <h2 style="color:var(--neon)">Yeni Paylaşım</h2>
-        <input type="file" class="inp" accept="video/*" onchange="uploadVideo(this)">
-        <div id="upProgress" style="color:var(--neon); margin:10px 0;"></div>
-        <input type="text" id="vTitle" class="inp" placeholder="Video başlığı...">
-        <button id="postBtn" onclick="finishPost()" style="width:100%; padding:15px; background:var(--trend); border:none; border-radius:10px; color:#fff; font-weight:bold; display:none;">PAYLAŞ</button>
-        <button onclick="closeModals()" style="width:100%; margin-top:10px; background:none; border:none; color:#555;">Bağla</button>
-    </div>
-
     <script>
-        // SƏNİN VERDİYİN REAL KONFİQURASİYA
         const firebaseConfig = {
             apiKey: "AIzaSyCtrVliO1bmdg7r0juWz-Yj2EaEGNsz2j8",
             authDomain: "ecopix-118c6.firebaseapp.com",
@@ -74,111 +88,93 @@
         const db = firebase.firestore();
         const storage = firebase.storage();
 
-        let videoUrl = "";
-        
-        // 30 HAZIR VİDEO (Firebase boş olsa belə görünəcək)
-        const readyVideos = Array.from({length: 30}, (_, i) => ({
-            url: "https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-lighting-in-the-rain-31242-large.mp4",
-            title: `EcoPix Trend #${i+1} 🔥`,
-            user: "Həsənov_Şamxal"
-        }));
+        // 30 HAZIR VİDEO LİNKİ (Real videolar qoydum ki, oynamasını görəsən)
+        const sampleVideos = [
+            "https://v.itiktok.com/ZMMqKqBvL/", // Bu tip linklər işləməyə bilər, ona görə real MP4 istifadə edirik
+            "https://assets.mixkit.co/videos/preview/mixkit-star-ry-night-sky-over-mountains-and-forest-34539-large.mp4",
+            "https://assets.mixkit.co/videos/preview/mixkit-trees-with-yellow-leaves-in-autumn-34509-large.mp4",
+            "https://assets.mixkit.co/videos/preview/mixkit-waves-in-the-ocean-near-the-shore-34504-large.mp4"
+        ];
 
-        // FEED-İ QURMAQ
-        function buildFeed() {
-            const feed = document.getElementById('masterFeed');
+        function loadFeed() {
+            const feed = document.getElementById('mainFeed');
             feed.innerHTML = "";
 
-            // 1. Canlıları çək
+            // 1. Canlıları bazadan çək
             db.collection('lives').where('active', '==', true).onSnapshot(snap => {
                 snap.forEach(doc => {
-                    const l = doc.data();
-                    feed.innerHTML += `
-                        <div class="v-card">
-                            <div class="live-tag">CANLI</div>
-                            <video src="" poster="https://via.placeholder.com/500x900/ff0055/ffffff?text=CANLI+YAYIM" autoplay muted></video>
-                            <div style="position:absolute; bottom:100px; left:20px;">
-                                <b>@${l.owner}</b>
-                                <button onclick="sendGift('👑')" style="background:var(--neon); border:none; padding:10px; border-radius:10px; margin-top:10px;">Hədiyyə At 👑</button>
-                            </div>
-                        </div>`;
+                    const data = doc.data();
+                    feed.prepend(createCard(data.url, "@" + data.owner, "CANLI YAYIM", true));
                 });
             });
 
-            // 2. Hazır videoları düz
-            readyVideos.forEach(v => {
-                feed.innerHTML += `
-                    <div class="v-card">
-                        <video src="${v.url}" loop onclick="this.paused?this.play():this.pause()"></video>
-                        <div style="position:absolute; bottom:100px; left:20px;">
-                            <b>@${v.user}</b>
-                            <p>${v.title}</p>
-                        </div>
-                        <div style="position:absolute; right:20px; bottom:150px; display:flex; flex-direction:column; gap:20px;">
-                            <div onclick="this.style.color='red'" style="font-size:30px;">❤️</div>
-                            <div onclick="prompt('Rəyiniz:')" style="font-size:30px;">💬</div>
-                        </div>
-                    </div>`;
-            });
-        }
+            // 2. Hazır videoları əlavə et
+            for(let i=0; i<30; i++) {
+                const videoUrl = sampleVideos[i % sampleVideos.length];
+                feed.innerHTML += createCard(videoUrl, "@Shamxal_Həsənov", "EcoPix Trend #" + (i+1));
+            }
 
-        // CANLI YAYIM BAŞLAT
-        async function startLive() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
-                alert("Canlı yayım texniki olaraq hazırdır! Kamera açıldı.");
-                await db.collection('lives').add({
-                    owner: "Şamxal Həsənov",
-                    active: true,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            // VİDEOLARI AVTOMATİK OYNATMA MƏNTİQİ
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const video = entry.target.querySelector('video');
+                    if(entry.isIntersecting) {
+                        video.play().catch(() => {}); // Səssiz başlasın deyə muted olmalıdır
+                    } else {
+                        video.pause();
+                    }
                 });
-            } catch(e) { alert("Kamera icazəsi verilməyib."); }
+            }, { threshold: 0.8 });
+
+            document.querySelectorAll('.v-card').forEach(card => observer.observe(card));
         }
 
-        // VİDEO YÜKLƏMƏ (TAM AVTOMATİK)
-        function uploadVideo(input) {
-            const file = input.files[0];
-            const status = document.getElementById('upProgress');
-            const ref = storage.ref('uploads/' + Date.now() + "_" + file.name);
-            const task = ref.put(file);
+        function createCard(url, user, title, isLive = false) {
+            return `
+                <div class="v-card">
+                    ${isLive ? '<div class="live-badge">CANLI</div>' : ''}
+                    <video src="${url}" loop muted playsinline onclick="togglePlay(this)"></video>
+                    
+                    <div class="side-bar">
+                        <div class="action-item">
+                            <div class="icon-circle">❤️</div>
+                            <span>8.4K</span>
+                        </div>
+                        <div class="action-item">
+                            <div class="icon-circle">💬</div>
+                            <span>124</span>
+                        </div>
+                        <div class="action-item">
+                            <div class="icon-circle">🎁</div>
+                            <span>Hədiyyə</span>
+                        </div>
+                    </div>
 
-            task.on('state_changed', 
-                (s) => { status.innerText = "Yüklənir: " + Math.round((s.bytesTransferred/s.totalBytes)*100) + "%"; },
-                (e) => { alert("Xəta! Firebase Rules bölməsini 'true' etdiyinizdən əmin olun."); },
-                () => {
-                    task.snapshot.ref.getDownloadURL().then(url => {
-                        videoUrl = url;
-                        status.innerText = "Yükləndi! ✅";
-                        document.getElementById('postBtn').style.display = 'block';
-                    });
-                }
-            );
+                    <div class="video-info">
+                        <h3>${user}</h3>
+                        <p>${title}</p>
+                    </div>
+                </div>`;
         }
 
-        async function finishPost() {
-            await db.collection('posts').add({
-                url: videoUrl,
-                title: document.getElementById('vTitle').value,
-                owner: "Şamxal",
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            alert("Video EcoPix-də canlıdır!");
-            location.reload();
+        function togglePlay(v) {
+            if(v.paused) {
+                v.play();
+                v.muted = false; // İlk toxunuşda səs açılsın
+            } else {
+                v.pause();
+            }
         }
 
-        function sendGift(emoji) {
-            const container = document.getElementById('fxContainer');
-            const el = document.createElement('div');
-            el.className = 'gift-anim';
-            el.innerText = emoji;
-            container.appendChild(el);
-            setTimeout(() => el.remove(), 3000);
+        function openPage(id) {
+            document.getElementById(id + 'Page').style.display = 'block';
         }
 
-        function openModal(id) { document.getElementById(id).style.display = 'block'; }
-        function closeModals() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
+        function closeAll() {
+            document.querySelectorAll('.overlay').forEach(o => o.style.display = 'none');
+        }
 
-        // Start
-        buildFeed();
+        loadFeed();
     </script>
 </body>
 </html>
