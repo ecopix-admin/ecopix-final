@@ -1,105 +1,130 @@
-<div id="textStylePanel" style="display: none; background: rgba(0,0,0,0.9); padding: 15px; position: absolute; bottom: 80px; width: 100%; z-index: 4000;">
-    <div style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px;">
-        <button onclick="changeFontFace('serif')" style="font-family: serif;" class="font-btn">Serif</button>
-        <button onclick="changeFontFace('cursive')" style="font-family: cursive;" class="font-btn">Cursive</button>
-        <button onclick="changeFontFace('monospace')" style="font-family: monospace;" class="font-btn">Mono</button>
-        <button onclick="changeFontFace('system-ui')" style="font-family: system-ui;" class="font-btn">Bold</button>
-    </div>
-    <div style="display: flex; gap: 10px;">
-        <div onclick="changeTextColor('#fe2c55')" style="background:#fe2c55;" class="color-dot"></div>
-        <div onclick="changeTextColor('#25f4ee')" style="background:#25f4ee;" class="color-dot"></div>
-        <div onclick="changeTextColor('#ffff00')" style="background:#ffff00;" class="color-dot"></div>
-        <div onclick="changeTextColor('#ffffff')" style="background:#ffffff;" class="color-dot"></div>
-    </div>
-</div>
-
-<style>
-    .font-btn { background: white; color: black; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer; }
-    .color-dot { width: 30px; height: 30px; border-radius: 50%; border: 2px solid white; cursor: pointer; }
-    
-    /* Yükləmə Progress Bar */
-    #uploadProgress {
-        display: none; position: fixed; top: 0; left: 0; width: 0%; height: 5px; 
-        background: var(--tiktok-cyan); z-index: 5000; transition: width 0.3s;
-    }
-</style>
-
-<div id="uploadProgress"></div>
-
-<script type="module">
-    // Firebase Modullarını İdxal Et
-    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
-    import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-storage.js";
-
-    const db = getFirestore();
-    const storage = getStorage();
-
-    // 1. Şrift və Rəng Dəyişmə Funksiyaları
-    window.addTextToVideo = function() {
-        const text = prompt("Yazını daxil edin:");
-        if (text) {
-            const el = document.getElementById('draggableText');
-            el.innerText = text;
-            el.style.display = 'block';
-            document.getElementById('textStylePanel').style.display = 'block';
-            makeDraggable(el);
-        }
-    };
-
-    window.changeFontFace = (font) => { document.getElementById('draggableText').style.fontFamily = font; };
-    window.changeTextColor = (color) => { document.getElementById('draggableText').style.color = color; };
-
-    // 2. REAL FİREBASE PAYLAŞIM FUNKSİYASI
-    window.finalPost = async function() {
-        const fileInput = document.getElementById('fileInput');
-        const desc = document.getElementById('postDescription').value;
-        const loc = document.getElementById('postLocation').value;
-        const dragText = document.getElementById('draggableText');
-
-        if (!fileInput.files[0]) return alert("Video seçilməyib!");
-
-        const file = fileInput.files[0];
-        const fileName = Date.now() + "_" + file.name;
-        const storageRef = ref(storage, 'videos/' + fileName);
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>EcoPix | TikTok Clone</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <style>
+        :root { --tt-red: #fe2c55; --tt-cyan: #25f4ee; }
+        body, html { margin: 0; padding: 0; background: #000; color: #fff; font-family: sans-serif; overflow: hidden; height: 100%; }
         
-        // Progress barı göstər
-        const progressBar = document.getElementById('uploadProgress');
-        progressBar.style.display = 'block';
+        /* Video Feed Layout */
+        .feed { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; }
+        .feed::-webkit-scrollbar { display: none; }
+        
+        .v-card { height: 100vh; width: 100%; scroll-snap-align: start; position: relative; background: #000; display: flex; align-items: center; }
+        video { width: 100%; height: 100%; object-fit: cover; }
 
-        // A. VİDEONU STORAGE-Ə YÜKLƏ
-        const uploadTask = uploadBytesResumable(storageRef, file);
+        /* Sağ tərəf ikonlar */
+        .side-icons { position: absolute; right: 10px; bottom: 100px; display: flex; flex-direction: column; align-items: center; gap: 15px; z-index: 10; }
+        .icon-group { text-align: center; cursor: pointer; }
+        .icon-group span { font-size: 32px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        .icon-group p { font-size: 12px; margin: 4px 0 0; font-weight: bold; }
+        
+        /* Profil Şəkli Videoda */
+        .v-avatar { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #fff; margin-bottom: 10px; }
 
-        uploadTask.on('state_changed', 
-            (snapshot) => {
-                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                progressBar.style.width = progress + "%";
-            }, 
-            (error) => { alert("Yükləmə xətası: " + error.message); }, 
-            async () => {
-                // B. VİDEO LİNKİNİ GÖTÜR
-                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+        /* Alt Naviqasiya */
+        .nav { position: fixed; bottom: 0; width: 100%; height: 50px; background: #000; border-top: 0.5px solid #333; display: flex; justify-content: space-around; align-items: center; z-index: 100; }
+        .plus { background: linear-gradient(to right, var(--tt-cyan), var(--tt-red)); padding: 2px 12px; border-radius: 8px; color: #000; font-weight: bold; font-size: 20px; }
 
-                // C. MƏLUMATLARI FİRESTORE-A YAZ
-                try {
-                    await addDoc(collection(db, "posts"), {
-                        videoUrl: downloadURL,
-                        description: desc,
-                        location: loc,
-                        overlayText: dragText.innerText,
-                        textColor: dragText.style.color,
-                        fontFamily: dragText.style.fontFamily,
-                        likes: 0,
-                        comments: [],
-                        timestamp: serverTimestamp(),
-                        owner: "ali" // Hazırkı istifadəçi
-                    });
-                    
-                    alert("Paylaşıldı! 🎉");
-                    location.reload(); // Səhifəni yenilə və feed-ə qayıt
-                } catch (e) {
-                    console.error("Xəta: ", e);
+        /* Yükləmə Ekranı */
+        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #333; border-top: 4px solid var(--tt-red); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="loader">
+        <div class="spinner"></div>
+        <p>EcoPix Hazırlanır...</p>
+    </div>
+
+    <div class="feed" id="mainFeed">
+        <div class="v-card">
+            <video src="https://v16m-default.akamaized.net/6090906060.../video.mp4" loop playsinline muted></video>
+            
+            <div class="side-icons">
+                <img src="https://via.placeholder.com/50" class="v-avatar">
+                <div class="icon-group" onclick="like(this)">
+                    <span class="material-icons-round">favorite</span>
+                    <p>12k</p>
+                </div>
+                <div class="icon-group">
+                    <span class="material-icons-round">chat_bubble</span>
+                    <p>45</p>
+                </div>
+                <div class="icon-group" onclick="share()">
+                    <span class="material-icons-round">reply</span>
+                    <p>Paylaş</p>
+                </div>
+            </div>
+
+            <div style="position:absolute; bottom:60px; left:15px;">
+                <b>@ali_developer</b>
+                <p>EcoPix-in ilk test videosu! 🚀 #viral</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav">
+        <span class="material-icons-round">home</span>
+        <span class="material-icons-round">explore</span>
+        <div class="plus">+</div>
+        <span class="material-icons-round">inbox</span>
+        <span class="material-icons-round">person</span>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCtrVliO1bmdg7r0juWz-Yj2EaEGNsz2j8",
+            authDomain: "ecopix-118c6.firebaseapp.com",
+            projectId: "ecopix-118c6",
+            storageBucket: "ecopix-118c6.firebasestorage.app",
+            messagingSenderId: "703699419893",
+            appId: "1:703699419893:web:278c140c02b29745787bbc"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Videoları Bazadan Real Vaxtda Çək
+        const q = query(collection(db, "posts"), orderBy("timestamp", "desc"));
+        onSnapshot(q, (snapshot) => {
+            const feed = document.getElementById('mainFeed');
+            // loader-i gizlə
+            document.getElementById('loader').style.display = 'none';
+            
+            snapshot.docChanges().forEach((change) => {
+                if (change.type === "added") {
+                    const data = change.doc.data();
+                    const videoHTML = `
+                        <div class="v-card">
+                            <video src="${data.videoUrl}" loop playsinline onclick="this.play()"></video>
+                            <div class="side-icons">
+                                <img src="https://via.placeholder.com/50" class="v-avatar">
+                                <div class="icon-group"><span class="material-icons-round">favorite</span><p>${data.likes || 0}</p></div>
+                                <div class="icon-group"><span class="material-icons-round">chat_bubble</span><p>0</p></div>
+                                <div class="icon-group"><span class="material-icons-round">reply</span><p>Paylaş</p></div>
+                            </div>
+                            <div style="position:absolute; bottom:60px; left:15px;">
+                                <b>@user_${change.doc.id.substring(0,5)}</b>
+                                <p>${data.description}</p>
+                            </div>
+                        </div>`;
+                    feed.insertAdjacentHTML('afterbegin', videoHTML);
                 }
-            }
-        );
-    };
-</script>
+            });
+        });
+
+        window.share = async () => {
+            if (navigator.share) await navigator.share({title: 'EcoPix', url: location.href});
+        };
+    </script>
+</body>
+</html>
