@@ -1,144 +1,105 @@
-<!DOCTYPE html>
-<html lang="az">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TikTok Pro - Full Clone</title>
-    <style>
-        :root { --tiktok-red: #fe2c55; --tiktok-black: #121212; }
-        body, html { margin: 0; padding: 0; background: #000; color: white; font-family: sans-serif; overflow: hidden; }
-
-        /* Səhifə Naviqasiyası */
-        .page { display: none; height: 100vh; width: 100%; position: absolute; top: 0; left: 0; }
-        .active-page { display: block; }
-
-        /* --- ANA SƏHİFƏ (VİDEO FEED) --- */
-        .feed { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; }
-        .video-container { height: 100vh; scroll-snap-align: start; position: relative; }
-        video { width: 100%; height: 100%; object-fit: cover; }
-
-        /* Profil İkonu (Videonun üstündə) */
-        .user-profile-btn { position: absolute; right: 15px; bottom: 320px; width: 50px; height: 50px; border-radius: 50%; border: 2px solid white; cursor: pointer; }
-
-        /* Yorum Paneli (Modal) */
-        .comment-panel { position: absolute; bottom: -100%; left: 0; width: 100%; height: 70%; background: white; color: black; border-top-left-radius: 20px; border-top-right-radius: 20px; transition: 0.3s; z-index: 100; padding: 20px; box-sizing: border-box; }
-        .comment-panel.open { bottom: 0; }
-        .comment-list { height: 80%; overflow-y: auto; }
-        .comment-input { width: 100%; display: flex; gap: 10px; }
-
-        /* --- PROFİL SƏHİFƏSİ --- */
-        .profile-page { background: var(--tiktok-black); overflow-y: auto; }
-        .profile-header { text-align: center; padding: 40px 20px; }
-        .profile-pic { width: 100px; height: 100px; border-radius: 50%; background: #555; margin: 0 auto 15px; overflow: hidden; border: 2px solid #fff; }
-        .profile-pic img { width: 100%; height: 100%; object-fit: cover; }
-        .stats { display: flex; justify-content: center; gap: 20px; margin: 15px 0; }
-        .video-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px; }
-        .grid-item { aspect-ratio: 3/4; background: #333; }
-
-        /* --- VİDEO YÜKLƏMƏ VƏ CANLI --- */
-        .upload-section { padding: 20px; text-align: center; }
-        .btn { background: var(--tiktok-red); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
-    </style>
-</head>
-<body>
-
-<div id="homePage" class="page active-page">
-    <div class="feed" id="videoFeed">
-        <div class="video-container">
-            <video loop src="https://www.w3schools.com/html/mov_bbb.mp4" onclick="this.play()"></video>
-            <img src="https://via.placeholder.com/50" class="user-profile-btn" onclick="showPage('profilePage')">
-            <div style="position:absolute; right:15px; bottom:150px; text-align:center;">
-                <div onclick="toggleLike(this)" style="font-size:30px; cursor:pointer;">❤️ <span id="likeCount">10</span></div>
-                <div onclick="toggleComments()" style="font-size:30px; cursor:pointer; margin-top:20px;">💬 <span>5</span></div>
-                <div onclick="downloadVideo()" style="font-size:30px; cursor:pointer; margin-top:20px;">⬇️</div>
-            </div>
-        </div>
+<div id="textStylePanel" style="display: none; background: rgba(0,0,0,0.9); padding: 15px; position: absolute; bottom: 80px; width: 100%; z-index: 4000;">
+    <div style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px;">
+        <button onclick="changeFontFace('serif')" style="font-family: serif;" class="font-btn">Serif</button>
+        <button onclick="changeFontFace('cursive')" style="font-family: cursive;" class="font-btn">Cursive</button>
+        <button onclick="changeFontFace('monospace')" style="font-family: monospace;" class="font-btn">Mono</button>
+        <button onclick="changeFontFace('system-ui')" style="font-family: system-ui;" class="font-btn">Bold</button>
     </div>
+    <div style="display: flex; gap: 10px;">
+        <div onclick="changeTextColor('#fe2c55')" style="background:#fe2c55;" class="color-dot"></div>
+        <div onclick="changeTextColor('#25f4ee')" style="background:#25f4ee;" class="color-dot"></div>
+        <div onclick="changeTextColor('#ffff00')" style="background:#ffff00;" class="color-dot"></div>
+        <div onclick="changeTextColor('#ffffff')" style="background:#ffffff;" class="color-dot"></div>
+    </div>
+</div>
+
+<style>
+    .font-btn { background: white; color: black; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer; }
+    .color-dot { width: 30px; height: 30px; border-radius: 50%; border: 2px solid white; cursor: pointer; }
     
-    <div id="commentPanel" class="comment-panel">
-        <div style="display:flex; justify-content: space-between;"><h3>Yorumlar</h3> <button onclick="toggleComments()">X</button></div>
-        <div id="commentList" class="comment-list">
-            <p><b>@ali:</b> Super video! 🔥</p>
-        </div>
-        <div class="comment-input">
-            <input type="text" id="cInput" placeholder="Yorum yaz..." style="flex:1">
-            <button class="btn" onclick="addComment()">Göndər</button>
-        </div>
-    </div>
-</div>
-
-<div id="profilePage" class="page profile-page">
-    <div class="profile-header">
-        <button onclick="showPage('homePage')" style="float:left; background:none; color:white; border:none; font-size:20px;">⬅️</button>
-        <div class="profile-pic" id="pPic"><img src="https://via.placeholder.com/100"></div>
-        <h2 id="pName">İstifadəçi Adı</h2>
-        <p id="pBio">Bura sizin bioqrafiyanızdır. ✨</p>
-        <a id="pLink" href="#" style="color: lightblue;">www.linkim.com</a>
-        <div class="stats">
-            <div><b>120</b> Takib</div>
-            <div><b>5.5K</b> Takibçi</div>
-        </div>
-        <button class="btn" onclick="editProfile()">Profili Redaktə Et</button>
-        <button class="btn" onclick="showPage('uploadPage')">Video Yüklə / Canlı</button>
-    </div>
-    <div class="video-grid">
-        <div class="grid-item"></div><div class="grid-item"></div><div class="grid-item"></div>
-        <div class="grid-item"></div><div class="grid-item"></div><div class="grid-item"></div>
-    </div>
-</div>
-
-<div id="uploadPage" class="page" style="background: #222; padding: 20px;">
-    <h2>Yeni Video / Canlı</h2>
-    <input type="text" id="vidDesc" placeholder="Açıqlama və #hashtag" style="width:100%; padding:10px; margin-bottom:10px;">
-    <input type="text" id="location" placeholder="Məkan əlavə et" style="width:100%; padding:10px; margin-bottom:10px;">
-    <button class="btn" onclick="alert('Video Redaktə Edilir...')">Video Redaktə Et & Paylaş</button>
-    <hr>
-    <button class="btn" style="background:blue;" onclick="alert('P2P Canlı Yayım Başlayır...')">PROFESİONAL CANLI AÇ (PK)</button>
-    <button class="btn" onclick="showPage('profilePage')">Geri</button>
-</div>
-
-<script>
-    // Səhifə Keçidləri
-    function showPage(pageId) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
-        document.getElementById(pageId).classList.add('active-page');
+    /* Yükləmə Progress Bar */
+    #uploadProgress {
+        display: none; position: fixed; top: 0; left: 0; width: 0%; height: 5px; 
+        background: var(--tiktok-cyan); z-index: 5000; transition: width 0.3s;
     }
+</style>
 
-    // Yorum Paneli
-    function toggleComments() {
-        document.getElementById('commentPanel').classList.toggle('open');
-    }
+<div id="uploadProgress"></div>
 
-    function addComment() {
-        let input = document.getElementById('cInput');
-        if(input.value) {
-            let div = document.createElement('p');
-            div.innerHTML = `<b>@siz:</b> ${input.value}`;
-            document.getElementById('commentList').appendChild(div);
-            input.value = "";
+<script type="module">
+    // Firebase Modullarını İdxal Et
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+    import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-storage.js";
+
+    const db = getFirestore();
+    const storage = getStorage();
+
+    // 1. Şrift və Rəng Dəyişmə Funksiyaları
+    window.addTextToVideo = function() {
+        const text = prompt("Yazını daxil edin:");
+        if (text) {
+            const el = document.getElementById('draggableText');
+            el.innerText = text;
+            el.style.display = 'block';
+            document.getElementById('textStylePanel').style.display = 'block';
+            makeDraggable(el);
         }
-    }
+    };
 
-    // Like Məntiqi
-    function toggleLike(el) {
-        let count = document.getElementById('likeCount');
-        el.style.color = el.style.color === 'red' ? 'white' : 'red';
-        count.innerText = parseInt(count.innerText) + (el.style.color === 'red' ? 1 : -1);
-    }
+    window.changeFontFace = (font) => { document.getElementById('draggableText').style.fontFamily = font; };
+    window.changeTextColor = (color) => { document.getElementById('draggableText').style.color = color; };
 
-    // Profil Redaktə
-    function editProfile() {
-        let newName = prompt("Yeni Ad:");
-        let newBio = prompt("Yeni Bio:");
-        if(newName) document.getElementById('pName').innerText = newName;
-        if(newBio) document.getElementById('pBio').innerText = newBio;
-    }
+    // 2. REAL FİREBASE PAYLAŞIM FUNKSİYASI
+    window.finalPost = async function() {
+        const fileInput = document.getElementById('fileInput');
+        const desc = document.getElementById('postDescription').value;
+        const loc = document.getElementById('postLocation').value;
+        const dragText = document.getElementById('draggableText');
 
-    // Video Endirmə (Simulyasiya)
-    function downloadVideo() {
-        alert("Video telefonun yaddaşına endirilir...");
-    }
+        if (!fileInput.files[0]) return alert("Video seçilməyib!");
+
+        const file = fileInput.files[0];
+        const fileName = Date.now() + "_" + file.name;
+        const storageRef = ref(storage, 'videos/' + fileName);
+        
+        // Progress barı göstər
+        const progressBar = document.getElementById('uploadProgress');
+        progressBar.style.display = 'block';
+
+        // A. VİDEONU STORAGE-Ə YÜKLƏ
+        const uploadTask = uploadBytesResumable(storageRef, file);
+
+        uploadTask.on('state_changed', 
+            (snapshot) => {
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                progressBar.style.width = progress + "%";
+            }, 
+            (error) => { alert("Yükləmə xətası: " + error.message); }, 
+            async () => {
+                // B. VİDEO LİNKİNİ GÖTÜR
+                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+
+                // C. MƏLUMATLARI FİRESTORE-A YAZ
+                try {
+                    await addDoc(collection(db, "posts"), {
+                        videoUrl: downloadURL,
+                        description: desc,
+                        location: loc,
+                        overlayText: dragText.innerText,
+                        textColor: dragText.style.color,
+                        fontFamily: dragText.style.fontFamily,
+                        likes: 0,
+                        comments: [],
+                        timestamp: serverTimestamp(),
+                        owner: "ali" // Hazırkı istifadəçi
+                    });
+                    
+                    alert("Paylaşıldı! 🎉");
+                    location.reload(); // Səhifəni yenilə və feed-ə qayıt
+                } catch (e) {
+                    console.error("Xəta: ", e);
+                }
+            }
+        );
+    };
 </script>
-
-</body>
-</html>
