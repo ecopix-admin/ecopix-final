@@ -3,212 +3,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EcoPix Ultra | Pro Version</title>
+    <title>EcoPix PRO - Real TikTok Experience</title>
     
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-storage-compat.js"></script>
+    
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
     <style>
-        :root { --tt-red: #fe2c55; --tt-cyan: #25f4ee; --glass: rgba(0,0,0,0.8); }
-        body, html { margin: 0; padding: 0; background: #000; color: white; font-family: sans-serif; overflow: hidden; height: 100%; }
+        :root { --tt-red: #fe2c55; --tt-cyan: #25f4ee; --glass: rgba(0,0,0,0.85); }
+        body, html { margin: 0; padding: 0; background: #000; color: white; font-family: sans-serif; height: 100%; overflow: hidden; }
         
-        /* 1. Video Feed & Scroll */
-        .page { display: none; height: 100vh; width: 100%; position: absolute; }
+        /* Navigation Pages */
+        .page { display: none; height: 100vh; width: 100%; position: absolute; overflow: hidden; }
         .active { display: block; }
-        .feed { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; }
-        .v-card { height: 100vh; scroll-snap-align: start; position: relative; background: #000; display: flex; align-items: center; }
+
+        /* Full Screen Video Feed */
+        .feed-container { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; }
+        .v-card { height: 100vh; scroll-snap-align: start; position: relative; background: #000; }
         video { width: 100%; height: 100%; object-fit: cover; }
 
-        /* 2. Header (Kəşf et & Axtarış) */
-        .top-nav { position: absolute; top: 0; width: 100%; padding: 15px; display: flex; justify-content: space-between; align-items: center; z-index: 100; background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent); }
-        .search-bar { background: var(--glass); border-radius: 20px; padding: 5px 15px; flex: 1; margin: 0 15px; display: flex; align-items: center; }
-        .search-bar input { background: none; border: none; color: white; width: 100%; outline: none; }
+        /* UI Overlays */
+        .overlay-content { position: absolute; bottom: 70px; left: 15px; right: 80px; z-index: 5; text-shadow: 1px 1px 5px #000; }
+        .side-actions { position: absolute; right: 10px; bottom: 100px; display: flex; flex-direction: column; align-items: center; gap: 20px; z-index: 5; }
+        .action-item { text-align: center; cursor: pointer; }
+        .action-item span { font-size: 40px; }
+        .action-item b { display: block; font-size: 13px; }
 
-        /* 3. Sağ Action Panel (Bəyəni, Komment, Paylaş) */
-        .side-bar { position: absolute; right: 10px; bottom: 100px; display: flex; flex-direction: column; align-items: center; gap: 20px; z-index: 100; }
-        .action-btn { text-align: center; cursor: pointer; }
-        .action-btn span { font-size: 38px; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.8)); }
-        .action-btn b { display: block; font-size: 12px; margin-top: 2px; }
+        /* Spinning Record (Music) */
+        .music-record { width: 50px; height: 50px; border-radius: 50%; border: 8px solid #333; animation: spin 3s linear infinite; background: url('https://cdn-icons-png.flaticon.com/512/3844/3844724.png') center/cover; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        /* 4. Musiqi Diski */
-        .music-disc { width: 45px; height: 45px; border-radius: 50%; border: 10px solid #222; background: url('https://cdn-icons-png.flaticon.com/512/3844/3844724.png') center/cover; animation: rotate 3s linear infinite; }
-        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        /* Bottom Nav Bar */
+        .nav-bar { position: fixed; bottom: 0; width: 100%; height: 60px; background: #000; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #222; z-index: 100; }
+        .upload-plus { background: linear-gradient(to right, var(--tt-cyan), var(--tt-red)); padding: 3px 15px; border-radius: 10px; color: #000; font-weight: bold; font-size: 25px; }
 
-        /* 5. Alt Menyu */
-        .nav { position: fixed; bottom: 0; width: 100%; height: 60px; background: #000; display: flex; justify-content: space-around; align-items: center; border-top: 0.5px solid #333; z-index: 1000; }
-        .plus-btn { background: linear-gradient(to right, var(--tt-cyan), var(--tt-red)); padding: 4px 18px; border-radius: 10px; color: #000; font-size: 24px; font-weight: bold; }
+        /* Profile Grid */
+        .profile-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding-top: 20px; }
+        .p-video { aspect-ratio: 3/4; background: #111; position: relative; }
 
-        /* 6. Video Yükləmə & Redaktə Paneli */
-        #uploadModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2000; display: none; flex-direction: column; }
-        .edit-tools { position: absolute; right: 10px; top: 50px; display: flex; flex-direction: column; gap: 15px; }
+        /* PK Split Screen */
+        .pk-wrap { height: 80vh; display: flex; flex-direction: column; background: #222; }
+        .pk-box { flex: 1; position: relative; border-bottom: 2px solid #333; }
 
-        /* 7. Canlı Yayım Siyahısı */
-        .live-item { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--tt-red); margin-right: 10px; flex-shrink: 0; }
-        .live-list { display: flex; padding: 10px; overflow-x: auto; background: #000; border-bottom: 0.5px solid #222; }
+        /* Modals */
+        #uploadUI { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 500; display: none; flex-direction: column; }
     </style>
 </head>
 <body>
 
 <div id="homePage" class="page active">
-    <div class="top-nav">
-        <span class="material-icons-round">live_tv</span>
-        <div class="search-bar">
-            <span class="material-icons-round" style="font-size: 18px;">search</span>
-            <input type="text" placeholder="Axtarış...">
-        </div>
-        <span class="material-icons-round">notifications_none</span>
-    </div>
-    
-    <div class="feed" id="mainFeed">
+    <div class="feed-container" id="mainFeed">
         </div>
 </div>
 
-<div id="uploadModal">
+<div id="livePage" class="page">
+    <div class="pk-wrap">
+        <div class="pk-box"><video id="myVideo" autoplay playsinline muted></video></div>
+        <div class="pk-box" id="enemyArea" style="display:none;"><video id="enemyVideo" autoplay playsinline></video></div>
+    </div>
+    <div style="padding: 20px; text-align: center;">
+        <button onclick="startPK()" style="background:var(--tt-red); color:white; border:none; padding:15px 40px; border-radius:30px; font-weight:bold;">AVTO-PK BAŞLAT</button>
+    </div>
+</div>
+
+<div id="profilePage" class="page" style="overflow-y:auto;">
+    <div style="text-align:center; padding: 40px 20px;">
+        <div style="width:90px; height:90px; background:#333; border-radius:50%; margin:0 auto; border:2px solid #fff;"></div>
+        <h3 id="userName">@user_eco</h3>
+        <p>12K İzləyici • 45K Bəyəni</p>
+        <button style="background:#222; color:#fff; border:none; padding:10px 20px; border-radius:5px;">Profili Redaktə Et</button>
+    </div>
+    <div class="profile-grid" id="profileVideos"></div>
+</div>
+
+<div id="uploadUI">
     <div style="padding: 15px; display: flex; justify-content: space-between;">
-        <span class="material-icons-round" onclick="closeUpload()">close</span>
-        <b>Yaradın</b>
-        <span class="material-icons-round" style="color:var(--tt-cyan)" onclick="finalPublish()">Davam et</span>
+        <span class="material-icons-round" onclick="this.parentElement.parentElement.style.display='none'">close</span>
+        <b>Yeni Video</b>
+        <span class="material-icons-round" style="color:var(--tt-cyan)" id="btnPublish">Paylaş</span>
     </div>
-    
-    <div style="flex: 1; background: #111; position: relative;">
-        <video id="previewVideo" style="height: 100%; width: 100%;" autoplay loop muted></video>
-        <div id="videoTextOverlay" style="position: absolute; top: 50%; left: 30%; font-size: 30px; font-weight: bold; cursor: move;"></div>
-        
-        <div class="edit-tools">
-            <button onclick="addTextOnVideo()" style="background:none; border:none; color:white;"><span class="material-icons-round">text_fields</span><br>Yazı</button>
-            <button onclick="selectMusic()" style="background:none; border:none; color:white;"><span class="material-icons-round">music_note</span><br>Musiqi</button>
-            <button onclick="addLocation()" style="background:none; border:none; color:white;"><span class="material-icons-round">location_on</span><br>Yer</button>
-        </div>
+    <div id="previewBox" style="flex:1; background:#111;">
+        <video id="vidPreview" loop muted autoplay></video>
     </div>
-    
     <div style="padding: 15px;">
-        <input type="text" id="videoDesc" placeholder="Açıqlama və #heşteqlər yazın..." style="width:100%; background:none; border:none; border-bottom:1px solid #333; color:white; padding:10px;">
+        <input type="text" id="postDesc" placeholder="Açıqlama və #heşteqlər..." style="width:100%; background:none; border:none; border-bottom:1px solid #333; color:white; padding:10px; outline:none;">
     </div>
 </div>
 
-<div class="nav">
-    <span class="material-icons-round" onclick="switchPage('homePage')">home</span>
-    <span class="material-icons-round">explore</span>
-    <div class="plus-btn" onclick="openUpload()">+</div>
-    <span class="material-icons-round">chat</span>
-    <span class="material-icons-round">person</span>
+<div class="nav-bar">
+    <span class="material-icons-round" onclick="showP('homePage')">home</span>
+    <span class="material-icons-round" onclick="showP('livePage')">live_tv</span>
+    <div class="upload-plus" onclick="triggerPick()">+</div>
+    <span class="material-icons-round">textsms</span>
+    <span class="material-icons-round" onclick="showP('profilePage')">person</span>
 </div>
 
 <script>
-    // --- FIREBASE BAŞLATMA ---
+    // 1. FIREBASE CONFIG (Daxil etdiyin məlumatlar)
     const firebaseConfig = {
-      apiKey: "AIzaSyCtrVliO1bmdg7r0juWz-Yj2EaEGNsz2j8",
-      authDomain: "ecopix-118c6.firebaseapp.com",
-      databaseURL: "https://ecopix-118c6-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "ecopix-118c6",
-      storageBucket: "ecopix-118c6.firebasestorage.app",
-      messagingSenderId: "703699419893",
-      appId: "1:703699419893:web:278c140c02b29745787bbc"
+        apiKey: "AIzaSyCtrVliO1bmdg7r0juWz-Yj2EaEGNsz2j8",
+        authDomain: "ecopix-118c6.firebaseapp.com",
+        databaseURL: "https://ecopix-118c6-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "ecopix-118c6",
+        storageBucket: "ecopix-118c6.firebasestorage.app",
+        messagingSenderId: "703699419893",
+        appId: "1:703699419893:web:278c140c02b29745787bbc"
     };
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const storage = firebase.storage();
+    let peer, myStream, currentFile;
 
-    // --- TREND MUSİQİ SİYAHISI ---
-    const trendMusic = [
-        { name: "Trend Pop 2026", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
-        { name: "EcoPix Remix", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
-        { name: "Azeri Bass", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" }
-    ];
-
-    let selectedFile, selectedMusicURL = "";
-
-    // --- VİDEO YÜKLƏMƏ VƏ REDAKTƏ ---
-    function openUpload() {
-        let inp = document.createElement('input');
-        inp.type = 'file'; inp.accept = 'video/*,image/*';
-        inp.onchange = e => {
-            selectedFile = e.target.files[0];
-            document.getElementById('uploadModal').style.display = 'flex';
-            document.getElementById('previewVideo').src = URL.createObjectURL(selectedFile);
-        };
-        inp.click();
-    }
-
-    function addTextOnVideo() {
-        const txt = prompt("Video üzərinə yazı yazın:");
-        document.getElementById('videoTextOverlay').innerText = txt;
-    }
-
-    function selectMusic() {
-        let list = trendMusic.map((m, i) => `${i+1}. ${m.name}`).join("\n");
-        let choice = prompt("Musiqi seçin:\n" + list);
-        if(choice) {
-            selectedMusicURL = trendMusic[choice-1].url;
-            alert("Musiqi əlavə olundu: " + trendMusic[choice-1].name);
-        }
-    }
-
-    async function finalPublish() {
-        const desc = document.getElementById('videoDesc').value;
-        const storageRef = storage.ref('posts/' + Date.now() + "_" + selectedFile.name);
-        
-        alert("Video sıxılır və paylaşılır...");
-        await storageRef.put(selectedFile);
-        const videoURL = await storageRef.getDownloadURL();
-
-        db.ref('posts').push({
-            videoUrl: videoURL,
-            description: desc,
-            likes: 0,
-            comments: 0,
-            music: selectedMusicURL || "Original Audio",
-            user: "User_" + Math.floor(Math.random()*1000)
-        });
-        
-        location.reload();
-    }
-
-    // --- ALQORİTM: VİDEOLARI FEED-Ə DÜZ ---
-    function loadFeed() {
+    // 2. VIDEO FEED (ALQORİTM)
+    function fetchFeed() {
         db.ref('posts').on('value', snap => {
             const feed = document.getElementById('mainFeed');
             feed.innerHTML = "";
-            snap.forEach(post => {
-                const p = post.val();
+            snap.forEach(child => {
+                const data = child.val();
                 feed.innerHTML = `
-                    <div class="v-card">
-                        <video src="${p.videoUrl}" loop playsinline onclick="togglePlay(this)"></video>
-                        <div class="side-bar">
-                            <div class="action-btn" onclick="likePost('${post.key}')">
-                                <span class="material-icons-round" style="color:red">favorite</span><b>${p.likes}</b>
-                            </div>
-                            <div class="action-btn">
-                                <span class="material-icons-round">textsms</span><b>${p.comments}</b>
-                            </div>
-                            <div class="action-btn">
-                                <span class="material-icons-round">share</span><b>Paylaş</b>
-                            </div>
-                            <div class="music-disc"></div>
-                        </div>
-                        <div style="position:absolute; bottom:80px; left:15px; width:70%;">
-                            <b>@${p.user}</b>
-                            <p>${p.description}</p>
-                            <small>🎵 ${p.music === 'Original Audio' ? 'Original Audio' : 'Trend Mahnı'}</small>
-                        </div>
-                    </div>` + feed.innerHTML;
+                <div class="v-card">
+                    <video src="${data.url}" loop playsinline onclick="this.paused ? this.play() : this.pause()"></video>
+                    <div class="side-actions">
+                        <div class="action-item"><span class="material-icons-round" style="color:red">favorite</span><b>${data.likes || 0}</b></div>
+                        <div class="action-item"><span class="material-icons-round">comment</span><b>12</b></div>
+                        <div class="action-item"><span class="material-icons-round">share</span><b>Share</b></div>
+                        <div class="music-record"></div>
+                    </div>
+                    <div class="overlay-content">
+                        <b>@${data.user}</b>
+                        <p>${data.desc}</p>
+                        <marquee style="width:150px">🎵 Original Audio - EcoPix Trend</marquee>
+                    </div>
+                </div>` + feed.innerHTML;
             });
         });
     }
 
-    function togglePlay(v) { v.paused ? v.play() : v.pause(); }
+    // 3. VIDEO YÜKLƏMƏ (Sıxma məntiqi ilə)
+    function triggerPick() {
+        let inp = document.createElement('input');
+        inp.type = 'file'; inp.accept = 'video/*';
+        inp.onchange = e => {
+            currentFile = e.target.files[0];
+            document.getElementById('uploadUI').style.display = 'flex';
+            document.getElementById('vidPreview').src = URL.createObjectURL(currentFile);
+        };
+        inp.click();
+    }
 
-    function closeUpload() { document.getElementById('uploadModal').style.display = 'none'; }
-    
-    function switchPage(id) {
+    document.getElementById('btnPublish').onclick = async () => {
+        const desc = document.getElementById('postDesc').value;
+        const ref = storage.ref('vids/' + Date.now() + ".mp4");
+        alert("Video serverə göndərilir... Meqabayt azaldılır.");
+        
+        await ref.put(currentFile);
+        const url = await ref.getDownloadURL();
+        
+        db.ref('posts').push({
+            url: url,
+            desc: desc,
+            user: "EcoUser_" + Math.floor(Math.random()*999),
+            likes: 0
+        });
+        location.reload();
+    };
+
+    // 4. CANLI PK (AVTOMATİK)
+    async function startPK() {
+        peer = new Peer();
+        myStream = await navigator.mediaDevices.getUserMedia({video:true, audio:true});
+        document.getElementById('myVideo').srcObject = myStream;
+
+        peer.on('open', id => {
+            db.ref('live_queue/' + id).set(true);
+            db.ref('live_queue').once('value', snap => {
+                snap.forEach(user => {
+                    if(user.key !== id) {
+                        const call = peer.call(user.key, myStream);
+                        call.on('stream', s => {
+                            document.getElementById('enemyArea').style.display = 'block';
+                            document.getElementById('enemyVideo').srcObject = s;
+                        });
+                    }
+                });
+            });
+        });
+    }
+
+    function showP(id) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.getElementById(id).classList.add('active');
     }
 
-    loadFeed();
+    // Başlat
+    fetchFeed();
 </script>
 </body>
 </html>
