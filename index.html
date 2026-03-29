@@ -1,109 +1,188 @@
-<!DOCTYPE html>
-<html lang="az">
+<!DOCTYPE html><html lang="az">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EcoPix Ultra</title>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    
-    <style>
-        /* CSS BURADADIR */
-        :root { --primary: #fe2c55; --secondary: #25f4ee; --bg: #000; --text: #fff; }
-        body, html { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: sans-serif; height: 100%; overflow: hidden; }
-        .page { display: none; height: calc(100vh - 60px); overflow-y: auto; }
-        .page.active { display: block; }
-        .video-feed { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; }
-        .v-card { height: 100vh; scroll-snap-align: start; position: relative; background: #000; display: flex; align-items: center; }
-        video { width: 100%; height: 100%; object-fit: cover; }
-        .side-bar { position: absolute; right: 12px; bottom: 100px; display: flex; flex-direction: column; gap: 18px; align-items: center; }
-        .nav-bar { position: fixed; bottom: 0; width: 100%; height: 60px; background: #000; display: flex; justify-content: space-around; align-items: center; border-top: 0.5px solid #333; }
-        .plus-btn { background: linear-gradient(to right, var(--secondary), var(--primary)); padding: 4px 16px; border-radius: 8px; color: #000; font-weight: bold; font-size: 24px; }
-        .profile-header { text-align: center; padding: 20px; }
-        .avatar { width: 90px; height: 90px; border-radius: 50%; border: 2px solid var(--secondary); }
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin-top: 10px; }
-        .grid-item { aspect-ratio: 9/16; background: #111; }
-    </style>
-</head>
-<body>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EcoPix FULL PRO</title><link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"><script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script><style>
+body{margin:0;background:#000;color:#fff;font-family:sans-serif}
+.page{display:none;height:100vh;overflow:auto}
+.active{display:block}
+video{width:100%;height:100vh;object-fit:cover}
+.bottom-nav{
+position:fixed;bottom:0;width:100%;
+display:flex;justify-content:space-around;
+background:#000;padding:10px;border-top:1px solid #333
+}
+button{background:none;border:none;color:#fff;font-size:16px}
+input,textarea{width:100%;padding:10px;margin:5px 0}
+.live-badge{
+position:absolute;top:10px;left:10px;
+background:red;padding:5px;border-radius:5px;
+animation:blink 1s infinite
+}
+@keyframes blink{50%{opacity:0.3}}
+</style></head><body><!-- LOGIN --><div id="loginPage" class="page active">
+<h2>EcoPix</h2>
+<button onclick="login()">Google ilə daxil ol</button>
+</div><!-- APP --><div id="app" style="display:none"><!-- FEED --><section id="feed" class="page active">
+<div id="videos"></div>
+</section><!-- UPLOAD --><section id="upload" class="page">
+<input type="text" id="videoURL" placeholder="Video URL">
+<input type="text" id="desc" placeholder="Açıqlama">
+<input type="text" id="tags" placeholder="#tag">
+<button onclick="upload()">Paylaş</button>
+</section><!-- CHAT --><section id="chat" class="page">
+<div id="chatBox"></div>
+<input id="msg">
+<button onclick="sendMsg()">Göndər</button>
+</section><!-- PROFILE --><section id="profile" class="page">
+<h2 id="name"></h2>
+<img id="avatar" width="100">
+<textarea id="bio" placeholder="Bio"></textarea>
+<button onclick="saveProfile()">Yadda saxla</button>
+<button onclick="shareProfile()">Profili paylaş</button>
+</section><!-- LIVE --><section id="live" class="page">
+<div class="live-badge">LIVE</div>
+<video id="liveVideo" autoplay muted></video>
+<button onclick="startLive()">Canlı Başla</button>
+</section><!-- NAV --><nav class="bottom-nav">
+<button onclick="nav('feed')">🏠</button>
+<button onclick="nav('upload')">➕</button>
+<button onclick="nav('live')">🔴</button>
+<button onclick="nav('chat')">💬</button>
+<button onclick="nav('profile')">👤</button>
+</nav></div><script>
+// FIREBASE CONFIG (ÖZÜNKÜNÜ QOY!)
+const config={
+apiKey:"AIzaSy...",
+authDomain:"YOUR.firebaseapp.com",
+databaseURL:"https://YOUR.firebaseio.com"
+}
+firebase.initializeApp(config)
 
-    <div id="feedPage" class="page active">
-        <div id="videoContainer" class="video-feed"></div>
-    </div>
+const db=firebase.database()
+const auth=firebase.auth()
 
-    <div id="profilePage" class="page">
-        <div class="profile-header">
-            <img src="https://via.placeholder.com/100" class="avatar">
-            <h2>@eco_user</h2>
-            <p>Bioqrafiya bura yazılır...</p>
-            <button onclick="alert('Redaktə aktivdir')" style="background:#333; color:white; border:none; padding:8px 15px; border-radius:5px;">Redaktə et ✎</button>
-        </div>
-        <div class="grid" id="userGrid"></div>
-    </div>
+// LOGIN
+function login(){
+let p=new firebase.auth.GoogleAuthProvider()
+auth.signInWithPopup(p)
+}
 
-    <div class="nav-bar">
-        <span class="material-icons-round" onclick="showP('feedPage')">home</span>
-        <div class="plus-btn" onclick="uploadVideo()">+</div>
-        <span class="material-icons-round" onclick="showP('profilePage')">person</span>
-    </div>
+auth.onAuthStateChanged(user=>{
+if(user){
+loginPage.style.display="none"
+app.style.display="block"
 
-    <script>
-        // JAVASCRIPT BURADADIR
-        const firebaseConfig = { databaseURL: "https://ecopix-118c6-default-rtdb.europe-west1.firebasedatabase.app" };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+name.innerText=user.displayName
+avatar.src=user.photoURL
 
-        const CLOUD = "dyrfkit3x"; // Sənin Cloudinary adın
-        const PRESET = "ecopix_upload"; // Sənin Unsigned Preset-in
+loadFeed()
+loadChat()
+loadProfile(user.uid)
+}
+})
 
-        function showP(id) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            if(id !== 'feedPage') document.querySelectorAll('video').forEach(v => v.pause());
-        }
+// NAV
+function nav(p){
+document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'))
+document.getElementById(p).classList.add('active')
+}
 
-        // VİDEO YÜKLƏMƏ
-        async function uploadVideo() {
-            let input = document.createElement('input');
-            input.type = 'file'; input.accept = 'video/*';
-            input.onchange = async e => {
-                const file = e.target.files[0];
-                const formData = new FormData();
-                formData.append("file", file);
-                formData.append("upload_preset", PRESET);
+// FEED
+function loadFeed(){
+db.ref("posts").on("value",snap=>{
+videos.innerHTML=""
+snap.forEach(c=>{
+let d=c.val()
+videos.innerHTML+=`
+<div style="position:relative">
+<video src="${d.url}" autoplay loop onclick="pause(this)"></video>
+<div style="position:absolute;right:10px;bottom:80px">
+<button onclick="like('${c.key}',${d.likes})">❤️ ${d.likes||0}</button>
+<button onclick="share('${d.url}')">🔗</button>
+</div>
+</div>`
+})
+})
+}
 
-                alert("Yüklənilir...");
-                const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/video/upload`, { method: "POST", body: formData });
-                const data = await res.json();
-                
-                await db.ref('posts').push({
-                    url: data.secure_url,
-                    user: "EcoUser",
-                    likes: 0,
-                    time: Date.now()
-                });
-                alert("Paylaşıldı!");
-            };
-            input.click();
-        }
+function pause(v){
+v.paused?v.play():v.pause()
+}
 
-        // FEED YÜKLƏMƏ
-        db.ref('posts').on('value', snap => {
-            const container = document.getElementById('videoContainer');
-            container.innerHTML = "";
-            snap.forEach(c => {
-                const v = c.val();
-                container.innerHTML = `
-                    <div class="v-card">
-                        <video src="${v.url}" loop playsinline onclick="this.paused?this.play():this.pause()"></video>
-                        <div class="side-bar">
-                            <span class="material-icons-round">favorite</span><b>${v.likes}</b>
-                            <span class="material-icons-round">chat_bubble</span><b>0</b>
-                        </div>
-                    </div>` + container.innerHTML;
-            });
-        });
-    </script>
-</body>
+function like(id,l){
+db.ref("posts/"+id).update({likes:(l||0)+1})
+}
+
+// UPLOAD
+function upload(){
+let u=auth.currentUser
+db.ref("posts").push({
+url:videoURL.value,
+desc:desc.value,
+tags:tags.value,
+user:u.displayName,
+likes:0
+})
+alert("Paylaşıldı")
+}
+
+// CHAT
+function sendMsg(){
+let u=auth.currentUser
+db.ref("chat").push({
+user:u.displayName,
+msg:msg.value
+})
+msg.value=""
+}
+
+function loadChat(){
+db.ref("chat").on("value",snap=>{
+chatBox.innerHTML=""
+snap.forEach(c=>{
+let d=c.val()
+chatBox.innerHTML+=`<p><b>${d.user}:</b> ${d.msg}</p>`
+})
+})
+}
+
+// PROFILE
+function saveProfile(){
+let u=auth.currentUser
+db.ref("users/"+u.uid).set({
+name:name.innerText,
+bio:bio.value,
+avatar:avatar.src
+})
+alert("Yadda saxlandı")
+}
+
+function loadProfile(uid){
+db.ref("users/"+uid).once("value",snap=>{
+let d=snap.val()
+if(d){bio.value=d.bio||""}
+})
+}
+
+function shareProfile(){
+navigator.clipboard.writeText(location.href)
+alert("Profil linki kopyalandı")
+}
+
+// SHARE
+function share(url){
+navigator.share({
+title:"EcoPix",
+url:url
+})
+}
+
+// LIVE (sadə kamera)
+async function startLive(){
+let stream=await navigator.mediaDevices.getUserMedia({video:true,audio:true})
+liveVideo.srcObject=stream
+}
+
+</script></body>
 </html>
