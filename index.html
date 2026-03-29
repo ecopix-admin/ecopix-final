@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Çayxana Ultra - Canlı Səsli Otaqlar</title>
+    <title>Çayxana SuperApp - Explore & Live</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
@@ -11,173 +11,222 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
-        :root { --accent: #00f2ff; --bg: #09090b; --card: #18181b; --live: #ef4444; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); color: white; font-family: sans-serif; overflow: hidden; }
+        :root { --accent: #00f2ff; --bg: #050505; --card: #121212; --danger: #ff3b30; }
+        * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
+        body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
 
-        /* HEADER & SEARCH */
-        .header { background: #000; padding: 10px 15px; border-bottom: 1px solid #222; }
-        .search-box { display: flex; gap: 10px; margin-top: 10px; }
-        .search-box input { flex: 1; background: #111; border: 1px solid #333; padding: 8px 15px; border-radius: 20px; color: white; outline: none; font-size: 13px; }
+        /* TOP NAVIGATION & SEARCH */
+        .top-nav { background: #000; padding: 15px; border-bottom: 1px solid #222; }
+        .search-area { display: flex; gap: 8px; margin-bottom: 15px; }
+        .search-area input { flex: 1; background: #111; border: 1px solid #333; padding: 10px 15px; border-radius: 25px; color: white; }
         
-        /* VOICE STATUS BAR */
-        .voice-status { background: #111; padding: 5px 15px; font-size: 11px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #222; }
-        .live-dot { width: 8px; height: 8px; background: var(--live); border-radius: 50%; animation: blink 1s infinite; display: none; }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } }
+        /* CATEGORY TABS (FILM, IDMAN, ANIMASIYA) */
+        .categories { display: flex; gap: 12px; overflow-x: auto; padding: 5px 0; scrollbar-width: none; }
+        .categories::-webkit-scrollbar { display: none; }
+        .cat-item { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; }
+        .cat-icon { width: 50px; height: 50px; border-radius: 15px; background: var(--card); border: 1px solid #333; display: flex; align-items: center; justify-content: center; font-size: 20px; transition: 0.3s; }
+        .cat-item.active .cat-icon { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 10px var(--accent); }
+        .cat-item span { font-size: 10px; color: #888; text-transform: uppercase; }
 
-        /* STAGE */
-        .stage { width: 100%; height: 28vh; background: #000; position: relative; }
+        /* LIST OVERLAY (KINOLAR SIYAHISI) */
+        #list-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; display: none; flex-direction: column; padding: 20px; }
+        .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .channel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; overflow-y: auto; }
+        .ch-card { background: #1a1a1a; border-radius: 10px; overflow: hidden; border: 1px solid #333; }
+        .ch-card img { width: 100%; height: 100px; object-fit: cover; }
+        .ch-info { padding: 8px; font-size: 12px; font-weight: bold; }
+
+        /* STAGE (PLAYER & P2P CAMS) */
+        .stage { width: 100%; height: 30vh; background: #000; position: relative; }
+        #video-grid { position: absolute; bottom: 10px; right: 10px; display: flex; flex-direction: column; gap: 5px; z-index: 50; pointer-events: none; }
+        .p2p-cam { width: 70px; height: 70px; border-radius: 10px; border: 2px solid var(--accent); object-fit: cover; background: #000; pointer-events: auto; }
         iframe, video { width: 100%; height: 100%; border: none; display: none; }
-        .active { display: block !important; }
+        .active-view { display: block !important; }
 
-        /* CHAT */
-        .chat { height: calc(72vh - 200px); overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; }
-        .msg { background: var(--card); padding: 10px; border-radius: 12px; max-width: 85%; border: 1px solid #27272a; position: relative; }
-        .msg b { display: block; font-size: 10px; color: var(--accent); margin-bottom: 4px; }
-        .msg img, .msg video { max-width: 100%; border-radius: 8px; margin-top: 5px; }
+        /* CHAT & ACTIONS */
+        .chat-view { height: calc(70vh - 210px); overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .msg { background: var(--card); padding: 10px; border-radius: 12px; border: 1px solid #222; font-size: 14px; max-width: 80%; }
+        .msg b { color: var(--accent); font-size: 10px; display: block; }
 
         /* FOOTER */
-        .tools { position: fixed; bottom: 0; width: 100%; background: #000; padding: 12px; display: flex; align-items: center; gap: 8px; border-top: 1px solid #222; }
-        .tools input { flex: 1; background: #18181b; border: none; padding: 12px; border-radius: 20px; color: white; outline: none; }
-        .icon-btn { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; background: #222; border: none; color: white; }
-        .btn-voice.active { background: var(--live); color: white; box-shadow: 0 0 15px var(--live); }
+        .bottom-tools { position: fixed; bottom: 0; width: 100%; background: #000; padding: 12px; display: flex; align-items: center; gap: 10px; border-top: 1px solid #222; }
+        .action-btn { width: 45px; height: 45px; border-radius: 50%; background: #1a1a1a; border: none; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .active-voice { background: var(--danger) !important; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <b id="myNick" onclick="setNick()" style="color: var(--accent);">Ləqəb Təyin Et</b>
-            <span id="roomName" style="font-size: 12px; color: #888;">Lobby</span>
+    <div class="top-nav">
+        <div class="search-area">
+            <input type="text" id="mainSearch" placeholder="Otaq və ya Kino axtar...">
+            <button class="action-btn" onclick="toggleExplore()" title="Kəşf Et"><i class="fas fa-compass"></i></button>
+            <button class="action-btn" onclick="createNewRoom()" title="Otaq Yarat"><i class="fas fa-plus-circle"></i></button>
         </div>
-        <div class="search-box">
-            <input type="text" id="roomSearch" placeholder="Otaq adı yazın...">
-            <button class="icon-btn" onclick="joinRoom()"><i class="fas fa-search"></i></button>
+        <div class="categories">
+            <div class="cat-item" onclick="showList('film')"><div class="cat-icon"><i class="fas fa-film"></i></div><span>Kinolar</span></div>
+            <div class="cat-item" onclick="showList('idman')"><div class="cat-icon"><i class="fas fa-futbol"></i></div><span>İdman</span></div>
+            <div class="cat-item" onclick="showList('tv')"><div class="cat-icon"><i class="fas fa-tv"></i></div><span>TV</span></div>
+            <div class="cat-item" onclick="showList('anim')"><div class="cat-icon"><i class="fas fa-dragon"></i></div><span>Cizgi</span></div>
+            <div class="cat-item" onclick="showList('music')"><div class="cat-icon"><i class="fas fa-music"></i></div><span>Musiqi</span></div>
         </div>
     </div>
 
-    <div class="voice-status">
-        <div id="liveDot" class="live-dot"></div>
-        <span id="voiceMsg">Səsli söhbət: Deaktiv</span>
+    <div id="list-overlay">
+        <div class="list-header">
+            <h2 id="list-title">Kinolist</h2>
+            <button class="action-btn" onclick="closeList()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="channel-grid" id="channel-container"></div>
     </div>
 
     <div class="stage">
-        <iframe id="yt" allow="autoplay"></iframe>
-        <video id="tv" controls autoplay muted></video>
+        <div id="video-grid">
+            <video id="my-cam" class="p2p-cam" style="display:none" autoplay muted playsinline></video>
+        </div>
+        <iframe id="yt-frame" allow="autoplay; encrypted-media"></iframe>
+        <video id="hls-video" controls autoplay muted></video>
     </div>
 
-    <div class="chat" id="chat"></div>
+    <div class="chat-view" id="chat"></div>
 
-    <div id="remote-audios"></div> <div class="tools">
-        <label for="fileInp" class="icon-btn"><i class="fas fa-paperclip"></i></label>
-        <input type="file" id="fileInp" style="display:none" onchange="uploadFile(this)">
-        
-        <input type="text" id="msgInp" placeholder="Mesaj yazın...">
-        
-        <button class="icon-btn" id="voiceBtn" onclick="toggleVoiceRoom()"><i class="fas fa-microphone"></i></button>
-        <button class="icon-btn" style="background: var(--accent); color: #000;" onclick="sendText()"><i class="fas fa-paper-plane"></i></button>
+    <div class="bottom-tools">
+        <button class="action-btn" onclick="document.getElementById('file-in').click()"><i class="fas fa-paperclip"></i></button>
+        <input type="file" id="file-in" hidden onchange="uploadMedia(this)">
+        <input type="text" id="msg-in" style="flex:1; background:#111; border:none; padding:12px; border-radius:20px; color:white" placeholder="Söhbətə qoşul...">
+        <button class="action-btn" id="voice-trigger" onclick="toggleVoiceRoom()"><i class="fas fa-microphone"></i></button>
+        <button class="action-btn" onclick="toggleP2PVideo()"><i class="fas fa-video"></i></button>
+        <button class="action-btn" style="background:var(--accent); color:black" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
     </div>
 
     <script>
         const conf = { apiKey: "AIzaSyCtrVliO1bmdg7r0juWz-Yj2EaEGNsz2j8", databaseURL: "https://ecopix-118c6-default-rtdb.europe-west1.firebasedatabase.app", projectId: "ecopix-118c6" };
         firebase.initializeApp(conf);
         const db = firebase.database();
-
+        
         let nick = localStorage.getItem('v_nick') || "User_" + Math.floor(Math.random()*9999);
         let room = localStorage.getItem('v_room') || "Lobby";
-        document.getElementById('myNick').innerText = nick;
-        document.getElementById('roomName').innerText = "Otaq: " + room;
+        const peer = new Peer(nick.replace(/\s+/g,'_') + "_" + room);
+        let myStream = null;
 
-        // PeerJS Setup (Kollektiv Səsli Söhbət)
-        const peer = new Peer(nick.replace(/\s+/g, '_') + "_" + room);
-        let myStream;
+        // 1. KANAL VERİLƏNLƏR BAZASI (Yüzlərlə bura əlavə edilə bilər)
+        const dbChannels = {
+            film: [
+                {n: "Avatar 2", id: "55yc5C84S48", t: "yt"},
+                {n: "Dune", id: "8g18jFHCLXk", t: "yt"},
+                {n: "Inception", id: "YoHD9XEInc0", t: "yt"},
+                {n: "Kino Kanal 1", id: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8", t: "hls"}
+            ],
+            idman: [
+                {n: "CBC Sport", id: "j_SInXN2Fas", t: "yt"},
+                {n: "TRT Spor", id: "v64pP7_r9-0", t: "yt"}
+            ],
+            anim: [
+                {n: "Cizgi Film 1", id: "5_XDiB66P7s", t: "yt"},
+                {n: "Masha and Bear", id: "3D099N-jNHA", t: "yt"}
+            ]
+        };
 
-        async function toggleVoiceRoom() {
-            const btn = document.getElementById('voiceBtn');
-            const dot = document.getElementById('liveDot');
-            const msg = document.getElementById('voiceMsg');
+        // 2. OTAQ VƏ KƏŞF ET SİSTEMİ
+        function createNewRoom() {
+            let r = prompt("Otaq adı qoyun (Şifrəli olsun):");
+            if(r) { room = r; localStorage.setItem('v_room', r); location.reload(); }
+        }
 
-            if (!myStream) {
-                try {
-                    myStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    btn.classList.add('active');
-                    dot.style.display = 'block';
-                    msg.innerText = "Səsli söhbət: AKTİV (Hər kəs sizi eşidir)";
-                    
-                    // Otaqdakı aktiv istifadəçiləri tap və onlara "zəng" et
-                    db.ref(`rooms/${room}/active_speakers`).once('value', s => {
-                        s.forEach(child => {
-                            if(child.key !== nick) {
-                                const call = peer.call(child.key.replace(/\s+/g, '_') + "_" + room, myStream);
-                                call.on('stream', remoteStream => playRemoteAudio(remoteStream, child.key));
-                            }
-                        });
-                    });
-                    db.ref(`rooms/${room}/active_speakers/${nick}`).set(true);
-                } catch (e) { alert("Mikrofon icazəsi verilmədi!"); }
+        function toggleExplore() {
+            let status = confirm("Otağınız Kəşf Et bölməsində hamıya görünsün?");
+            if(status) db.ref('explore_rooms/'+room).set({users: 1, active: Date.now()});
+            else db.ref('explore_rooms/'+room).remove();
+        }
+
+        // 3. KANAL SİYAHISINI GÖSTƏRMƏK
+        function showList(cat) {
+            const overlay = document.getElementById('list-overlay');
+            const container = document.getElementById('channel-container');
+            document.getElementById('list-title').innerText = cat.toUpperCase() + " SİYAHISI";
+            container.innerHTML = "";
+            
+            (dbChannels[cat] || []).forEach(ch => {
+                let card = document.createElement('div');
+                card.className = "ch-card";
+                card.onclick = () => selectMedia(ch.t, ch.id);
+                card.innerHTML = `<img src="https://img.youtube.com/vi/${ch.id}/0.jpg"> <div class="ch-info">${ch.n}</div>`;
+                container.appendChild(card);
+            });
+            overlay.style.display = "flex";
+        }
+
+        function closeList() { document.getElementById('list-overlay').style.display = "none"; }
+
+        function selectMedia(type, id) {
+            db.ref(`rooms/${room}/media`).set({type, id});
+            closeList();
+        }
+
+        // 4. CANLI P2P QRUP VİDEO & SƏS
+        async function toggleP2PVideo() {
+            if(!myStream) {
+                myStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
+                document.getElementById('my-cam').srcObject = myStream;
+                document.getElementById('my-cam').style.display = 'block';
+                db.ref(`rooms/${room}/speakers/${nick}`).set(true);
             } else {
                 myStream.getTracks().forEach(t => t.stop());
                 myStream = null;
-                btn.classList.remove('active');
-                dot.style.display = 'none';
-                msg.innerText = "Səsli söhbət: Deaktiv";
-                db.ref(`rooms/${room}/active_speakers/${nick}`).remove();
+                document.getElementById('my-cam').style.display = 'none';
+                db.ref(`rooms/${room}/speakers/${nick}`).remove();
             }
         }
 
         peer.on('call', call => {
             if(myStream) {
                 call.answer(myStream);
-                call.on('stream', remoteStream => playRemoteAudio(remoteStream, call.peer));
+                call.on('stream', st => addRemoteCam(st, call.peer));
             }
         });
 
-        function playRemoteAudio(stream, id) {
-            if(document.getElementById('audio-'+id)) return;
-            const audio = document.createElement('audio');
-            audio.id = 'audio-' + id;
-            audio.srcObject = stream;
-            audio.autoplay = true;
-            document.getElementById('remote-audios').append(audio);
+        function addRemoteCam(st, id) {
+            if(document.getElementById(id)) return;
+            let v = document.createElement('video');
+            v.id = id; v.className = "p2p-cam"; v.srcObject = st; v.autoplay = true;
+            document.getElementById('video-grid').appendChild(v);
         }
 
-        // MESAJ SİSTEMİ & 1 SAATLIQ SİLMƏ
-        function sendText() {
-            let i = document.getElementById('msgInp');
-            if(i.value) {
-                db.ref(`rooms/${room}/msgs`).push({ user: nick, text: i.value, type: 'text', timestamp: Date.now() });
-                i.value = "";
+        // 5. SYNC MEDIA (Hər kəs otaqda eyni şeyə baxır)
+        db.ref(`rooms/${room}/media`).on('value', s => {
+            const d = s.val() || {type: 'yt', id: 'j_SInXN2Fas'};
+            const yt = document.getElementById('yt-frame'); const tv = document.getElementById('hls-video');
+            yt.classList.remove('active-view'); tv.classList.remove('active-view');
+            if(d.type === 'yt') {
+                yt.src = `https://www.youtube.com/embed/${d.id}?autoplay=1&mute=1`;
+                yt.classList.add('active-view');
+            } else {
+                tv.classList.add('active-view');
+                if(Hls.isSupported()) { let h = new Hls(); h.loadSource(d.id); h.attachMedia(tv); }
             }
+        });
+
+        // 6. ÇAT & 1 SAAT SİLMƏ
+        function sendMessage() {
+            let i = document.getElementById('msg-in');
+            if(i.value) { db.ref(`rooms/${room}/msgs`).push({user: nick, text: i.value, time: Date.now()}); i.value = ""; }
         }
 
         db.ref(`rooms/${room}/msgs`).on('child_added', snap => {
             const d = snap.val();
             const div = document.createElement('div');
             div.className = 'msg';
-            div.innerHTML = `<b>${d.user}</b>${d.type === 'text' ? d.text : (d.type === 'image' ? `<img src="${d.url}"><br><a href="${d.url}" download style="color:var(--accent); font-size:12px;">Endir</a>` : `<video src="${d.url}" controls></video>`)}`;
-            document.getElementById('chat').append(div);
-            document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
+            div.innerHTML = `<b>${d.user}</b> ${d.text}`;
+            document.getElementById('chat').appendChild(div);
+            document.getElementById('chat').scrollTop = 9999;
         });
 
-        // 1 Saatlıq Avtomatik Silmə (Real vaxtda)
         setInterval(() => {
             const limit = Date.now() - (3600 * 1000);
-            db.ref(`rooms/${room}/msgs`).orderByChild('timestamp').endAt(limit).once('value', s => {
+            db.ref(`rooms/${room}/msgs`).orderByChild('time').endAt(limit).once('value', s => {
                 s.forEach(c => c.ref.remove());
             });
         }, 60000);
-
-        function setNick() { let n = prompt("Ləqəb:", nick); if(n) { localStorage.setItem('v_nick', n); location.reload(); } }
-        function joinRoom() { let r = document.getElementById('roomSearch').value; if(r) { localStorage.setItem('v_room', r); location.reload(); } }
-        
-        // Fayl Yükləmə (Cloudinary)
-        async function uploadFile(input) {
-            const file = input.files[0]; if(!file) return;
-            const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', 'ml_default');
-            const res = await fetch(`https://api.cloudinary.com/v1_1/dyrfkit3x/auto/upload`, { method: 'POST', body: fd });
-            const data = await res.json();
-            db.ref(`rooms/${room}/msgs`).push({ user: nick, url: data.secure_url, type: file.type.startsWith('image') ? 'image' : 'video', timestamp: Date.now() });
-        }
     </script>
 </body>
 </html>
