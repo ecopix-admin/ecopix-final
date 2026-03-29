@@ -3,148 +3,223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EcoPix | Real-Time P2P & PK</title>
+    <title>EcoPix Pro | TikTok Clone</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        :root { --tt-red: #fe2c55; --tt-cyan: #25f4ee; }
-        body, html { margin: 0; padding: 0; background: #000; color: white; font-family: sans-serif; overflow: hidden; height: 100%; }
+        :root { --tt-red: #fe2c55; --tt-cyan: #25f4ee; --glass: rgba(255, 255, 255, 0.15); }
+        body, html { margin: 0; padding: 0; background: #000; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100%; }
         
-        .page { display: none; height: 100vh; width: 100%; position: absolute; top: 0; }
+        /* Səhifə strukturu */
+        .page { display: none; height: 100vh; width: 100%; position: absolute; top: 0; transition: 0.3s; }
         .active-page { display: block; }
 
         /* Video Feed */
         .feed { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; }
-        .v-card { height: 100vh; scroll-snap-align: start; position: relative; background: #000; display: flex; align-items: center; }
+        .v-card { height: 100vh; scroll-snap-align: start; position: relative; display: flex; align-items: center; background: #000; }
         video { width: 100%; height: 100%; object-fit: cover; }
 
-        /* Canlı Yayım (PK Mode) */
-        #liveContainer { position: relative; height: 100vh; background: #111; display: flex; flex-direction: column; }
-        .video-grid { display: flex; flex-direction: column; height: 80%; gap: 2px; background: #333; }
-        .live-video { flex: 1; background: #000; position: relative; overflow: hidden; }
-        video.remote { border-top: 3px solid var(--tt-cyan); }
-        .pk-bar { height: 10px; background: linear-gradient(to right, var(--tt-cyan) 50%, var(--tt-red) 50%); margin: 5px 0; }
-        
-        .live-info { position: absolute; top: 20px; left: 10px; z-index: 100; display: flex; flex-direction: column; gap: 10px; }
-        .id-tag { background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 20px; font-size: 12px; }
+        /* TikTok İnterfeys Elementləri */
+        .ui-overlay { position: absolute; bottom: 70px; left: 10px; z-index: 10; width: 70%; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); }
+        .side-icons { position: absolute; right: 10px; bottom: 100px; display: flex; flex-direction: column; align-items: center; gap: 20px; z-index: 11; }
+        .icon-btn { text-align: center; cursor: pointer; }
+        .icon-btn span { font-size: 38px; filter: drop-shadow(0 0 5px rgba(0,0,0,0.5)); }
+        .icon-btn p { font-size: 12px; font-weight: bold; margin: 2px 0; }
+        .prof-pic { width: 45px; height: 45px; border-radius: 50%; border: 2px solid white; margin-bottom: 5px; }
 
-        /* Menyu */
+        /* CANLI YAYIM & PK */
+        #livePage { background: #000; }
+        .live-header { position: absolute; top: 15px; left: 10px; display: flex; align-items: center; gap: 10px; z-index: 100; }
+        .live-badge { background: var(--tt-red); padding: 4px 10px; border-radius: 5px; font-weight: bold; font-size: 12px; }
+        
+        .video-container { display: flex; flex-direction: column; height: 100%; width: 100%; transition: 0.5s; }
+        .video-box { flex: 1; position: relative; overflow: hidden; background: #111; display: flex; align-items: center; justify-content: center; }
+        #remoteVideo.hidden { display: none; } /* Dost qoşulana qədər gizli */
+
+        /* Uçan Ürəklər və Şəffaf Rəylər */
+        #heartCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 90; }
+        .live-chats { position: absolute; bottom: 80px; left: 10px; width: 250px; height: 150px; overflow-y: hidden; z-index: 95; display: flex; flex-direction: column-reverse; }
+        .chat-msg { background: rgba(0,0,0,0.4); padding: 5px 12px; border-radius: 15px; margin-bottom: 5px; font-size: 13px; animation: slideIn 0.3s ease; }
+        
+        /* Profil Səhifəsi */
+        .profile-header { text-align: center; padding: 40px 20px 20px; border-bottom: 1px solid #222; }
+        .stat-grid { display: flex; justify-content: center; gap: 30px; margin: 20px 0; }
+        .stat-item { text-align: center; }
+        .stat-item b { display: block; font-size: 18px; }
+
+        /* Naviqasiya */
         .nav { position: fixed; bottom: 0; width: 100%; height: 55px; background: #000; border-top: 0.5px solid #333; display: flex; justify-content: space-around; align-items: center; z-index: 1000; }
         .plus-btn { background: linear-gradient(to right, var(--tt-cyan), var(--tt-red)); padding: 2px 14px; border-radius: 8px; color: black; font-weight: bold; font-size: 22px; cursor: pointer; }
 
-        .btn-action { background: var(--tt-red); border: none; color: white; padding: 10px 20px; border-radius: 25px; font-weight: bold; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
     </style>
 </head>
 <body>
 
 <div id="homePage" class="page active-page">
     <div class="feed" id="videoFeed">
+        <div class="v-card">
+            <video src="https://v16m-default.akamaized.net/609090/video.mp4" loop playsinline muted autoplay></video>
+            <div class="side-icons">
+                <img src="https://i.pravatar.cc/100?u=ali" class="prof-pic" onclick="showPage('profilePage')">
+                <div class="icon-btn" onclick="likeAnim(this)"><span class="material-icons-round">favorite</span><p>45.2K</p></div>
+                <div class="icon-btn"><span class="material-icons-round">chat_bubble</span><p>890</p></div>
+                <div class="icon-btn" onclick="navigator.share({url:window.location.href})"><span class="material-icons-round">reply</span><p>Paylaş</p></div>
+            </div>
+            <div class="ui-overlay">
+                <b>@ali_developer</b>
+                <p>EcoPix Pro versiyası artıq canlıdır! 🚀 #TikTokClone #EcoPix</p>
+                <div style="display:flex; align-items:center; gap:5px;"><span class="material-icons-round" style="font-size:14px;">music_note</span> <span>Orijinal səs - EcoPix Music</span></div>
+            </div>
         </div>
+    </div>
 </div>
 
 <div id="livePage" class="page">
-    <div id="liveContainer">
-        <div class="live-info">
-            <div class="id-tag" style="background:var(--tt-red)">CANLI</div>
-            <div class="id-tag" id="myIdDisplay">ID: Yüklənir...</div>
-        </div>
-        
-        <div class="video-grid">
-            <div class="live-video"><video id="localVideo" autoplay playsinline muted></video></div>
-            <div class="live-video"><video id="remoteVideo" class="remote" autoplay playsinline></video></div>
-        </div>
-        
-        <div class="pk-bar"></div>
+    <div class="live-header">
+        <div class="live-badge">CANLI</div>
+        <div id="peerIdDisplay" style="font-size:12px; background:rgba(0,0,0,0.5); padding:4px 8px; border-radius:10px;">ID: Yaranır...</div>
+    </div>
 
-        <div style="padding: 20px; display: flex; gap: 10px; justify-content: center;">
-            <input type="text" id="peerIdInput" placeholder="Dostunun ID-sini yaz" style="padding:10px; border-radius:20px; border:none; width:60%;">
-            <button class="btn-action" style="background:var(--tt-cyan); color:black;" onclick="connectToPeer()">PK BAŞLAT</button>
-            <button class="btn-action" onclick="endLive()">BİTİR</button>
+    <div class="video-container" id="videoGrid">
+        <div class="video-box"><video id="localVideo" autoplay playsinline muted></video></div>
+        <div class="video-box hidden" id="remoteBox"><video id="remoteVideo" autoplay playsinline></video></div>
+    </div>
+
+    <canvas id="heartCanvas"></canvas>
+    <div class="live-chats" id="chatBox"></div>
+
+    <div style="position:absolute; bottom:70px; width:100%; padding:10px; display:flex; gap:10px; align-items:center; z-index:101;">
+        <input type="text" id="targetId" placeholder="Dostunun ID-sini yaz" style="flex:1; padding:12px; border-radius:25px; border:none; background:rgba(255,255,255,0.2); color:white; outline:none;">
+        <button onclick="startPK()" style="background:var(--tt-cyan); border:none; padding:12px 20px; border-radius:25px; font-weight:bold;">PK At</button>
+        <div onclick="spawnHeart()" style="background:var(--tt-red); width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+            <span class="material-icons-round">favorite</span>
         </div>
+    </div>
+</div>
+
+<div id="profilePage" class="page" style="background:#000; overflow-y:auto;">
+    <div style="padding:15px; display:flex; justify-content:space-between;">
+        <span class="material-icons-round" onclick="showPage('homePage')">arrow_back</span>
+        <b>Profil</b>
+        <span class="material-icons-round" onclick="alert('Link kopyalandı!')">more_horiz</span>
+    </div>
+    <div class="profile-header">
+        <img src="https://i.pravatar.cc/100?u=ali" style="width:100px; height:100px; border-radius:50%; border:3px solid #222;">
+        <h3>@ali_developer</h3>
+        <div class="stat-grid">
+            <div class="stat-item"><b>125</b><span>Takib</span></div>
+            <div class="stat-item"><b>10.2K</b><span>Takibçi</span></div>
+            <div class="stat-item"><b>450K</b><span>Bəyəni</span></div>
+        </div>
+        <button style="background:var(--tt-red); color:white; border:none; padding:10px 40px; border-radius:5px; font-weight:bold;">Takib Et</button>
+    </div>
+    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:2px; padding:2px;">
+        <div style="aspect-ratio:3/4; background:#222;"></div><div style="aspect-ratio:3/4; background:#222;"></div><div style="aspect-ratio:3/4; background:#222;"></div>
     </div>
 </div>
 
 <div class="nav">
     <span class="material-icons-round" onclick="showPage('homePage')">home</span>
     <span class="material-icons-round" onclick="initLive()">live_tv</span>
-    <div class="plus-btn" onclick="alert('Video Redaktə Paneli Aktivdir!')">+</div>
+    <div class="plus-btn">+</div>
     <span class="material-icons-round">message</span>
-    <span class="material-icons-round">person</span>
+    <span class="material-icons-round" onclick="showPage('profilePage')">person</span>
 </div>
 
 <script>
-    // 1. HAZIR VİDEOLAR (AUTO-SCROLL)
-    const videos = [
-        "https://v16m-default.akamaized.net/609090/video.mp4",
-        "https://www.w3schools.com/html/mov_bbb.mp4",
-        "https://www.w3schools.com/html/movie.mp4",
-        "https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-light-12859-large.mp4"
-    ];
+    let peer, localStream;
+    const canvas = document.getElementById('heartCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-    const feed = document.getElementById('videoFeed');
-    videos.forEach((src, i) => {
-        feed.innerHTML += `
-            <div class="v-card">
-                <video src="${src}" loop playsinline onclick="this.play()"></video>
-                <div style="position:absolute; bottom:80px; left:20px;">
-                    <b>@user_${i+1}</b><br>
-                    <span>EcoPix subtitr sınağı... [Subtitles Active]</span>
-                </div>
-            </div>`;
-    });
-
-    // 2. REAL P2P CANLI YAYIM (PeerJS)
-    let peer;
-    let localStream;
-
-    function initLive() {
-        showPage('livePage');
-        peer = new Peer(); // Hər kəsə özəl ID verir
-
-        peer.on('open', (id) => {
-            document.getElementById('myIdDisplay').innerText = "Mənim ID: " + id;
-            console.log('ID alındı: ' + id);
-        });
-
-        // Kameranı aç
-        navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
-            localStream = stream;
-            document.getElementById('localVideo').srcObject = stream;
-        });
-
-        // Zəng gələndə (Dostun sənə PK atanda)
-        peer.on('call', (call) => {
-            call.answer(localStream);
-            call.on('stream', (remoteStream) => {
-                document.getElementById('remoteVideo').srcObject = remoteStream;
-            });
-        });
-    }
-
-    // DOSTA ZƏNG ET (PK BAŞLAT)
-    function connectToPeer() {
-        const remoteId = document.getElementById('peerIdInput').value;
-        if (!remoteId) return alert("Dostunun ID-sini yaz!");
-
-        const call = peer.call(remoteId, localStream);
-        call.on('stream', (remoteStream) => {
-            document.getElementById('remoteVideo').srcObject = remoteStream;
-        });
-    }
-
-    function endLive() {
-        if(localStream) localStream.getTracks().forEach(t => t.stop());
-        showPage('homePage');
-        location.reload();
-    }
-
+    // 1. SƏHİFƏ İDARƏSİ
     function showPage(id) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
         document.getElementById(id).classList.add('active-page');
     }
 
-    // Auto-Play Scroll
-    feed.onscroll = () => {
+    // 2. REAL CANLI YAYIM SİSTEMİ
+    async function initLive() {
+        showPage('livePage');
+        peer = new Peer();
+        
+        peer.on('open', id => {
+            document.getElementById('peerIdDisplay').innerText = "Mənim ID: " + id;
+        });
+
+        // Kameranı və Səsi Aktiv Et
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        document.getElementById('localVideo').srcObject = localStream;
+
+        peer.on('call', call => {
+            call.answer(localStream);
+            call.on('stream', remoteStream => {
+                const rVideo = document.getElementById('remoteVideo');
+                rVideo.srcObject = remoteStream;
+                document.getElementById('remoteBox').classList.remove('hidden'); // PK rejimini aç
+            });
+        });
+
+        // Təsadüfi Rəylər (Simulyasiya)
+        setInterval(() => {
+            const msgs = ["Salam!", "Əla yayım ❤️", "PK-da kim udacaq?", "Support!", "Möhtəşəm 🔥"];
+            const chat = document.getElementById('chatBox');
+            const div = document.createElement('div');
+            div.className = 'chat-msg';
+            div.innerHTML = `<b>İstifadəçi:</b> ${msgs[Math.floor(Math.random()*msgs.length)]}`;
+            chat.prepend(div);
+        }, 3000);
+    }
+
+    function startPK() {
+        const id = document.getElementById('targetId').value;
+        if(!id) return alert("ID daxil edin!");
+        const call = peer.call(id, localStream);
+        call.on('stream', remoteStream => {
+            document.getElementById('remoteVideo').srcObject = remoteStream;
+            document.getElementById('remoteBox').classList.remove('hidden');
+        });
+    }
+
+    // 3. UÇAN ÜRƏKLƏR EFFEKTİ
+    let hearts = [];
+    function spawnHeart() {
+        hearts.push({
+            x: window.innerWidth - 50,
+            y: window.innerHeight - 100,
+            vX: (Math.random() - 0.5) * 4,
+            vY: -Math.random() * 5 - 2,
+            size: Math.random() * 20 + 10,
+            opacity: 1
+        });
+    }
+
+    function drawHearts() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        hearts.forEach((h, i) => {
+            h.x += h.vX; h.y += h.vY; h.opacity -= 0.01;
+            ctx.globalAlpha = h.opacity;
+            ctx.fillStyle = '#fe2c55';
+            ctx.font = h.size + 'px Material Icons Round';
+            ctx.fillText('favorite', h.x, h.y);
+            if(h.opacity <= 0) hearts.splice(i, 1);
+        });
+        requestAnimationFrame(drawHearts);
+    }
+    drawHearts();
+
+    // 4. LİKE ANİMASİYASI
+    function likeAnim(el) {
+        const span = el.querySelector('span');
+        span.style.color = span.style.color === 'red' ? 'white' : 'red';
+        span.style.transform = 'scale(1.3)';
+        setTimeout(() => span.style.transform = 'scale(1)', 200);
+    }
+
+    // Video Feed Scroll (Auto Play)
+    document.getElementById('videoFeed').onscroll = () => {
         const vids = document.querySelectorAll('video');
         vids.forEach(v => {
             const r = v.getBoundingClientRect();
