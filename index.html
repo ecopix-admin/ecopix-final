@@ -1,188 +1,89 @@
-<!DOCTYPE html><html lang="az">
+<!DOCTYPE html>
+<html lang="az">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EcoPix FULL PRO</title><link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"><script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script><style>
-body{margin:0;background:#000;color:#fff;font-family:sans-serif}
-.page{display:none;height:100vh;overflow:auto}
-.active{display:block}
-video{width:100%;height:100vh;object-fit:cover}
-.bottom-nav{
-position:fixed;bottom:0;width:100%;
-display:flex;justify-content:space-around;
-background:#000;padding:10px;border-top:1px solid #333
-}
-button{background:none;border:none;color:#fff;font-size:16px}
-input,textarea{width:100%;padding:10px;margin:5px 0}
-.live-badge{
-position:absolute;top:10px;left:10px;
-background:red;padding:5px;border-radius:5px;
-animation:blink 1s infinite
-}
-@keyframes blink{50%{opacity:0.3}}
-</style></head><body><!-- LOGIN --><div id="loginPage" class="page active">
-<h2>EcoPix</h2>
-<button onclick="login()">Google ilə daxil ol</button>
-</div><!-- APP --><div id="app" style="display:none"><!-- FEED --><section id="feed" class="page active">
-<div id="videos"></div>
-</section><!-- UPLOAD --><section id="upload" class="page">
-<input type="text" id="videoURL" placeholder="Video URL">
-<input type="text" id="desc" placeholder="Açıqlama">
-<input type="text" id="tags" placeholder="#tag">
-<button onclick="upload()">Paylaş</button>
-</section><!-- CHAT --><section id="chat" class="page">
-<div id="chatBox"></div>
-<input id="msg">
-<button onclick="sendMsg()">Göndər</button>
-</section><!-- PROFILE --><section id="profile" class="page">
-<h2 id="name"></h2>
-<img id="avatar" width="100">
-<textarea id="bio" placeholder="Bio"></textarea>
-<button onclick="saveProfile()">Yadda saxla</button>
-<button onclick="shareProfile()">Profili paylaş</button>
-</section><!-- LIVE --><section id="live" class="page">
-<div class="live-badge">LIVE</div>
-<video id="liveVideo" autoplay muted></video>
-<button onclick="startLive()">Canlı Başla</button>
-</section><!-- NAV --><nav class="bottom-nav">
-<button onclick="nav('feed')">🏠</button>
-<button onclick="nav('upload')">➕</button>
-<button onclick="nav('live')">🔴</button>
-<button onclick="nav('chat')">💬</button>
-<button onclick="nav('profile')">👤</button>
-</nav></div><script>
-// FIREBASE CONFIG (ÖZÜNKÜNÜ QOY!)
-const config={
-apiKey:"AIzaSy...",
-authDomain:"YOUR.firebaseapp.com",
-databaseURL:"https://YOUR.firebaseio.com"
-}
-firebase.initializeApp(config)
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SuperApp Video & Call Prototype</title>
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; }
+        
+        /* Video Arxa Fonu */
+        .video-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        iframe { width: 100%; height: 100%; border: none; }
 
-const db=firebase.database()
-const auth=firebase.auth()
+        /* Üst Panel (User ID) */
+        .header { position: absolute; top: 20px; left: 20px; color: white; text-shadow: 1px 1px 5px rgba(0,0,0,0.8); z-index: 10; }
+        .user-id { font-weight: bold; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 20px; }
 
-// LOGIN
-function login(){
-let p=new firebase.auth.GoogleAuthProvider()
-auth.signInWithPopup(p)
-}
+        /* Sağ Düymələr */
+        .side-bar { position: absolute; right: 15px; bottom: 100px; display: flex; flex-direction: column; gap: 20px; z-index: 10; }
+        .action-btn { background: rgba(255,255,255,0.2); border: none; border-radius: 50%; width: 55px; height: 55px; color: white; cursor: pointer; backdrop-filter: blur(5px); }
+        .call-btn { background: #2ecc71; animation: pulse 2s infinite; }
 
-auth.onAuthStateChanged(user=>{
-if(user){
-loginPage.style.display="none"
-app.style.display="block"
+        /* Görüntülü Zəng Pəncərəsi (Kiçik Dairə) */
+        #pip-window { 
+            position: absolute; top: 20px; right: 20px; width: 100px; height: 100px; 
+            border-radius: 50%; border: 2px solid #2ecc71; display: none; overflow: hidden; z-index: 20;
+            background: url('https://via.placeholder.com/100/2ecc71/ffffff?text=Dostun') center/cover;
+        }
 
-name.innerText=user.displayName
-avatar.src=user.photoURL
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(46, 204, 113, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
+        }
 
-loadFeed()
-loadChat()
-loadProfile(user.uid)
-}
-})
+        /* Alt Rəy Bölməsi */
+        .chat-overlay { position: absolute; bottom: 20px; left: 20px; width: 70%; max-height: 150px; overflow: hidden; color: white; z-index: 10; pointer-events: none; }
+        .msg { background: rgba(0,0,0,0.3); padding: 5px 10px; border-radius: 10px; margin-bottom: 5px; font-size: 14px; animation: slideIn 0.3s ease; }
 
-// NAV
-function nav(p){
-document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'))
-document.getElementById(p).classList.add('active')
-}
+        @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    </style>
+</head>
+<body>
 
-// FEED
-function loadFeed(){
-db.ref("posts").on("value",snap=>{
-videos.innerHTML=""
-snap.forEach(c=>{
-let d=c.val()
-videos.innerHTML+=`
-<div style="position:relative">
-<video src="${d.url}" autoplay loop onclick="pause(this)"></video>
-<div style="position:absolute;right:10px;bottom:80px">
-<button onclick="like('${c.key}',${d.likes})">❤️ ${d.likes||0}</button>
-<button onclick="share('${d.url}')">🔗</button>
-</div>
-</div>`
-})
-})
-}
+    <div class="header">
+        <span class="user-id">#ID_789456</span>
+    </div>
 
-function pause(v){
-v.paused?v.play():v.pause()
-}
+    <div class="video-container">
+        <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&controls=0&loop=1&playlist=dQw4w9WgXcQ" allow="autoplay"></iframe>
+    </div>
 
-function like(id,l){
-db.ref("posts/"+id).update({likes:(l||0)+1})
-}
+    <div id="pip-window"></div>
 
-// UPLOAD
-function upload(){
-let u=auth.currentUser
-db.ref("posts").push({
-url:videoURL.value,
-desc:desc.value,
-tags:tags.value,
-user:u.displayName,
-likes:0
-})
-alert("Paylaşıldı")
-}
+    <div class="side-bar">
+        <button class="action-btn">❤️</button>
+        <button class="action-btn">💬</button>
+        <button class="action-btn call-btn" onclick="startCall()">📞</button>
+    </div>
 
-// CHAT
-function sendMsg(){
-let u=auth.currentUser
-db.ref("chat").push({
-user:u.displayName,
-msg:msg.value
-})
-msg.value=""
-}
+    <div class="chat-overlay" id="chat">
+        <div class="msg"><b>Eli:</b> Salam, bu video əladır!</div>
+        <div class="msg"><b>Gunel:</b> Zəngə qoşulun gəlin baxaq.</div>
+    </div>
 
-function loadChat(){
-db.ref("chat").on("value",snap=>{
-chatBox.innerHTML=""
-snap.forEach(c=>{
-let d=c.val()
-chatBox.innerHTML+=`<p><b>${d.user}:</b> ${d.msg}</p>`
-})
-})
-}
+    <script>
+        function startCall() {
+            const pip = document.getElementById('pip-window');
+            if(pip.style.display === 'block') {
+                pip.style.display = 'none';
+                alert('Zəng başa çatdı.');
+            } else {
+                pip.style.display = 'block';
+                alert('P2P Zəng başladılır... Dostun görüntüsü yuxarıda açıldı.');
+            }
+        }
 
-// PROFILE
-function saveProfile(){
-let u=auth.currentUser
-db.ref("users/"+u.uid).set({
-name:name.innerText,
-bio:bio.value,
-avatar:avatar.src
-})
-alert("Yadda saxlandı")
-}
-
-function loadProfile(uid){
-db.ref("users/"+uid).once("value",snap=>{
-let d=snap.val()
-if(d){bio.value=d.bio||""}
-})
-}
-
-function shareProfile(){
-navigator.clipboard.writeText(location.href)
-alert("Profil linki kopyalandı")
-}
-
-// SHARE
-function share(url){
-navigator.share({
-title:"EcoPix",
-url:url
-})
-}
-
-// LIVE (sadə kamera)
-async function startLive(){
-let stream=await navigator.mediaDevices.getUserMedia({video:true,audio:true})
-liveVideo.srcObject=stream
-}
-
-</script></body>
+        // Simulyasiya: Hər 3 saniyədən bir saxta rəy gəlsin
+        setInterval(() => {
+            const chat = document.getElementById('chat');
+            const newMsg = document.createElement('div');
+            newMsg.className = 'msg';
+            newMsg.innerHTML = `<b>User_${Math.floor(Math.random()*100)}:</b> Möhtəşəm! 🔥`;
+            chat.appendChild(newMsg);
+            if(chat.childNodes.length > 5) chat.removeChild(chat.firstChild);
+        }, 3000);
+    </script>
+</body>
 </html>
