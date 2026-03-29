@@ -3,177 +3,200 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EcoPix | Professional Clone</title>
+    <title>EcoPix | Final Pro</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <style>
         :root { --tt-red: #fe2c55; --tt-cyan: #25f4ee; --tt-black: #010101; }
-        body, html { margin: 0; padding: 0; background: var(--tt-black); color: white; font-family: 'proxima-nova', sans-serif; overflow: hidden; height: 100%; }
-
-        /* Səhifə Naviqasiyası */
-        .page { display: none; height: 100vh; width: 100%; position: absolute; }
+        body, html { margin: 0; padding: 0; background: var(--tt-black); color: white; font-family: sans-serif; overflow: hidden; height: 100%; }
+        
+        /* Səhifə İdarəetmə */
+        .page { display: none; height: 100vh; width: 100%; position: absolute; background: #000; }
         .active-page { display: block; }
 
-        /* FEED (VİDEO AKIŞI) */
+        /* Video Feed */
         .feed { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; }
-        .feed::-webkit-scrollbar { display: none; }
-        .v-card { height: 100vh; width: 100%; scroll-snap-align: start; position: relative; background: #000; display: flex; align-items: center; }
+        .v-card { height: 100vh; scroll-snap-align: start; position: relative; display: flex; align-items: center; }
         video { width: 100%; height: 100%; object-fit: cover; }
 
-        /* SAĞ PANEL (İkonlar) */
-        .side-bar { position: absolute; right: 12px; bottom: 100px; display: flex; flex-direction: column; align-items: center; gap: 18px; z-index: 10; }
-        .avatar-container { position: relative; width: 48px; height: 48px; border-radius: 50%; border: 2px solid #fff; margin-bottom: 10px; }
-        .avatar-container img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
-        .plus-small { position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); background: var(--tt-red); border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
-        
+        /* Yan Butonlar */
+        .side-bar { position: absolute; right: 12px; bottom: 120px; display: flex; flex-direction: column; align-items: center; gap: 20px; z-index: 10; }
         .action-item { text-align: center; cursor: pointer; }
-        .action-item span { font-size: 35px; text-shadow: 0 0 10px rgba(0,0,0,0.5); transition: 0.2s; }
-        .action-item p { font-size: 12px; margin-top: 2px; font-weight: 600; }
-        .liked { color: var(--tt-red); }
+        .action-item span { font-size: 35px; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        .action-item p { font-size: 12px; margin: 2px 0; }
 
-        /* ALT NAVİQASİYA */
+        /* Alt Naviqasiya */
         .nav { position: fixed; bottom: 0; width: 100%; height: 55px; background: #000; border-top: 0.5px solid #333; display: flex; justify-content: space-around; align-items: center; z-index: 100; }
-        .plus-btn { background: linear-gradient(to right, var(--tt-cyan) 10%, var(--tt-red) 90%); padding: 2px 14px; border-radius: 8px; color: black; font-weight: bold; font-size: 22px; cursor: pointer; }
+        .plus-btn { background: linear-gradient(to right, var(--tt-cyan), var(--tt-red)); padding: 2px 14px; border-radius: 8px; color: black; font-weight: bold; font-size: 22px; }
 
-        /* MODAL (Yorum & Paylaş) */
-        .modal { position: fixed; bottom: -100%; left: 0; width: 100%; height: 70%; background: #fff; color: #000; border-radius: 15px 15px 0 0; transition: 0.4s; z-index: 2000; padding: 20px; box-sizing: border-box; }
+        /* Şərh Modalı */
+        .modal { position: fixed; bottom: -100%; left: 0; width: 100%; height: 60%; background: #fff; color: #000; border-radius: 15px 15px 0 0; transition: 0.4s; z-index: 2000; display: flex; flex-direction: column; }
         .modal.open { bottom: 0; }
+        .modal-header { padding: 15px; display: flex; justify-content: space-between; border-bottom: 1px solid #eee; }
+        #commentList { flex: 1; overflow-y: auto; padding: 15px; }
+        .comment-input-area { padding: 10px; display: flex; gap: 10px; border-top: 1px solid #eee; background: #fafafa; }
+        .comment-input-area input { flex: 1; padding: 10px; border-radius: 20px; border: 1px solid #ddd; outline: none; }
+        .send-btn { color: var(--tt-red); font-weight: bold; border: none; background: none; cursor: pointer; }
+
+        /* Profil */
+        .stats-row { display: flex; justify-content: center; gap: 25px; margin: 15px 0; }
+        .stat-box { text-align: center; cursor: pointer; }
+        .stat-box b { display: block; font-size: 18px; }
+        .stat-box span { font-size: 13px; color: #888; }
+        .profile-btn-row { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .p-btn { background: #333; color: white; border: none; padding: 8px 20px; border-radius: 4px; font-weight: 600; font-size: 14px; }
     </style>
 </head>
 <body>
 
 <div id="homePage" class="page active-page">
-    <div class="feed" id="videoFeed">
+    <div class="feed">
         <div class="v-card">
-            <video src="https://www.w3schools.com/html/mov_bbb.mp4" loop playsinline muted onclick="this.play()"></video>
+            <video id="v1" loop src="https://www.w3schools.com/html/mov_bbb.mp4" playsinline onclick="playPause(this)"></video>
             <div class="side-bar">
-                <div class="avatar-container" onclick="showPage('profilePage')">
-                    <img src="https://via.placeholder.com/50" id="feedAvatar">
-                    <div class="plus-small">+</div>
-                </div>
-                <div class="action-item" onclick="toggleLike(this)">
-                    <span class="material-icons-round">favorite</span>
-                    <p class="count">12.4K</p>
-                </div>
-                <div class="action-item" onclick="openComments()">
-                    <span class="material-icons-round">chat_bubble</span>
-                    <p>452</p>
-                </div>
-                <div class="action-item" onclick="nativeShare()">
-                    <span class="material-icons-round">reply</span>
-                    <p>Paylaş</p>
-                </div>
+                <div class="action-item" onclick="toggleLike(this)"><span class="material-icons-round">favorite</span><p>12.4K</p></div>
+                <div class="action-item" onclick="toggleModal('commentModal')"><span class="material-icons-round">chat_bubble</span><p>452</p></div>
+                <div class="action-item" onclick="openShareMenu()"><span class="material-icons-round">reply</span><p>Paylaş</p></div>
             </div>
-            <div style="position:absolute; bottom:70px; left:15px; max-width:70%;">
-                <h4 style="margin:0;">@ali_developer</h4>
-                <p style="font-size:14px; margin:5px 0;">EcoPix-də hər şey artıq işləkdir! 🚀 #firebasedev</p>
-            </div>
+            <div style="position:absolute; bottom:70px; left:15px;"><b>@ali_developer</b><p>Hər şey işləkdir! 🚀</p></div>
         </div>
     </div>
 </div>
 
-<div id="profilePage" class="page" style="background:#000; overflow-y:auto;">
-    <div style="padding:15px; display:flex; justify-content:space-between;">
+<div id="profilePage" class="page">
+    <div style="padding:15px; display:flex; justify-content:space-between; align-items:center;">
         <span class="material-icons-round" onclick="showPage('homePage')">arrow_back</span>
-        <span class="material-icons-round" onclick="shareProfile()">share</span>
+        <b>@ali</b>
+        <span class="material-icons-round" onclick="copyProfileLink()">share</span>
     </div>
-    <div style="text-align:center; padding:20px;">
-        <div style="position:relative; display:inline-block;">
-            <img src="https://via.placeholder.com/100" id="pImg" style="width:100px; height:100px; border-radius:50%; border:2px solid #fff;">
-            <span class="material-icons-round" onclick="editProfile()" style="position:absolute; bottom:0; right:0; background:#333; border-radius:50%; padding:5px; font-size:15px;">edit</span>
+    <div style="text-align:center; padding:10px;">
+        <img src="https://via.placeholder.com/100" style="width:90px; height:90px; border-radius:50%; border:2px solid #fff;">
+        <h3>Əli Developer</h3>
+        <p style="color:#ccc; font-size:14px;">EcoPix Yaradıcısı ✨</p>
+        
+        <div class="stats-row">
+            <div class="stat-box"><b>120</b><span>Takib</span></div>
+            <div class="stat-box"><b>5.5K</b><span>Takibçi</span></div>
+            <div class="stat-box"><b>45K</b><span>Bəyəni</span></div>
         </div>
-        <h3 id="pName">@ali</h3>
-        <p id="pBio" style="font-size:14px; color:#ccc;">Bura mənim bioqrafiyamdır...</p>
-        <a href="#" id="pLink" style="color:var(--tt-cyan); font-size:13px;">www.ecopix.com</a>
+
+        <div class="profile-btn-row">
+            <button class="p-btn" onclick="alert('Redaktə bölməsi')">Profili Redaktə Et</button>
+            <button class="p-btn" style="background:var(--tt-red)">Takib Et</button>
+        </div>
     </div>
-    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:2px; margin-top:20px;">
-        <div style="aspect-ratio:3/4; background:#222;"></div>
-        <div style="aspect-ratio:3/4; background:#222;"></div>
-        <div style="aspect-ratio:3/4; background:#222;"></div>
+    <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:2px; padding:2px;">
+        <div style="aspect-ratio:3/4; background:#222;"></div><div style="aspect-ratio:3/4; background:#222;"></div><div style="aspect-ratio:3/4; background:#222;"></div>
     </div>
 </div>
 
-<div id="uploadPage" class="page" style="background:#111;">
-    <div style="display:flex; justify-content:space-between; padding:20px;">
+<div id="uploadPage" class="page" style="background:#000;">
+    <div style="padding:15px; display:flex; justify-content:space-between; border-bottom:1px solid #222;">
         <span onclick="showPage('homePage')">Ləğv et</span>
-        <b>Paylaş</b>
-        <span style="color:var(--tt-red);" onclick="alert('Paylaşılır...')">Göndər</span>
+        <b>Yaradın</b>
+        <span style="color:var(--tt-red); font-weight:bold;" onclick="startUpload()">Paylaş</span>
     </div>
-    <div style="padding:20px;">
-        <div style="width:100%; height:200px; background:#222; border-radius:10px; display:flex; align-items:center; justify-content:center; border:2px dashed #444;" onclick="document.getElementById('fileInp').click()">
-            <span class="material-icons-round">add_a_photo</span>
-            <input type="file" id="fileInp" style="display:none;">
+    <div style="padding:20px; text-align:center;">
+        <div id="previewBox" onclick="document.getElementById('fileInp').click()" style="width:100%; height:300px; background:#111; border:2px dashed #333; border-radius:15px; display:flex; flex-direction:column; justify-content:center; align-items:center; overflow:hidden;">
+            <span class="material-icons-round" style="font-size:50px;">videocam</span>
+            <p>Video və ya Şəkil Seç</p>
+            <video id="prevVideo" style="display:none; width:100%; height:100%; object-fit:cover;"></video>
         </div>
-        <textarea placeholder="Açıqlama yaz..." style="width:100%; background:none; border:none; color:#fff; margin-top:20px; font-size:16px;"></textarea>
-        <input type="text" placeholder="Məkan əlavə et" style="width:100%; background:#222; border:none; color:#fff; padding:12px; border-radius:8px; margin-top:10px;">
+        <input type="file" id="fileInp" accept="video/*,image/*" style="display:none;" onchange="previewFile(event)">
+        <textarea id="upDesc" placeholder="Açıqlama və #hashtag..." style="width:100%; background:none; border:none; color:white; margin-top:20px; height:80px; outline:none; font-size:16px;"></textarea>
+    </div>
+</div>
+
+<div id="commentModal" class="modal">
+    <div class="modal-header"><b>Şərhlər (5)</b><span onclick="toggleModal('commentModal')">X</span></div>
+    <div id="commentList">
+        <p><b>@murad:</b> Möhtəşəm dizayndır! 👏</p>
+        <p><b>@aygun:</b> Uğurlar EcoPix komandası.</p>
+    </div>
+    <div class="comment-input-area">
+        <input type="text" id="commInput" placeholder="Şərhinizi yazın...">
+        <button class="send-btn" onclick="sendComment()">Göndər</button>
     </div>
 </div>
 
 <div class="nav">
     <span class="material-icons-round" onclick="showPage('homePage')">home</span>
-    <span class="material-icons-round">search</span>
+    <span class="material-icons-round">explore</span>
     <div class="plus-btn" onclick="showPage('uploadPage')">+</div>
-    <span class="material-icons-round">message</span>
+    <span class="material-icons-round">inbox</span>
     <span class="material-icons-round" onclick="showPage('profilePage')">person</span>
 </div>
 
-<div id="commentModal" class="modal">
-    <div style="display:flex; justify-content:space-between;"><b>Şərhlər</b> <span onclick="openComments()">X</span></div>
-    <hr>
-    <div id="commentList" style="height:250px; overflow-y:auto;">
-        <p><b>@dost:</b> Əla videodur! 🔥</p>
-    </div>
-    <input type="text" placeholder="Şərh yaz..." style="width:100%; padding:10px; border-radius:20px; border:1px solid #ddd;">
-</div>
-
 <script>
-    // SƏHİFƏLƏR ARASI KEÇİD
-    function showPage(pageId) {
+    // 1. Səhifə Keçidləri
+    function showPage(pId) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
-        document.getElementById(pageId).classList.add('active-page');
+        document.getElementById(pId).classList.add('active-page');
     }
 
-    // BƏYƏNMƏ (LIKE) SİSTEMİ
-    function toggleLike(el) {
-        const icon = el.querySelector('span');
-        const countP = el.querySelector('.count');
-        let count = parseFloat(countP.innerText);
+    // 2. Video Pleyer Nəzarəti
+    function playPause(vid) { vid.paused ? vid.play() : vid.pause(); }
 
-        if(icon.classList.contains('liked')) {
-            icon.classList.remove('liked');
-            icon.innerText = "favorite";
-            countP.innerText = (count - 0.1).toFixed(1) + "K";
-        } else {
-            icon.classList.add('liked');
-            icon.innerText = "favorite";
-            countP.innerText = (count + 0.1).toFixed(1) + "K";
+    // 3. Şərh Göndərmə (İŞLƏK DÜYMƏ)
+    function sendComment() {
+        const inp = document.getElementById('commInput');
+        const list = document.getElementById('commentList');
+        if(inp.value.trim() !== "") {
+            const p = document.createElement('p');
+            p.innerHTML = `<b>@siz:</b> ${inp.value}`;
+            list.appendChild(p);
+            inp.value = "";
+            list.scrollTop = list.scrollHeight;
         }
     }
 
-    // PAYLAŞMA SİSTEMİ (NATIVE)
-    async function nativeShare() {
+    // 4. Paylaşma Menyusu (Real Telefon Menyusu)
+    async function openShareMenu() {
         if (navigator.share) {
-            await navigator.share({ title: 'EcoPix Video', url: window.location.href });
+            try {
+                await navigator.share({ title: 'EcoPix Video', url: window.location.href });
+            } catch (err) { console.log("Paylaşma ləğv edildi."); }
         } else {
-            alert("Link kopyalandı!");
+            copyProfileLink(); // PC-dədirsə linki kopyala
         }
     }
 
-    // PROFİL REDAKTƏSİ
-    function editProfile() {
-        const name = prompt("Yeni ad:");
-        const bio = prompt("Yeni bio:");
-        if(name) document.getElementById('pName').innerText = "@" + name;
-        if(bio) document.getElementById('pBio').innerText = bio;
+    // 5. Profil Linkini Kopyala
+    function copyProfileLink() {
+        const link = window.location.href;
+        navigator.clipboard.writeText(link).then(() => {
+            alert("Profil linki kopyalandı: " + link);
+        });
     }
 
-    // ŞƏRHLƏRİ AÇ
-    function openComments() {
-        document.getElementById('commentModal').classList.toggle('open');
+    // 6. Yükləmə Önizləmə (Real fayl seçimi)
+    function previewFile(e) {
+        const file = e.target.files[0];
+        const vTag = document.getElementById('prevVideo');
+        if(file) {
+            const url = URL.createObjectURL(file);
+            vTag.src = url;
+            vTag.style.display = 'block';
+            document.querySelector('#previewBox p').style.display = 'none';
+            document.querySelector('#previewBox span').style.display = 'none';
+            vTag.play();
+        }
     }
 
-    // PROFİL PAYLAŞMA (QR KOD SİMULYASİYASI)
-    function shareProfile() {
-        alert("Profil Linki: " + window.location.href + "\nQR Kod yaradıldı!");
+    function startUpload() {
+        const desc = document.getElementById('upDesc').value;
+        if(desc) {
+            alert("Video emal edilir və Firebase-ə yüklənir...");
+            showPage('homePage');
+        } else { alert("Açıqlama daxil edin!"); }
+    }
+
+    // Modal Aç/Bağla
+    function toggleModal(id) { document.getElementById(id).classList.toggle('open'); }
+
+    // Like
+    function toggleLike(el) {
+        const s = el.querySelector('span');
+        s.style.color = s.style.color === 'red' ? 'white' : 'red';
     }
 </script>
 
