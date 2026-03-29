@@ -3,191 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Çayxana SuperApp PRO</title>
+    <title>Çayxana Ultra - Canlı Səsli Otaqlar</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
-        :root { --bg: #050505; --accent: #00f2ff; --glass: rgba(255,255,255,0.08); }
+        :root { --accent: #00f2ff; --bg: #09090b; --card: #18181b; --live: #ef4444; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
+        body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); color: white; font-family: sans-serif; overflow: hidden; }
 
-        /* STORIES (KANAL SEÇİMİ) */
-        .stories { height: 110px; display: flex; align-items: center; gap: 15px; padding: 10px 15px; overflow-x: auto; background: #000; scrollbar-width: none; border-bottom: 1px solid #111; }
-        .stories::-webkit-scrollbar { display: none; }
-        .story { flex-shrink: 0; text-align: center; width: 70px; cursor: pointer; }
-        .ring { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--accent); padding: 2px; margin: 0 auto 5px; background: #111; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        .ring i { font-size: 20px; color: var(--accent); }
-        .story span { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #aaa; white-space: nowrap; overflow: hidden; }
-
-        /* MULTI-PLAYER SECTION */
-        .stage { position: relative; width: 100%; height: 35vh; background: #000; border-bottom: 2px solid #111; }
-        video, iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; display: none; }
-        .active-player { display: block !important; }
-
-        /* CANLI VİDEO QRUP (DAİRƏVİ İKONLAR) */
-        .live-circles { height: 80px; display: flex; align-items: center; gap: 10px; padding: 0 15px; background: rgba(255,255,255,0.02); border-bottom: 1px solid #111; overflow-x: auto; }
-        .user-cam { width: 60px; height: 60px; border-radius: 50%; background: #222; border: 2px solid #444; object-fit: cover; flex-shrink: 0; }
-        .user-cam.me { border-color: #00ff00; }
-
-        /* ÇAT */
-        .chat { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; height: calc(47vh - 100px); padding-bottom: 90px; }
-        .bubble { background: var(--glass); padding: 12px; border-radius: 15px; max-width: 85%; border: 1px solid rgba(255,255,255,0.05); }
-        .bubble b { display: block; font-size: 10px; color: var(--accent); margin-bottom: 3px; }
-
-        /* TOOLBAR */
-        .tools { position: fixed; bottom: 0; width: 100%; background: #000; padding: 15px; display: flex; align-items: center; gap: 10px; border-top: 1px solid #111; z-index: 100; }
-        .tools input { flex: 1; background: #111; border: 1px solid #222; padding: 12px 20px; border-radius: 25px; color: white; outline: none; }
-        .btn { width: 45px; height: 45px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: 0.2s; }
-        .btn-cam { background: #222; color: white; }
-        .btn-cam.on { background: #00ff00; color: #000; }
-        .btn-send { background: var(--accent); color: #000; }
-        .btn-mic { background: #333; color: white; }
-        .btn-mic.rec { background: #ff3b30; animation: pulse 1s infinite; }
+        /* HEADER & SEARCH */
+        .header { background: #000; padding: 10px 15px; border-bottom: 1px solid #222; }
+        .search-box { display: flex; gap: 10px; margin-top: 10px; }
+        .search-box input { flex: 1; background: #111; border: 1px solid #333; padding: 8px 15px; border-radius: 20px; color: white; outline: none; font-size: 13px; }
         
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } }
+        /* VOICE STATUS BAR */
+        .voice-status { background: #111; padding: 5px 15px; font-size: 11px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #222; }
+        .live-dot { width: 8px; height: 8px; background: var(--live); border-radius: 50%; animation: blink 1s infinite; display: none; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        /* STAGE */
+        .stage { width: 100%; height: 28vh; background: #000; position: relative; }
+        iframe, video { width: 100%; height: 100%; border: none; display: none; }
+        .active { display: block !important; }
+
+        /* CHAT */
+        .chat { height: calc(72vh - 200px); overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; }
+        .msg { background: var(--card); padding: 10px; border-radius: 12px; max-width: 85%; border: 1px solid #27272a; position: relative; }
+        .msg b { display: block; font-size: 10px; color: var(--accent); margin-bottom: 4px; }
+        .msg img, .msg video { max-width: 100%; border-radius: 8px; margin-top: 5px; }
+
+        /* FOOTER */
+        .tools { position: fixed; bottom: 0; width: 100%; background: #000; padding: 12px; display: flex; align-items: center; gap: 8px; border-top: 1px solid #222; }
+        .tools input { flex: 1; background: #18181b; border: none; padding: 12px; border-radius: 20px; color: white; outline: none; }
+        .icon-btn { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; background: #222; border: none; color: white; }
+        .btn-voice.active { background: var(--live); color: white; box-shadow: 0 0 15px var(--live); }
     </style>
 </head>
 <body>
 
-    <div class="stories" id="story-bar">
-        <div class="story" onclick="playMedia('yt', 'j_SInXN2Fas')">
-            <div class="ring"><i class="fas fa-futbol"></i></div><span>CBC Sport</span>
+    <div class="header">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <b id="myNick" onclick="setNick()" style="color: var(--accent);">Ləqəb Təyin Et</b>
+            <span id="roomName" style="font-size: 12px; color: #888;">Lobby</span>
         </div>
-        <div class="story" onclick="playMedia('hls', 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8')">
-            <div class="ring"><i class="fas fa-tv"></i></div><span>IPTV Test</span>
+        <div class="search-box">
+            <input type="text" id="roomSearch" placeholder="Otaq adı yazın...">
+            <button class="icon-btn" onclick="joinRoom()"><i class="fas fa-search"></i></button>
         </div>
-        <div class="story" onclick="playMedia('yt', '5_XDiB66P7s')">
-            <div class="ring"><i class="fas fa-film"></i></div><span>Kino 24/7</span>
-        </div>
-        <div class="story" onclick="playMedia('yt', '3D099N-jNHA')">
-            <div class="ring"><i class="fas fa-newspaper"></i></div><span>Xəbərlər</span>
-        </div>
-        <div class="story" onclick="addLink()">
-            <div class="ring" style="border-style:dashed"><i class="fas fa-plus"></i></div><span>Əlavə Et</span>
-        </div>
+    </div>
+
+    <div class="voice-status">
+        <div id="liveDot" class="live-dot"></div>
+        <span id="voiceMsg">Səsli söhbət: Deaktiv</span>
     </div>
 
     <div class="stage">
-        <iframe id="yt-player" allow="autoplay; encrypted-media"></iframe>
-        <video id="hls-player" controls autoplay muted></video>
+        <iframe id="yt" allow="autoplay"></iframe>
+        <video id="tv" controls autoplay muted></video>
     </div>
 
-    <div class="live-circles" id="cam-grid">
-        <video id="localVideo" class="user-cam me" autoplay muted playsinline style="display: none;"></video>
-    </div>
+    <div class="chat" id="chat"></div>
 
-    <div class="chat" id="chatbox"></div>
-
-    <div class="tools">
-        <button class="btn btn-cam" id="camBtn" onclick="toggleCam()"><i class="fas fa-video"></i></button>
-        <input type="text" id="msgInp" placeholder="Söhbətə qoşul...">
-        <button class="btn btn-send" onclick="sendMsg()"><i class="fas fa-paper-plane"></i></button>
-        <button class="btn btn-mic" id="micBtn"><i class="fas fa-microphone"></i></button>
+    <div id="remote-audios"></div> <div class="tools">
+        <label for="fileInp" class="icon-btn"><i class="fas fa-paperclip"></i></label>
+        <input type="file" id="fileInp" style="display:none" onchange="uploadFile(this)">
+        
+        <input type="text" id="msgInp" placeholder="Mesaj yazın...">
+        
+        <button class="icon-btn" id="voiceBtn" onclick="toggleVoiceRoom()"><i class="fas fa-microphone"></i></button>
+        <button class="icon-btn" style="background: var(--accent); color: #000;" onclick="sendText()"><i class="fas fa-paper-plane"></i></button>
     </div>
 
     <script>
-        const fbConfig = {
-            apiKey: "AIzaSyCtrVliO1bmdg7r0juWz-Yj2EaEGNsz2j8",
-            databaseURL: "https://ecopix-118c6-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "ecopix-118c6"
-        };
-        firebase.initializeApp(fbConfig);
+        const conf = { apiKey: "AIzaSyCtrVliO1bmdg7r0juWz-Yj2EaEGNsz2j8", databaseURL: "https://ecopix-118c6-default-rtdb.europe-west1.firebasedatabase.app", projectId: "ecopix-118c6" };
+        firebase.initializeApp(conf);
         const db = firebase.database();
-        const user = localStorage.getItem('v_user') || "Qonaq_" + Math.floor(Math.random()*9999);
-        localStorage.setItem('v_user', user);
 
-        const yt = document.getElementById('yt-player');
-        const hlsPlayer = document.getElementById('hls-player');
-        const hls = new Hls();
+        let nick = localStorage.getItem('v_nick') || "User_" + Math.floor(Math.random()*9999);
+        let room = localStorage.getItem('v_room') || "Lobby";
+        document.getElementById('myNick').innerText = nick;
+        document.getElementById('roomName').innerText = "Otaq: " + room;
 
-        // MEDIA SİSTEMİ (IPTV & YouTube)
-        function playMedia(type, link) {
-            db.ref('current_stream').set({ type, link });
+        // PeerJS Setup (Kollektiv Səsli Söhbət)
+        const peer = new Peer(nick.replace(/\s+/g, '_') + "_" + room);
+        let myStream;
+
+        async function toggleVoiceRoom() {
+            const btn = document.getElementById('voiceBtn');
+            const dot = document.getElementById('liveDot');
+            const msg = document.getElementById('voiceMsg');
+
+            if (!myStream) {
+                try {
+                    myStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    btn.classList.add('active');
+                    dot.style.display = 'block';
+                    msg.innerText = "Səsli söhbət: AKTİV (Hər kəs sizi eşidir)";
+                    
+                    // Otaqdakı aktiv istifadəçiləri tap və onlara "zəng" et
+                    db.ref(`rooms/${room}/active_speakers`).once('value', s => {
+                        s.forEach(child => {
+                            if(child.key !== nick) {
+                                const call = peer.call(child.key.replace(/\s+/g, '_') + "_" + room, myStream);
+                                call.on('stream', remoteStream => playRemoteAudio(remoteStream, child.key));
+                            }
+                        });
+                    });
+                    db.ref(`rooms/${room}/active_speakers/${nick}`).set(true);
+                } catch (e) { alert("Mikrofon icazəsi verilmədi!"); }
+            } else {
+                myStream.getTracks().forEach(t => t.stop());
+                myStream = null;
+                btn.classList.remove('active');
+                dot.style.display = 'none';
+                msg.innerText = "Səsli söhbət: Deaktiv";
+                db.ref(`rooms/${room}/active_speakers/${nick}`).remove();
+            }
         }
 
-        db.ref('current_stream').on('value', s => {
-            const data = s.val() || { type: 'yt', link: 'j_SInXN2Fas' };
-            yt.classList.remove('active-player');
-            hlsPlayer.classList.remove('active-player');
-            hlsPlayer.pause();
-
-            if(data.type === 'yt') {
-                yt.src = `https://www.youtube.com/embed/${data.link}?autoplay=1&mute=1`;
-                yt.classList.add('active-player');
-            } else if(data.type === 'hls') {
-                hlsPlayer.classList.add('active-player');
-                if (Hls.isSupported()) {
-                    hls.loadSource(data.link);
-                    hls.attachMedia(hlsPlayer);
-                } else if (hlsPlayer.canPlayType('application/vnd.apple.mpegurl')) {
-                    hlsPlayer.src = data.link;
-                }
+        peer.on('call', call => {
+            if(myStream) {
+                call.answer(myStream);
+                call.on('stream', remoteStream => playRemoteAudio(remoteStream, call.peer));
             }
         });
 
-        // VİDEO ZƏNG SİSTEMİ (SIMULATED FOR UI)
-        async function toggleCam() {
-            const v = document.getElementById('localVideo');
-            const btn = document.getElementById('camBtn');
-            if(v.style.display === 'none') {
-                const s = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                v.srcObject = s;
-                v.style.display = 'block';
-                btn.classList.add('on');
-            } else {
-                v.srcObject.getTracks().forEach(t => t.stop());
-                v.style.display = 'none';
-                btn.classList.remove('on');
+        function playRemoteAudio(stream, id) {
+            if(document.getElementById('audio-'+id)) return;
+            const audio = document.createElement('audio');
+            audio.id = 'audio-' + id;
+            audio.srcObject = stream;
+            audio.autoplay = true;
+            document.getElementById('remote-audios').append(audio);
+        }
+
+        // MESAJ SİSTEMİ & 1 SAATLIQ SİLMƏ
+        function sendText() {
+            let i = document.getElementById('msgInp');
+            if(i.value) {
+                db.ref(`rooms/${room}/msgs`).push({ user: nick, text: i.value, type: 'text', timestamp: Date.now() });
+                i.value = "";
             }
         }
 
-        // ÇAT SİSTEMİ
-        function sendMsg() {
-            let i = document.getElementById('msgInp');
-            if(i.value) { db.ref('super_chat').push({ user, text: i.value }); i.value = ""; }
-        }
-
-        db.ref('super_chat').limitToLast(20).on('child_added', snap => {
+        db.ref(`rooms/${room}/msgs`).on('child_added', snap => {
             const d = snap.val();
             const div = document.createElement('div');
-            div.className = 'bubble';
-            if(d.type === 'voice') {
-                div.innerHTML = `<b>${d.user}</b><i class="fas fa-play" onclick="new Audio('${d.url}').play()"></i> Səsli Mesaj`;
-            } else {
-                div.innerHTML = `<b>${d.user}</b>${d.text}`;
-            }
-            document.getElementById('chatbox').appendChild(div);
-            document.getElementById('chatbox').scrollTop = document.getElementById('chatbox').scrollHeight;
+            div.className = 'msg';
+            div.innerHTML = `<b>${d.user}</b>${d.type === 'text' ? d.text : (d.type === 'image' ? `<img src="${d.url}"><br><a href="${d.url}" download style="color:var(--accent); font-size:12px;">Endir</a>` : `<video src="${d.url}" controls></video>`)}`;
+            document.getElementById('chat').append(div);
+            document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
         });
 
-        function addLink() {
-            let link = prompt("YouTube ID və ya m3u8 linkini daxil edin:");
-            if(link) {
-                let type = link.includes('m3u8') ? 'hls' : 'yt';
-                playMedia(type, link);
-            }
-        }
+        // 1 Saatlıq Avtomatik Silmə (Real vaxtda)
+        setInterval(() => {
+            const limit = Date.now() - (3600 * 1000);
+            db.ref(`rooms/${room}/msgs`).orderByChild('timestamp').endAt(limit).once('value', s => {
+                s.forEach(c => c.ref.remove());
+            });
+        }, 60000);
 
-        // CLOUDINARY MICROPHONE
-        let rec; let chunks = [];
-        const mic = document.getElementById('micBtn');
-        mic.onmousedown = async () => {
-            const s = await navigator.mediaDevices.getUserMedia({ audio: true });
-            rec = new MediaRecorder(s); chunks = [];
-            rec.ondataavailable = e => chunks.push(e.data);
-            rec.onstop = async () => {
-                const b = new Blob(chunks, { type: 'audio/webm' });
-                const fd = new FormData(); fd.append('file', b); fd.append('upload_preset', 'ml_default');
-                const res = await fetch('https://api.cloudinary.com/v1_1/dyrfkit3x/video/upload', { method: 'POST', body: fd });
-                const r = await res.json();
-                if(r.secure_url) db.ref('super_chat').push({ user, url: r.secure_url, type: 'voice' });
-            };
-            rec.start(); mic.classList.add('rec');
-        };
-        mic.onmouseup = () => { if(rec) { rec.stop(); mic.classList.remove('rec'); } };
+        function setNick() { let n = prompt("Ləqəb:", nick); if(n) { localStorage.setItem('v_nick', n); location.reload(); } }
+        function joinRoom() { let r = document.getElementById('roomSearch').value; if(r) { localStorage.setItem('v_room', r); location.reload(); } }
+        
+        // Fayl Yükləmə (Cloudinary)
+        async function uploadFile(input) {
+            const file = input.files[0]; if(!file) return;
+            const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', 'ml_default');
+            const res = await fetch(`https://api.cloudinary.com/v1_1/dyrfkit3x/auto/upload`, { method: 'POST', body: fd });
+            const data = await res.json();
+            db.ref(`rooms/${room}/msgs`).push({ user: nick, url: data.secure_url, type: file.type.startsWith('image') ? 'image' : 'video', timestamp: Date.now() });
+        }
     </script>
 </body>
 </html>
