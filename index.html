@@ -3,135 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EcoPix - Pro</title>
+    <title>EcoPix Ultra</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    
     <style>
-        body, html { margin: 0; padding: 0; background: #000; color: #fff; font-family: sans-serif; height: 100%; overflow: hidden; }
-        .v-feed { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; }
-        .v-card { height: 100vh; scroll-snap-align: start; position: relative; }
+        /* CSS BURADADIR */
+        :root { --primary: #fe2c55; --secondary: #25f4ee; --bg: #000; --text: #fff; }
+        body, html { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: sans-serif; height: 100%; overflow: hidden; }
+        .page { display: none; height: calc(100vh - 60px); overflow-y: auto; }
+        .page.active { display: block; }
+        .video-feed { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; }
+        .v-card { height: 100vh; scroll-snap-align: start; position: relative; background: #000; display: flex; align-items: center; }
         video { width: 100%; height: 100%; object-fit: cover; }
-        
-        /* Profil Səhifəsi */
-        .profile-page { display: none; position: fixed; top: 0; background: #000; width: 100%; height: 100%; z-index: 1000; padding: 20px; overflow-y: auto; }
-        .profile-header { text-align: center; }
-        .avatar { width: 100px; height: 100px; border-radius: 50%; border: 2px solid #fff; }
-        .stats { display: flex; justify-content: center; gap: 30px; margin: 20px 0; }
-        .edit-btn { background: #333; border: none; color: white; padding: 8px 20px; border-radius: 5px; }
-        
-        /* Canlı Yayım UI (Ürəklər və Rəylər) */
-        .live-ui { position: absolute; bottom: 80px; left: 10px; z-index: 20; width: 100%; pointer-events: none; }
-        .floating-comment { background: rgba(0,0,0,0.4); padding: 5px 10px; border-radius: 10px; margin-bottom: 5px; font-size: 14px; animation: slideUp 3s forwards; width: fit-content; }
-        @keyframes slideUp { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-50px); } }
-        
-        /* Naviqasiya */
-        .nav { position: fixed; bottom: 0; width: 100%; height: 60px; background: #000; display: flex; justify-content: space-around; align-items: center; border-top: 0.5px solid #222; }
-        .plus { background: linear-gradient(to right, #25f4ee, #fe2c55); padding: 3px 15px; border-radius: 8px; color: #000; font-weight: bold; font-size: 24px; cursor: pointer; }
+        .side-bar { position: absolute; right: 12px; bottom: 100px; display: flex; flex-direction: column; gap: 18px; align-items: center; }
+        .nav-bar { position: fixed; bottom: 0; width: 100%; height: 60px; background: #000; display: flex; justify-content: space-around; align-items: center; border-top: 0.5px solid #333; }
+        .plus-btn { background: linear-gradient(to right, var(--secondary), var(--primary)); padding: 4px 16px; border-radius: 8px; color: #000; font-weight: bold; font-size: 24px; }
+        .profile-header { text-align: center; padding: 20px; }
+        .avatar { width: 90px; height: 90px; border-radius: 50%; border: 2px solid var(--secondary); }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin-top: 10px; }
+        .grid-item { aspect-ratio: 9/16; background: #111; }
     </style>
 </head>
 <body>
 
-<div id="feed" class="v-feed"></div>
-
-<div class="nav">
-    <span class="material-icons-round" onclick="location.reload()">home</span>
-    <div class="plus" onclick="triggerUpload()">+</div>
-    <span class="material-icons-round" onclick="openProfile()">person</span>
-</div>
-
-<div id="profilePage" class="profile-page">
-    <div style="display: flex; justify-content: space-between;"><span onclick="closeProfile()">←</span> <span>Ayarlar</span></div>
-    <div class="profile-header">
-        <img id="p-img" src="https://via.placeholder.com/100" class="avatar">
-        <h2 id="p-name">Sənin Adın</h2>
-        <div class="stats">
-            <div><b>1.2K</b><p>Təqibçi</p></div>
-            <div><b>500</b><p>Təqib edilən</p></div>
-        </div>
-        <button class="edit-btn" onclick="editProfile()">Redaktə et ✎</button>
-        <p id="p-bio">Bura bioqrafiyadır...</p>
-        <a id="p-link" href="#" style="color: #25f4ee;">link.com</a>
+    <div id="feedPage" class="page active">
+        <div id="videoContainer" class="video-feed"></div>
     </div>
-    <div id="user-videos" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px; margin-top: 20px;"></div>
-</div>
 
-<script>
-    // FİREBASE & CLOUDINARY KONFİQURASİYASI
-    const firebaseConfig = { databaseURL: "https://ecopix-118c6-default-rtdb.europe-west1.firebasedatabase.app" };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const CLOUD_NAME = "dyrfkit3x";
-    const PRESET = "ecopix_upload";
+    <div id="profilePage" class="page">
+        <div class="profile-header">
+            <img src="https://via.placeholder.com/100" class="avatar">
+            <h2>@eco_user</h2>
+            <p>Bioqrafiya bura yazılır...</p>
+            <button onclick="alert('Redaktə aktivdir')" style="background:#333; color:white; border:none; padding:8px 15px; border-radius:5px;">Redaktə et ✎</button>
+        </div>
+        <div class="grid" id="userGrid"></div>
+    </div>
 
-    // VİDEO YÜKLƏMƏ
-    function triggerUpload() {
-        let input = document.createElement('input');
-        input.type = 'file'; input.accept = 'video/*';
-        input.onchange = async e => {
-            const file = e.target.files[0];
-            const desc = prompt("Açıqlama və Heştəglər:");
-            const music = "Trend Musiqi #1"; // Bura musiqi siyahısı da əlavə oluna bilər
-            
-            const formData = new FormData();
-            formData.append("file", file);
-            formData.append("upload_preset", PRESET);
+    <div class="nav-bar">
+        <span class="material-icons-round" onclick="showP('feedPage')">home</span>
+        <div class="plus-btn" onclick="uploadVideo()">+</div>
+        <span class="material-icons-round" onclick="showP('profilePage')">person</span>
+    </div>
 
-            alert("Video və mahnı emal edilir...");
-            const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`, { method: "POST", body: formData });
-            const data = await res.json();
-            
-            db.ref('posts').push({
-                url: data.secure_url,
-                desc: desc || "#EcoPix",
-                music: music,
-                user: document.getElementById('p-name').innerText,
-                likes: 0,
-                time: Date.now()
+    <script>
+        // JAVASCRIPT BURADADIR
+        const firebaseConfig = { databaseURL: "https://ecopix-118c6-default-rtdb.europe-west1.firebasedatabase.app" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        const CLOUD = "dyrfkit3x"; // Sənin Cloudinary adın
+        const PRESET = "ecopix_upload"; // Sənin Unsigned Preset-in
+
+        function showP(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if(id !== 'feedPage') document.querySelectorAll('video').forEach(v => v.pause());
+        }
+
+        // VİDEO YÜKLƏMƏ
+        async function uploadVideo() {
+            let input = document.createElement('input');
+            input.type = 'file'; input.accept = 'video/*';
+            input.onchange = async e => {
+                const file = e.target.files[0];
+                const formData = new FormData();
+                formData.append("file", file);
+                formData.append("upload_preset", PRESET);
+
+                alert("Yüklənilir...");
+                const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/video/upload`, { method: "POST", body: formData });
+                const data = await res.json();
+                
+                await db.ref('posts').push({
+                    url: data.secure_url,
+                    user: "EcoUser",
+                    likes: 0,
+                    time: Date.now()
+                });
+                alert("Paylaşıldı!");
+            };
+            input.click();
+        }
+
+        // FEED YÜKLƏMƏ
+        db.ref('posts').on('value', snap => {
+            const container = document.getElementById('videoContainer');
+            container.innerHTML = "";
+            snap.forEach(c => {
+                const v = c.val();
+                container.innerHTML = `
+                    <div class="v-card">
+                        <video src="${v.url}" loop playsinline onclick="this.paused?this.play():this.pause()"></video>
+                        <div class="side-bar">
+                            <span class="material-icons-round">favorite</span><b>${v.likes}</b>
+                            <span class="material-icons-round">chat_bubble</span><b>0</b>
+                        </div>
+                    </div>` + container.innerHTML;
             });
-            alert("Paylaşıldı!");
-        };
-        input.click();
-    }
-
-    // FEED GÖSTƏRMƏ
-    db.ref('posts').on('value', snap => {
-        const feed = document.getElementById('feed');
-        feed.innerHTML = "";
-        snap.forEach(c => {
-            const v = c.val();
-            feed.innerHTML = `
-                <div class="v-card" onclick="spawnHeart()">
-                    <video src="${v.url}" loop playsinline onclick="this.paused?this.play():this.pause()"></video>
-                    <div class="live-ui" id="comments-${c.key}"></div>
-                </div>` + feed.innerHTML;
         });
-    });
-
-    // PROFİL FUNKSİYALARI
-    function openProfile() { document.getElementById('profilePage').style.display = 'block'; }
-    function closeProfile() { document.getElementById('profilePage').style.display = 'none'; }
-    function editProfile() {
-        const name = prompt("Yeni ad:");
-        const bio = prompt("Bio:");
-        const link = prompt("Link:");
-        if(name) document.getElementById('p-name').innerText = name;
-        if(bio) document.getElementById('p-bio').innerText = bio;
-        if(link) document.getElementById('p-link').innerText = link;
-    }
-
-    // CANLI ÜRƏKLƏR (Ekrana toxunanda)
-    function spawnHeart() {
-        const heart = document.createElement('span');
-        heart.innerHTML = "❤️";
-        heart.style.position = "fixed";
-        heart.style.left = event.clientX + "px";
-        heart.style.top = event.clientY + "px";
-        heart.style.fontSize = "30px";
-        heart.style.transition = "2s";
-        document.body.appendChild(heart);
-        setTimeout(() => { heart.style.transform = "translateY(-200px)"; heart.style.opacity = "0"; }, 100);
-    }
-</script>
+    </script>
 </body>
 </html>
