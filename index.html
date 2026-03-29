@@ -3,264 +3,223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EcoPix Final | Full Platform</title>
+    <title>EcoPix Live PK Pro</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        :root { --tt-red: #fe2c55; --tt-cyan: #25f4ee; --glass: rgba(0,0,0,0.6); }
+        :root { --tt-red: #fe2c55; --tt-cyan: #25f4ee; --glass: rgba(0,0,0,0.5); }
         body, html { margin: 0; padding: 0; background: #000; color: white; font-family: sans-serif; overflow: hidden; height: 100%; }
         
-        .page { display: none; height: 100vh; width: 100%; position: absolute; top: 0; z-index: 10; }
+        .page { display: none; height: 100vh; width: 100%; position: absolute; top: 0; }
         .active-page { display: block; }
 
-        /* Feed & Video */
-        .feed { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; }
-        .v-card { height: 100vh; scroll-snap-align: start; position: relative; background: #000; display: flex; align-items: center; }
-        video { width: 100%; height: 100%; object-fit: cover; }
+        /* PK Rejimi - Ekranı iki yerə bölmək */
+        .live-container { display: flex; flex-direction: column; height: 100vh; width: 100%; background: #000; }
+        .video-box { flex: 1; position: relative; overflow: hidden; background: #111; border-bottom: 1px solid #333; transition: 0.5s; }
+        .video-box video { width: 100%; height: 100%; object-fit: cover; }
 
-        /* Canlı Yayım Başlatma Ekranı */
-        #countdownOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 2000; font-size: 100px; font-weight: bold; color: var(--tt-cyan); }
+        /* Canlı Yayım UI Elementləri */
+        .live-top { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; z-index: 100; }
+        .id-label { background: var(--tt-red); padding: 5px 10px; border-radius: 5px; font-weight: bold; font-size: 11px; }
+        
+        .music-btn { position: absolute; top: 60px; right: 10px; background: var(--glass); padding: 8px; border-radius: 50%; z-index: 100; cursor: pointer; }
 
-        /* Yükləmə Paneli */
-        .upload-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 5000; display: none; flex-direction: column; padding: 20px; box-sizing: border-box; }
-        .input-field { background: #222; border: none; padding: 15px; border-radius: 10px; color: white; margin-bottom: 10px; width: 100%; box-sizing: border-box; }
+        .live-overlay { position: absolute; bottom: 80px; left: 10px; z-index: 100; width: 280px; }
+        .chat-list { height: 140px; overflow-y: hidden; display: flex; flex-direction: column-reverse; margin-bottom: 10px; pointer-events: none; }
+        .msg-bubble { background: var(--glass); padding: 6px 12px; border-radius: 15px; margin-top: 5px; font-size: 13px; animation: fadeIn 0.3s; width: fit-content; }
 
-        /* Profil Redaktə */
-        .edit-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #111; z-index: 5001; display: none; padding: 20px; }
+        /* Animasiyalar */
+        #heart-field { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 200; }
+        .gift-anim { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 80px; z-index: 1000; pointer-events: none; display: none; }
 
-        /* Canlı Yayım UI (Professional) */
-        .live-ui-top { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; z-index: 100; }
-        .live-chats { position: absolute; bottom: 80px; left: 10px; height: 150px; width: 250px; overflow-y: hidden; display: flex; flex-direction: column-reverse; pointer-events: none; }
-        .chat-msg { background: var(--glass); padding: 6px 12px; border-radius: 15px; margin-top: 5px; font-size: 13px; animation: slideIn 0.3s ease; }
+        /* Musiqi Paneli */
+        .music-drawer { position: fixed; bottom: -100%; left: 0; width: 100%; background: #1a1a1a; border-radius: 20px 20px 0 0; transition: 0.3s; z-index: 2000; padding: 20px; box-sizing: border-box; }
+        .music-drawer.open { bottom: 0; }
+        .m-item { padding: 15px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
 
         /* Naviqasiya */
-        .nav { position: fixed; bottom: 0; width: 100%; height: 55px; background: #000; border-top: 0.5px solid #333; display: flex; justify-content: space-around; align-items: center; z-index: 1000; }
-        .plus-btn { background: linear-gradient(to right, var(--tt-cyan), var(--tt-red)); padding: 2px 14px; border-radius: 8px; color: black; font-weight: bold; font-size: 22px; cursor: pointer; }
-
-        @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+        .nav { position: fixed; bottom: 0; width: 100%; height: 55px; background: #000; border-top: 1px solid #333; display: flex; justify-content: space-around; align-items: center; z-index: 1000; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-<div id="homePage" class="page active-page">
-    <div class="feed" id="mainFeed">
+<div id="livePage" class="page active-page">
+    <div class="live-top">
+        <div style="display:flex; flex-direction:column; gap:5px;">
+            <div class="id-label" id="myIdDisplay">ID: Yüklənir...</div>
+            <div style="display:flex; gap:5px;">
+                <input type="text" id="peerIdInput" placeholder="Dost ID" style="padding:5px; border-radius:5px; border:none; background:rgba(255,255,255,0.2); color:white; font-size:10px; width:100px;">
+                <button onclick="connectToFriend()" style="background:var(--tt-cyan); border:none; border-radius:5px; padding:5px 10px; font-weight:bold; font-size:10px;">PK QOŞUL</button>
+            </div>
         </div>
-</div>
+        <button onclick="location.reload()" style="background:var(--glass); border:none; color:white; padding:5px 15px; border-radius:20px;">Bitir</button>
+    </div>
 
-<div id="livePage" class="page">
-    <div id="countdownOverlay">3</div>
-    
-    <div class="live-ui-top">
+    <div class="music-btn" onclick="toggleMusicMenu()">
+        <span class="material-icons-round">music_note</span>
+    </div>
+
+    <div class="live-container">
+        <div class="video-box" id="localBox"><video id="localVideo" autoplay playsinline muted></video></div>
+        <div class="video-box" id="remoteBox" style="display:none;"><video id="remoteVideo" autoplay playsinline></video></div>
+    </div>
+
+    <canvas id="heart-field"></canvas>
+    <div id="shipAnim" class="gift-anim">🚢</div>
+    <div id="roseAnim" class="gift-anim">🌹🌹🌹</div>
+
+    <div class="live-overlay">
+        <div class="chat-list" id="chatContainer"></div>
         <div style="display:flex; gap:5px; align-items:center;">
-            <div style="background:var(--tt-red); padding:4px 8px; border-radius:5px; font-weight:bold; font-size:12px;">CANLI</div>
-            <span id="myPeerId" style="font-size:10px; background:rgba(0,0,0,0.5); padding:4px; border-radius:5px;">ID: Yüklənir...</span>
+            <input type="text" id="msgInput" placeholder="Şərh yaz..." style="flex:1; padding:12px; border-radius:25px; border:2px solid orange; background:rgba(0,0,0,0.6); color:white;">
+            <button onclick="sendLiveMsg()" style="background:var(--tt-red); border:none; border-radius:25px; padding:12px 20px; font-weight:bold;">Göndər</button>
         </div>
-        <button onclick="endLive()" style="background:rgba(255,255,255,0.2); border:none; color:white; padding:5px 15px; border-radius:20px;">Bitir</button>
-    </div>
-
-    <div style="display:flex; flex-direction:column; height:100%;">
-        <div style="flex:1; background:#000; position:relative;">
-            <video id="localLive" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover;"></video>
+        <div style="display:flex; gap:15px; margin-top:15px;">
+            <button onclick="sendGift('🌹')" style="background:none; border:none; font-size:30px;">🌹</button>
+            <button onclick="sendGift('👑')" style="background:none; border:none; font-size:30px;">👑</button>
+            <button onclick="sendGift('🚢')" style="background:none; border:none; font-size:30px;">🚢</button>
+            <button onclick="spawnHearts()" style="background:var(--tt-red); border:none; border-radius:50%; width:45px; height:45px; margin-left:auto;"><span class="material-icons-round">favorite</span></button>
         </div>
-        <div id="remoteBox" style="flex:1; background:#111; display:none; border-top:2px solid #333;">
-            <video id="remoteLive" autoplay playsinline style="width:100%; height:100%; object-fit:cover;"></video>
-        </div>
-    </div>
-
-    <div class="live-chats" id="chatList"></div>
-
-    <div style="position:absolute; bottom:70px; width:100%; padding:10px; display:flex; gap:5px; z-index:100; box-sizing:border-box;">
-        <input type="text" id="chatInput" placeholder="Şərh yaz..." class="input-field" style="margin:0; flex:1;">
-        <button onclick="sendChat()" style="background:var(--tt-red); border:none; border-radius:10px; padding:0 15px; font-weight:bold;">Göndər</button>
     </div>
 </div>
 
-<div id="profilePage" class="page" style="background:#000; overflow-y:auto;">
-    <div style="text-align:center; padding:40px 20px;">
-        <img id="pImg" src="https://i.pravatar.cc/150?u=ali" style="width:100px; height:100px; border-radius:50%; border:3px solid #fff;">
-        <h2 id="pNameDisp">@ali_developer</h2>
-        <p id="pBioDisp">EcoPix-in ilk test istifadəçisi! 🚀</p>
-        <div style="display:flex; justify-content:center; gap:20px; margin:20px 0;">
-            <div><b>120</b><br><small>Takib</small></div>
-            <div><b>5.5K</b><br><small>Takibçi</small></div>
-            <div><b>45K</b><br><small>Bəyəni</small></div>
-        </div>
-        <button onclick="openEditModal()" style="background:#333; color:white; border:none; padding:10px 30px; border-radius:5px; font-weight:bold;">Profili Redaktə Et</button>
-    </div>
-    <div id="userVideos" style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:2px;"></div>
-</div>
-
-<div id="uploadModal" class="upload-modal">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <span class="material-icons-round" onclick="closeUpload()">close</span>
-        <h3>Yeni Video</h3>
-        <button onclick="processUpload()" style="color:var(--tt-cyan); background:none; border:none; font-weight:bold;">Paylaş</button>
-    </div>
-    <input type="file" id="videoFile" accept="video/*" class="input-field">
-    <textarea id="videoDesc" placeholder="Açıklama yaz... #hashtag" class="input-field" rows="4"></textarea>
-    <input type="text" id="videoMusic" placeholder="Musiqi adı..." class="input-field">
-    <div id="uploadPreview" style="flex:1; background:#111; border-radius:10px; display:flex; align-items:center; justify-content:center;">
-        <small style="color:#555;">Video seçimi gözlənilir...</small>
-    </div>
-</div>
-
-<div id="editModal" class="edit-modal">
-    <h3>Profili Redaktə Et</h3>
-    <input type="text" id="editName" placeholder="Ad (@istifadəçi)" class="input-field">
-    <textarea id="editBio" placeholder="Bioqrafiya..." class="input-field"></textarea>
-    <button onclick="saveProfile()" style="width:100%; background:var(--tt-red); color:white; border:none; padding:15px; border-radius:10px; font-weight:bold;">Yadda Saxla</button>
-    <button onclick="closeEditModal()" style="width:100%; background:none; color:white; border:1px solid #333; padding:10px; margin-top:10px; border-radius:10px;">Ləğv Et</button>
-</div>
-
-<div class="nav">
-    <span class="material-icons-round" onclick="showPage('homePage')">home</span>
-    <span class="material-icons-round" onclick="startLiveWithCountdown()">live_tv</span>
-    <div class="plus-btn" onclick="openUpload()">+</div>
-    <span class="material-icons-round">message</span>
-    <span class="material-icons-round" onclick="showPage('profilePage')">person</span>
+<div id="musicMenu" class="music-drawer">
+    <div style="display:flex; justify-content:space-between; align-items:center;"><h3>Musiqi Seçimi</h3> <span class="material-icons-round" onclick="toggleMusicMenu()">close</span></div>
+    <div class="m-item" onclick="playMusic(1)"><span>🎵 Viral Remix 2024</span> <span class="material-icons-round">play_arrow</span></div>
+    <div class="m-item" onclick="playMusic(2)"><span>🎵 Bass Booster PK</span> <span class="material-icons-round">play_arrow</span></div>
+    <div class="m-item" onclick="playMusic(3)"><span>🎵 Sad Violin (Emotional)</span> <span class="material-icons-round">play_arrow</span></div>
+    <div class="m-item" onclick="playMusic(4)"><span>🎵 Azerbaijan Pop Mix</span> <span class="material-icons-round">play_arrow</span></div>
+    <button onclick="stopMusic()" style="width:100%; margin-top:15px; padding:10px; border-radius:10px; background:none; color:white; border:1px solid #444;">Durdur</button>
+    <audio id="bgMusic" loop></audio>
 </div>
 
 <script>
-    let peer, localStream, currentVideoIndex = 0;
-    const db = {
-        videos: [
-            {id:1, src: "https://v16m-default.akamaized.net/609090/video.mp4", user: "@ali_developer", desc: "EcoPix test videosu! 🚀 #viral", music: "Orijinal səs", likes: "12k", comments: 45},
-            {id:2, src: "https://www.w3schools.com/html/mov_bbb.mp4", user: "@bunny_fan", desc: "Təbiət möhtəşəmdir! 🐰", music: "Nature Beats", likes: "5k", comments: 12}
-        ]
-    };
+    let peer, conn, localStream;
+    const canvas = document.getElementById('heart-field');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-    // 1. FEED-İ DOLDUR
-    function renderFeed() {
-        const feed = document.getElementById('mainFeed');
-        feed.innerHTML = '';
-        db.videos.forEach(v => {
-            feed.innerHTML += `
-                <div class="v-card">
-                    <video src="${v.src}" loop playsinline onclick="this.paused ? this.play() : this.pause()"></video>
-                    <div style="position:absolute; bottom:80px; left:15px; z-index:100;">
-                        <b onclick="showPage('profilePage')">${v.user}</b>
-                        <p style="margin:5px 0;">${v.desc}</p>
-                        <div style="display:flex; align-items:center; gap:5px;"><span class="material-icons-round" style="font-size:14px;">music_note</span> ${v.music}</div>
-                    </div>
-                    <div style="position:absolute; right:10px; bottom:120px; display:flex; flex-direction:column; align-items:center; gap:20px;">
-                        <div style="text-align:center;"><span class="material-icons-round" style="font-size:35px;">favorite</span><p style="font-size:12px;">${v.likes}</p></div>
-                        <div style="text-align:center;"><span class="material-icons-round" style="font-size:35px;">chat_bubble</span><p style="font-size:12px;">${v.comments}</p></div>
-                        <div style="text-align:center;"><span class="material-icons-round" style="font-size:35px;">reply</span><p style="font-size:12px;">Paylaş</p></div>
-                    </div>
-                </div>`;
-        });
-    }
-    renderFeed();
-
-    // 2. VİDEO YÜKLƏMƏ SİSTEMİ
-    function openUpload() { document.getElementById('uploadModal').style.display = 'flex'; }
-    function closeUpload() { document.getElementById('uploadModal').style.display = 'none'; }
-    
-    function processUpload() {
-        const fileInput = document.getElementById('videoFile');
-        const desc = document.getElementById('videoDesc').value;
-        const music = document.getElementById('videoMusic').value || "Orijinal səs";
-
-        if(fileInput.files[0]) {
-            const url = URL.createObjectURL(fileInput.files[0]);
-            db.videos.unshift({
-                id: Date.now(),
-                src: url,
-                user: document.getElementById('pNameDisp').innerText,
-                desc: desc,
-                music: music,
-                likes: "0",
-                comments: 0
-            });
-            renderFeed();
-            closeUpload();
-            showPage('homePage');
-            alert("Video uğurla yükləndi!");
-        } else { alert("Zəhmət olmasa video seçin!"); }
-    }
-
-    // 3. CANLI YAYIM (3-2-1 Başlatma)
-    function startLiveWithCountdown() {
-        const overlay = document.getElementById('countdownOverlay');
-        overlay.style.display = 'flex';
-        let count = 3;
-        overlay.innerText = count;
-
-        const timer = setInterval(async () => {
-            count--;
-            if(count > 0) {
-                overlay.innerText = count;
-            } else {
-                clearInterval(timer);
-                overlay.style.display = 'none';
-                initLiveSystem();
-            }
-        }, 1000);
-    }
-
-    async function initLiveSystem() {
-        showPage('livePage');
+    // 1. CANLI YAYIMI VƏ SƏSİ BAŞLAT
+    async function startLive() {
         peer = new Peer();
-        peer.on('open', id => document.getElementById('myPeerId').innerText = "ID: " + id);
-        
-        localStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
-        document.getElementById('localLive').srcObject = localStream;
+        peer.on('open', id => document.getElementById('myIdDisplay').innerText = "ID: " + id);
+
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        document.getElementById('localVideo').srcObject = localStream;
 
         peer.on('call', call => {
             call.answer(localStream);
             call.on('stream', rStream => {
                 const rBox = document.getElementById('remoteBox');
                 rBox.style.display = 'block';
-                document.getElementById('remoteLive').srcObject = rStream;
+                document.getElementById('remoteVideo').srcObject = rStream;
             });
+        });
+
+        peer.on('connection', c => {
+            conn = c;
+            setupConn();
         });
     }
 
-    function endLive() {
-        if(localStream) localStream.getTracks().forEach(t => t.stop());
-        location.reload(); 
+    function connectToFriend() {
+        const friendId = document.getElementById('peerIdInput').value;
+        if(!friendId) return alert("Dost ID daxil et!");
+        
+        conn = peer.connect(friendId);
+        setupConn();
+        
+        const call = peer.call(friendId, localStream);
+        call.on('stream', rStream => {
+            document.getElementById('remoteBox').style.display = 'block';
+            document.getElementById('remoteVideo').srcObject = rStream;
+        });
     }
 
-    // 4. ŞƏRH SİSTEMİ (İşlək)
-    function sendChat() {
-        const inp = document.getElementById('chatInput');
-        const list = document.getElementById('chatList');
-        if(inp.value.trim() !== "") {
-            const div = document.createElement('div');
-            div.className = 'chat-msg';
-            div.innerHTML = `<b>Mən:</b> ${inp.value}`;
-            list.prepend(div);
-            inp.value = "";
+    function setupConn() {
+        conn.on('data', data => {
+            if(data.type === 'chat') addChat(data.user, data.msg);
+            if(data.type === 'gift') showGiftAnim(data.gift);
+            if(data.type === 'hearts') spawnHearts();
+        });
+    }
+
+    // 2. ŞƏRH SİSTEMİ
+    function sendLiveMsg() {
+        const inp = document.getElementById('msgInput');
+        if(inp.value.trim()) {
+            addChat('Mən', inp.value);
+            if(conn) conn.send({ type: 'chat', user: 'Dostun', msg: inp.value });
+            inp.value = '';
         }
     }
 
-    // 5. PROFİL REDAKTƏ
-    function openEditModal() { document.getElementById('editModal').style.display = 'block'; }
-    function closeEditModal() { document.getElementById('editModal').style.display = 'none'; }
-    
-    function saveProfile() {
-        const name = document.getElementById('editName').value;
-        const bio = document.getElementById('editBio').value;
-        if(name) document.getElementById('pNameDisp').innerText = name;
-        if(bio) document.getElementById('pBioDisp').innerText = bio;
-        closeEditModal();
+    function addChat(user, msg) {
+        const container = document.getElementById('chatContainer');
+        const div = document.createElement('div');
+        div.className = 'msg-bubble';
+        div.innerHTML = `<b>${user}:</b> ${msg}`;
+        container.prepend(div);
     }
 
-    function showPage(id) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
-        document.getElementById(id).classList.add('active-page');
-        // Ana səhifədə deyilsə videoları dayandır
-        if(id !== 'homePage') document.querySelectorAll('video').forEach(v => v.pause());
+    // 3. MUSİQİ İDARƏSİ
+    function toggleMusicMenu() { document.getElementById('musicMenu').classList.toggle('open'); }
+    function playMusic(id) {
+        const tracks = [
+            "",
+            "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+            "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+            "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
+            "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3"
+        ];
+        const audio = document.getElementById('bgMusic');
+        audio.src = tracks[id];
+        audio.play();
+        toggleMusicMenu();
+        addChat('Sistem', 'Musiqi başladıldı 🎵');
+    }
+    function stopMusic() { document.getElementById('bgMusic').pause(); toggleMusicMenu(); }
+
+    // 4. HƏDİYYƏ VƏ ÜRƏK ANİMASİYALARI
+    function sendGift(type) {
+        showGiftAnim(type);
+        if(conn) conn.send({ type: 'gift', gift: type });
     }
 
-    // Scroll auto-play
-    document.getElementById('mainFeed').onscroll = () => {
-        const vids = document.querySelectorAll('video');
-        vids.forEach(v => {
-            const r = v.getBoundingClientRect();
-            if(r.top >= 0 && r.top < 300) v.play(); else v.pause();
+    function showGiftAnim(type) {
+        let elId = type === '🚢' ? 'shipAnim' : (type === '🌹' ? 'roseAnim' : null);
+        if(!elId) return alert(type + " göndərildi!");
+        
+        const el = document.getElementById(elId);
+        el.style.display = 'block';
+        setTimeout(() => el.style.display = 'none', 3000);
+    }
+
+    let heartList = [];
+    function spawnHearts() {
+        for(let i=0; i<10; i++) {
+            heartList.push({ x: window.innerWidth - 50, y: window.innerHeight - 150, vX: (Math.random()-0.5)*5, vY: -Math.random()*5-2, a: 1 });
+        }
+        if(conn && arguments.length === 0) conn.send({ type: 'hearts' });
+        animateHearts();
+    }
+
+    function animateHearts() {
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        heartList.forEach((h, i) => {
+            h.x += h.vX; h.y += h.vY; h.a -= 0.01;
+            ctx.globalAlpha = h.a;
+            ctx.fillStyle = '#fe2c55';
+            ctx.font = '24px Arial';
+            ctx.fillText('❤️', h.x, h.y);
+            if(h.a <= 0) heartList.splice(i, 1);
         });
-    };
+        if(heartList.length > 0) requestAnimationFrame(animateHearts);
+    }
+
+    startLive();
 </script>
 </body>
 </html>
