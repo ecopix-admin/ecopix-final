@@ -3,190 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EcoPix Live Paint</title>
+    <title>AzTube - Professional Video Network</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --bg: #000; --accent: #00f2ff; --grad: linear-gradient(135deg, #00f2ff, #0072ff); }
-        body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); color: white; font-family: sans-serif; overflow: hidden; }
+        :root { --main: #ff0000; --bg: #050505; --glass: rgba(255, 255, 255, 0.1); }
+        body { margin:0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
         
-        /* Video Container - Full Screen */
-        .v-container { width: 100%; height: 100vh; position: relative; overflow: hidden; }
-        #v-player { width: 100%; height: 100%; object-fit: cover; }
+        /* App Container */
+        #app { height: 100vh; display: flex; flex-direction: column; }
 
-        /* CANLI YAZI QATI (Dünyada İlk: Canlı Qraffiti) */
-        #paint-canvas { position: absolute; inset: 0; pointer-events: none; z-index: 80; }
-        .live-text { position: absolute; font-size: 24px; font-weight: bold; color: white; text-shadow: 0 0 10px var(--accent), 0 0 20px black; animation: fadeOut 4s forwards; }
+        /* Full Screen Video Feed */
+        #feed { flex: 1; overflow-y: scroll; scroll-snap-type: y mandatory; background: #000; }
+        .video-card { width: 100%; height: 100vh; scroll-snap-align: start; position: relative; }
+        video { width: 100%; height: 100%; object-fit: cover; }
 
-        /* Yazı Yazma Düyməsi */
-        .text-btn { position: absolute; top: 20px; right: 20px; z-index: 100; background: rgba(0,242,255,0.3); border: 2px solid var(--accent); color: white; padding: 10px; border-radius: 50%; font-size: 18px; cursor: pointer; backdrop-filter: blur(5px); }
+        /* UI Overlays */
+        .overlay { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(0deg, rgba(0,0,0,0.7) 0%, transparent 40%); }
+        .v-meta { position: absolute; bottom: 100px; left: 15px; pointer-events: auto; }
+        .side-actions { position: absolute; right: 15px; bottom: 120px; display: flex; flex-direction: column; gap: 20px; pointer-events: auto; }
+        .icon-btn { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; }
+        .icon-btn i { font-size: 30px; text-shadow: 0 0 10px rgba(0,0,0,0.5); }
 
-        /* Sağ Panel: Emoji Düymələri */
-        .side-bar { position: absolute; right: 10px; bottom: 120px; display: flex; flex-direction: column; gap: 20px; z-index: 100; }
-        .m-btn { font-size: 32px; filter: drop-shadow(0 0 10px rgba(0,0,0,0.8)); cursor: pointer; transition: 0.2s; }
-        .m-btn:active { transform: scale(1.4); }
+        /* Mesajlaşma Bölməsi (DM) */
+        #dm-page { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: none; flex-direction: column; }
+        #chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .msg { padding: 10px 15px; border-radius: 15px; max-width: 80%; width: fit-content; }
+        .msg.me { align-self: flex-end; background: var(--main); }
+        .msg.them { align-self: flex-start; background: var(--glass); }
+        .chat-input { padding: 15px; background: #111; display: flex; gap: 10px; align-items: center; }
+        input { flex: 1; background: var(--glass); border: none; padding: 10px; border-radius: 20px; color: white; outline: none; }
 
-        /* Uçan Emojilər (100-lərlə gələ bilər) */
-        .vibe { position: absolute; bottom: 50px; pointer-events: none; animation: fly 3s linear forwards; font-size: 24px; z-index: 50; }
+        /* Alt Naviqasiya */
+        nav { height: 70px; background: rgba(0,0,0,0.9); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #222; }
+        .nav-item { font-size: 20px; color: #777; cursor: pointer; }
+        .nav-item.active { color: var(--main); }
+        .upload-circle { background: white; color: black; width: 45px; height: 35px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
 
-        /* İdarəetmə Düymələri */
-        .controls { position: absolute; bottom: 30px; left: 0; width: 100%; display: flex; justify-content: center; gap: 30px; z-index: 100; }
-        .c-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 15px; border-radius: 50%; font-size: 20px; backdrop-filter: blur(5px); }
-
-        .upload-zone { position: absolute; top: 20px; left: 20px; z-index: 100; }
-        #status { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); padding: 15px; border-radius: 10px; display: none; z-index: 1000; border: 1px solid var(--accent); }
-
-        @keyframes fly { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80vh) opacity: 0; } }
-        @keyframes fadeOut { 0% { opacity: 1; transform: scale(1); } 80% { opacity: 1; } 100% { opacity: 0; transform: scale(1.5); } }
+        /* Profil Səhifəsi */
+        #profile-page { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: none; padding: 20px; }
     </style>
 </head>
 <body>
 
-    <div id="status">Video Yüklənir...</div>
+    <div id="app">
+        <div id="feed">
+            <div class="video-card">
+                <video src="https://www.w3schools.com/html/mov_bbb.mp4" loop autoplay muted playsinline></video>
+                <div class="overlay"></div>
+                <div class="v-meta">
+                    <h3 id="display-name">@Samxal_Hasanov</h3>
+                    <p id="display-bio">AzTube: Gələcəyin Sosial Şəbəkəsi 🇦🇿</p>
+                </div>
+                <div class="side-actions">
+                    <div class="icon-btn"><i class="fas fa-heart"></i><span>8.4K</span></div>
+                    <div class="icon-btn" onclick="toggleDM()"><i class="fas fa-comment-dots"></i><span>124</span></div>
+                    <div class="icon-btn"><i class="fas fa-share"></i><span>Paylaş</span></div>
+                </div>
+            </div>
+        </div>
 
-    <button class="text-btn" onclick="openTextInput()"><i class="fas fa-comment-dots"></i></button>
-
-    <div class="upload-zone">
-        <button class="c-btn" onclick="document.getElementById('fileInp').click()"><i class="fas fa-plus"></i></button>
-        <input type="file" id="fileInp" hidden accept="video/*" onchange="upload(this)">
+        <nav>
+            <i class="fas fa-home nav-item active" onclick="home()"></i>
+            <i class="fas fa-search nav-item"></i>
+            <div class="upload-circle" onclick="triggerUpload()"><i class="fas fa-plus"></i></div>
+            <i class="fas fa-paper-plane nav-item" onclick="toggleDM()"></i>
+            <i class="fas fa-user nav-item" onclick="toggleProfile()"></i>
+        </nav>
     </div>
 
-    <div class="v-container">
-        <video id="v-player" loop playsinline src=""></video>
-        
-        <div id="paint-canvas"></div>
-
-        <div class="side-bar">
-            <div class="m-btn" onclick="vibe('🔥')">🔥</div>
-            <div class="m-btn" onclick="vibe('❤️')">❤️</div>
-            <div class="m-btn" onclick="vibe('😂')">😂</div>
-            <div class="m-btn" onclick="vibe('😮')">😮</div>
+    <div id="dm-page">
+        <div style="padding: 15px; border-bottom: 1px solid #222; display: flex; align-items: center; gap: 15px;">
+            <i class="fas fa-arrow-left" onclick="toggleDM()"></i>
+            <h3>Mesajlar</h3>
         </div>
-        
-        <div class="controls">
-            <button class="c-btn" onclick="prev()"><i class="fas fa-step-backward"></i></button>
-            <button class="c-btn" id="p-btn" onclick="togglePlay()"><i class="fas fa-pause"></i></button>
-            <button class="c-btn" onclick="next()"><i class="fas fa-step-forward"></i></button>
+        <div id="chat-box"></div>
+        <div class="chat-input">
+            <i class="fas fa-camera" onclick="alert('Şəkil seçin...')"></i>
+            <input type="text" id="msg-input" placeholder="Mesaj yazın...">
+            <i class="fas fa-microphone" id="rec-btn"></i>
+            <i class="fas fa-paper-plane" style="color: var(--main);" onclick="sendMsg()"></i>
+        </div>
+    </div>
+
+    <div id="profile-page">
+        <i class="fas fa-arrow-left" onclick="toggleProfile()" style="font-size: 24px;"></i>
+        <div style="text-align: center; margin-top: 30px;">
+            <div style="width: 90px; height: 90px; background: var(--glass); border-radius: 50%; margin: 0 auto; border: 2px solid var(--main);"></div>
+            <h2 id="userName">İstifadəçi Adı</h2>
+            <p id="userBio" style="opacity: 0.6;">Bioqrafiya bura yazılır...</p>
+            <button onclick="updateProfile()" style="background: white; color: black; border: none; padding: 10px 25px; border-radius: 20px; font-weight: bold;">Profili Yenilə</button>
         </div>
     </div>
 
     <script>
         // Firebase Konfiqurasiyası
-        const conf = { 
+        const config = { 
             apiKey: "AIzaSyCtrVliO1bmdg7r0juWz-Yj2EaEGNsz2j8", 
             databaseURL: "https://ecopix-118c6-default-rtdb.europe-west1.firebasedatabase.app", 
             projectId: "ecopix-118c6" 
         };
-        firebase.initializeApp(conf);
+        firebase.initializeApp(config);
         const db = firebase.database();
 
-        const v = document.getElementById('v-player');
-        const canvas = document.getElementById('paint-canvas');
-        let videos = [];
-        let curIdx = 0;
-        let lastVib = 0;
-
-        // 1. Videoları Dinlə (Sinxron İzləmə)
-        db.ref('stream_videos').on('value', s => {
-            const data = s.val();
-            if(data) {
-                videos = Object.values(data);
-                if(!v.src) loadVideo(0);
-            }
-        });
-
-        function loadVideo(idx) {
-            if(videos[idx]) {
-                v.src = videos[idx].url;
-                v.play();
-                curIdx = idx;
-                document.getElementById('p-btn').innerHTML = '<i class="fas fa-pause"></i>';
-                // Video dəyişəndə köhnə yazıları təmizlə
-                canvas.innerHTML = ""; 
+        // 1. Profil İdarəetməsi
+        function updateProfile() {
+            const name = prompt("Adınız:");
+            const bio = prompt("Haqqınızda:");
+            if(name) {
+                document.getElementById('userName').innerText = name;
+                document.getElementById('display-name').innerText = "@" + name.replace(/\s/g, '');
+                document.getElementById('userBio').innerText = bio;
+                db.ref('aztube_users/myID').set({ name, bio });
             }
         }
 
-        function next() { curIdx++; if(curIdx >= videos.length) curIdx = 0; loadVideo(curIdx); }
-        function prev() { curIdx--; if(curIdx < 0) curIdx = videos.length - 1; loadVideo(curIdx); }
-        function togglePlay() {
-            if(v.paused) { v.play(); document.getElementById('p-btn').innerHTML = '<i class="fas fa-pause"></i>'; }
-            else { v.pause(); document.getElementById('p-btn').innerHTML = '<i class="fas fa-play"></i>'; }
+        // 2. Mesajlaşma Sistemi (Real-Time)
+        function sendMsg() {
+            const inp = document.getElementById('msg-input');
+            if(!inp.value) return;
+            db.ref('aztube_chats').push({ text: inp.value, user: 'me', time: Date.now() });
+            inp.value = "";
         }
 
-        // 2. Canlı Yazı Sistemi (Dünyada İlk)
-        function openTextInput() {
-            const text = prompt("Videonun üzərinə nə yazmaq istəyirsən?");
-            if(text && text.trim()) {
-                // Təsadüfi mövqe
-                const x = Math.random() * 60 + 20; // 20% - 80% arası
-                const y = Math.random() * 60 + 20;
-                const size = Math.random() * 10 + 20; // 20px - 30px arası
-
-                db.ref('live_paint').push({
-                    t: text,
-                    x: x,
-                    y: y,
-                    s: size,
-                    ts: Date.now()
-                });
-            }
-        }
-
-        // Canlı Yazıları Dinləmək
-        db.ref('live_paint').limitToLast(1).on('child_added', s => {
+        db.ref('aztube_chats').on('child_added', s => {
             const d = s.val();
-            const txt = document.createElement('div');
-            txt.className = 'live-text';
-            txt.innerHTML = d.t;
-            txt.style.left = d.x + '%';
-            txt.style.top = d.y + '%';
-            txt.style.fontSize = d.s + 'px';
-            txt.style.color = `hsl(${Math.random()*360}, 100%, 70%)`; // Təsadüfi rəng
-
-            canvas.appendChild(txt);
-            
-            // 4 saniyə sonra yazını sil
-            setTimeout(() => txt.remove(), 4000);
+            const box = document.getElementById('chat-box');
+            const m = document.createElement('div');
+            m.className = `msg ${d.user === 'me' ? 'me' : 'them'}`;
+            m.innerText = d.text;
+            box.appendChild(m);
+            box.scrollTop = box.scrollHeight;
         });
 
-        // 3. Emoji Vibe Sistemi (100-lərlə emoji dəstəyi)
-        function vibe(e) {
-            db.ref('global_vibe').push({ e: e, x: Math.random() * 80 + 10 });
-            if(navigator.vibrate) navigator.vibrate(50);
+        // 3. Professional Video Yükləmə
+        async function triggerUpload() {
+            const inp = document.createElement('input');
+            inp.type = 'file'; inp.accept = 'video/*';
+            inp.onchange = async (e) => {
+                alert("AzTube: Video emal olunur...");
+                const fd = new FormData();
+                fd.append('file', e.target.files[0]);
+                fd.append('upload_preset', 'ml_default');
+                try {
+                    const res = await fetch('https://api.cloudinary.com/v1_1/dyrfkit3x/video/upload', {method:'POST', body:fd});
+                    const data = await res.json();
+                    db.ref('aztube_feed').push({ url: data.secure_url, user: 'User', ts: Date.now() });
+                    alert("Video yayımlandı! 🇦🇿");
+                } catch(err) { alert("Xəta!"); }
+            };
+            inp.click();
         }
 
-        db.ref('global_vibe').limitToLast(1).on('child_added', s => {
-            const d = s.val();
-            const el = document.createElement('div');
-            el.className = 'vibe';
-            el.innerHTML = d.e;
-            el.style.left = d.x + '%';
-            document.body.appendChild(el);
-            setTimeout(() => el.remove(), 3000);
-
-            // Ağıllı Vibrasiya Filteri
-            let now = Date.now();
-            if(now - lastVib > 1500) {
-                if(navigator.vibrate) navigator.vibrate([40, 100, 40]);
-                lastVib = now;
-            }
-        });
-
-        // 4. Video Yükləmə (Cloudinary 4K)
-        async function upload(inp) {
-            if(!inp.files[0]) return;
-            document.getElementById('status').style.display = 'block';
-            const fd = new FormData();
-            fd.append('file', inp.files[0]);
-            fd.append('upload_preset', 'ml_default');
-            try {
-                const res = await fetch('https://api.cloudinary.com/v1_1/dyrfkit3x/video/upload', {method:'POST', body:fd});
-                const d = await res.json();
-                db.ref('stream_videos').push({ url: d.secure_url });
-                document.getElementById('status').style.display = 'none';
-            } catch(e) { alert("Xəta!"); document.getElementById('status').style.display = 'none'; }
-        }
+        // UI Keçidləri
+        function toggleDM() { const p = document.getElementById('dm-page'); p.style.display = p.style.display === 'flex' ? 'none' : 'flex'; }
+        function toggleProfile() { const p = document.getElementById('profile-page'); p.style.display = p.style.display === 'block' ? 'none' : 'block'; }
+        function home() { toggleDM(); toggleProfile(); }
     </script>
 </body>
 </html>
