@@ -3,289 +3,327 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Çayxana Ultimate - Pro Media Hub</title>
+    <title>Çayxana Pro - Full Ecosystem</title>
+    
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
     <style>
         :root { --accent: #00f2ff; --bg: #050505; --card: #121212; --danger: #ff3b30; --grad: linear-gradient(135deg, #00f2ff, #0072ff); }
         * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
-        body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+        body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; position: fixed; width: 100%; }
 
-        /* HEADER & SEARCH */
-        .top-nav { background: #000; padding: 10px 15px; border-bottom: 1px solid #222; z-index: 100; }
-        .search-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
-        .search-bar { flex: 1; background: #111; border: 1px solid #333; padding: 10px 15px; border-radius: 20px; color: white; display: flex; align-items: center; }
-        .search-bar input { background: transparent; border: none; color: white; width: 100%; padding-left: 10px; }
+        /* HEADER & PROFILE */
+        .top-nav { background: #000; padding: 10px; border-bottom: 1px solid #222; z-index: 1000; position: relative; }
+        .header-top { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .user-profile-btn { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--accent); overflow: hidden; cursor: pointer; background: #222; }
+        .user-profile-btn img { width: 100%; height: 100%; object-fit: cover; }
         
-        /* CATEGORIES */
-        .categories { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; }
-        .cat-item { flex-shrink: 0; text-align: center; cursor: pointer; }
-        .cat-icon { width: 45px; height: 45px; border-radius: 12px; background: var(--card); border: 1px solid #333; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 4px; transition: 0.3s; }
-        .cat-item:active .cat-icon { border-color: var(--accent); color: var(--accent); }
+        .search-container { flex: 1; display: flex; background: #111; border-radius: 20px; padding: 5px 15px; align-items: center; border: 1px solid #333; }
+        .search-container input { background: transparent; border: none; color: white; flex: 1; padding: 5px; }
+        .search-btn { color: var(--accent); cursor: pointer; padding: 5px; }
+
+        .categories { display: flex; gap: 15px; overflow-x: auto; padding: 5px 0; scrollbar-width: none; }
+        .cat-item { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }
+        .cat-icon { width: 45px; height: 45px; border-radius: 12px; background: var(--card); border: 1px solid #333; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: 0.3s; }
         .cat-item span { font-size: 10px; color: #888; }
 
-        /* PLAYER STAGE */
-        .stage { width: 100%; height: 32vh; background: #000; position: relative; overflow: hidden; border-bottom: 1px solid #222; }
-        iframe, video { width: 100%; height: 100%; border: none; display: none; }
-        .active-view { display: block !important; }
-
-        /* DRAGGABLE & ZOOMABLE CAMS */
-        #video-grid { position: absolute; inset: 0; pointer-events: none; z-index: 50; }
+        /* STAGE & CAMERAS */
+        .main-container { height: 100vh; display: flex; flex-direction: column; }
+        .stage { width: 100%; height: 35vh; background: #000; position: relative; overflow: hidden; border-bottom: 1px solid #222; }
+        #video-grid { position: fixed; inset: 0; pointer-events: none; z-index: 500; }
         .p2p-cam { 
-            width: 75px; height: 75px; border-radius: 50%; border: 2px solid var(--accent); 
+            width: 85px; height: 85px; border-radius: 50%; border: 2px solid var(--accent); 
             object-fit: cover; background: #000; position: absolute; 
             cursor: move; pointer-events: auto; touch-action: none;
-            box-shadow: 0 0 10px rgba(0,242,255,0.3); transition: width 0.3s, height 0.3s, border-radius 0.3s;
+            box-shadow: 0 0 15px rgba(0,242,255,0.4); z-index: 501;
         }
-        .cam-zoomed { width: 100% !important; height: 100% !important; border-radius: 0 !important; top: 0 !important; left: 0 !important; z-index: 100; transform: none !important; }
-        .back-btn-cam { position: absolute; top: 10px; left: 10px; z-index: 110; display: none; background: rgba(0,0,0,0.7); border: 1px solid var(--accent); color: white; padding: 5px 10px; border-radius: 5px; }
+        
+        /* SPLIT VIEW */
+        .split-view { position: absolute; inset: 0; z-index: 600; display: none; flex-direction: column; background: #000; }
+        .split-top, .split-bottom { flex: 1; position: relative; overflow: hidden; }
+        .split-bottom { border-top: 2px solid var(--accent); }
+        .close-split { position: absolute; top: 15px; right: 15px; z-index: 700; background: var(--danger); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 18px; }
 
-        /* OVERLAYS (SHORTS, GAMES, MUSIC, LISTS) */
-        .full-overlay { position: fixed; inset: 0; background: #000; z-index: 2000; display: none; flex-direction: column; }
-        .overlay-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; }
-        .scroll-grid { flex: 1; overflow-y: auto; padding: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .shorts-wrapper { flex: 1; overflow-y: scroll; snap-type: y mandatory; }
-        .short-item { width: 100%; height: 100%; snap-align: start; background: #000; position: relative; }
+        /* OVERLAYS */
+        .overlay { position: fixed; inset: 0; background: #050505; z-index: 2000; display: none; flex-direction: column; }
+        .overlay-header { padding: 15px; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #222; }
+        .back-btn { font-size: 20px; cursor: pointer; color: var(--accent); }
+        .scroll-grid { flex: 1; overflow-y: auto; padding: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .content-card { background: var(--card); border-radius: 12px; overflow: hidden; border: 1px solid #222; }
 
-        /* CHAT SECTION */
-        .chat-area { height: calc(68vh - 160px); display: flex; flex-direction: column; background: #080808; }
-        .messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-        .msg { background: #151515; padding: 10px; border-radius: 12px; border: 1px solid #222; font-size: 13px; max-width: 85%; }
-        .msg.me { align-self: flex-end; border-color: var(--accent); background: #1a1a1a; }
-        .msg b { font-size: 9px; color: var(--accent); display: block; margin-bottom: 3px; }
-        .msg img { width: 100%; border-radius: 8px; margin-top: 5px; }
+        /* CHAT */
+        .chat-area { flex: 1; display: flex; flex-direction: column; background: #080808; overflow: hidden; }
+        .messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; }
+        .msg { background: #151515; padding: 12px; border-radius: 18px; max-width: 85%; border: 1px solid #222; font-size: 14px; position: relative; animation: fadeIn 0.3s; }
+        .msg b { display: block; font-size: 10px; color: var(--accent); margin-bottom: 4px; }
+        .msg img { width: 100%; border-radius: 12px; margin-top: 5px; }
+        .msg.me { align-self: flex-end; background: #1a1a1a; border-color: var(--accent); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* BOTTOM TOOLS */
-        .footer { background: #000; padding: 10px; display: flex; align-items: center; gap: 10px; border-top: 1px solid #222; }
-        .action-btn { width: 42px; height: 42px; border-radius: 50%; background: #18181b; border: none; color: white; display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; }
-        .btn-main { background: var(--grad); color: #000; font-weight: bold; }
-        .active-red { background: var(--danger) !important; box-shadow: 0 0 10px var(--danger); }
+        /* FOOTER & BUTTONS */
+        .footer { background: #000; padding: 12px; display: flex; align-items: center; gap: 10px; border-top: 1px solid #222; }
+        .action-btn { width: 46px; height: 46px; border-radius: 50%; background: #1a1a1b; border: none; color: white; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; transition: 0.2s; }
+        .send-btn { background: var(--grad); color: black; font-weight: bold; }
+        .recording-active { background: var(--danger) !important; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7); } 100% { box-shadow: 0 0 0 15px rgba(255, 59, 48, 0); } }
+        
+        .goog-te-banner-frame { display: none !important; }
+        body { top: 0 !important; }
     </style>
 </head>
 <body>
 
-    <div class="top-nav">
-        <div class="search-row">
-            <div class="search-bar">
-                <i class="fas fa-search" style="color:#555"></i>
-                <input type="text" id="globalSearch" placeholder="Otaq və ya Kino axtar...">
-                <i class="fas fa-times" onclick="document.getElementById('globalSearch').value=''" style="cursor:pointer"></i>
+    <div class="main-container">
+        <div class="top-nav">
+            <div class="header-top">
+                <div class="user-profile-btn" onclick="openProfile()"><img id="myAvatar" src=""></div>
+                <div class="search-container">
+                    <input type="text" id="mainSearch" placeholder="Kino, Kanal, Otaq...">
+                    <i class="fas fa-search search-btn" onclick="executeSearch()"></i>
+                </div>
+                <button class="action-btn" onclick="openFull('rooms')"><i class="fas fa-list"></i></button>
+                <div id="google_translate_element" style="display:none"></div>
             </div>
-            <button class="action-btn" onclick="showRoomsList()"><i class="fas fa-layer-group"></i></button>
-            <button class="action-btn" onclick="toggleNotif()" id="notifBtn"><i class="fas fa-bell"></i></button>
+            <div class="categories">
+                <div class="cat-item" onclick="openFull('shorts')"><div class="cat-icon" style="color:#ff0050"><i class="fab fa-tiktok"></i></div><span>Shorts</span></div>
+                <div class="cat-item" onclick="showList('film')"><div class="cat-icon"><i class="fas fa-film"></i></div><span>100+ Film</span></div>
+                <div class="cat-item" onclick="showList('tv')"><div class="cat-icon"><i class="fas fa-tv"></i></div><span>50+ Kanal</span></div>
+                <div class="cat-item" onclick="showList('sport')"><div class="cat-icon"><i class="fas fa-futbol"></i></div><span>İdman TV</span></div>
+                <div class="cat-item" onclick="openFull('games')"><div class="cat-icon" style="color:#00ff00"><i class="fas fa-gamepad"></i></div><span>Oyunlar</span></div>
+                <div class="cat-item" onclick="openFull('music')"><div class="cat-icon" style="color:#ff00ff"><i class="fas fa-music"></i></div><span>Musiqi</span></div>
+            </div>
         </div>
-        <div class="categories">
-            <div class="cat-item" onclick="openFull('shorts')"><div class="cat-icon" style="color:#ff0050"><i class="fab fa-tiktok"></i></div><span>Shorts</span></div>
-            <div class="cat-item" onclick="showList('film')"><div class="cat-icon"><i class="fas fa-film"></i></div><span>Kinolar</span></div>
-            <div class="cat-item" onclick="showList('tv')"><div class="cat-icon"><i class="fas fa-tv"></i></div><span>TV</span></div>
-            <div class="cat-item" onclick="showList('idman')"><div class="cat-icon"><i class="fas fa-futbol"></i></div><span>İdman</span></div>
-            <div class="cat-item" onclick="openFull('games')"><div class="cat-icon" style="color:#00ff00"><i class="fas fa-gamepad"></i></div><span>Oyunlar</span></div>
-            <div class="cat-item" onclick="openFull('music')"><div class="cat-icon" style="color:#ff00ff"><i class="fas fa-music"></i></div><span>Musiqi</span></div>
+
+        <div class="stage">
+            <div id="video-grid">
+                <video id="my-cam" class="p2p-cam" style="display:none; top:20px; left:20px;" autoplay muted playsinline onclick="expandCam(this)"></video>
+            </div>
+            <iframe id="yt-player" style="width:100%; height:100%; display:none;" allow="autoplay; encrypted-media"></iframe>
+            <video id="hls-player" style="width:100%; height:100%; display:none;" controls autoplay></video>
+            
+            <div class="split-view" id="splitView">
+                <button class="close-split" onclick="closeSplit()"><i class="fas fa-times"></i></button>
+                <div class="split-top" id="splitTarget"></div>
+                <div class="split-bottom" id="splitSelf"></div>
+            </div>
+        </div>
+
+        <div class="chat-area">
+            <div class="messages" id="msgBox"></div>
+            <div class="footer">
+                <label class="action-btn"><i class="fas fa-plus"></i><input type="file" hidden id="fileInp" onchange="uploadMedia(this)"></label>
+                <input type="text" id="msgInp" style="flex:1; background:#18181b; border:none; padding:12px; border-radius:20px; color:white" placeholder="Mesajınız...">
+                <button class="action-btn" id="micBtn" onclick="toggleVoiceRecord()"><i class="fas fa-microphone"></i></button>
+                <button class="action-btn" id="camBtn" onclick="toggleCam()"><i class="fas fa-video"></i></button>
+                <button class="action-btn send-btn" onclick="sendMsg()"><i class="fas fa-paper-plane"></i></button>
+            </div>
         </div>
     </div>
 
-    <div class="stage">
-        <button id="camBackBtn" class="back-btn-cam" onclick="minimizeCam()"><i class="fas fa-compress"></i> Geri</button>
-        <div id="video-grid">
-            <video id="my-cam" class="p2p-cam" style="display:none; top:10px; left:10px;" autoplay muted playsinline onclick="zoomCam(this)"></video>
+    <div id="shortsOverlay" class="overlay">
+        <div class="overlay-header"><i class="fas fa-chevron-left back-btn" onclick="closeFull('shorts')"></i><h2>Video Shorts</h2></div>
+        <div id="shortsList" style="flex:1; overflow-y:scroll; snap-type: y mandatory;"></div>
+    </div>
+
+    <div id="contentOverlay" class="overlay">
+        <div class="overlay-header"><i class="fas fa-chevron-left back-btn" onclick="closeFull('content')"></i><h2 id="overlayTitle">Siyahı</h2></div>
+        <div class="scroll-grid" id="contentGrid"></div>
+    </div>
+
+    <div id="profileOverlay" class="overlay">
+        <div class="overlay-header"><i class="fas fa-user-edit back-btn" onclick="closeFull('profile')"></i><h2>Profilim</h2></div>
+        <div style="padding:30px; text-align:center;">
+            <div class="user-profile-btn" style="width:120px; height:120px; margin:0 auto 20px;" onclick="document.getElementById('avatarInp').click()">
+                <img id="editAvatar" src="">
+            </div>
+            <input type="file" id="avatarInp" hidden onchange="updateAvatar(this)">
+            <input type="text" id="nickInp" style="width:100%; background:#111; border:1px solid #333; padding:15px; border-radius:12px; color:white; margin-bottom:20px; font-size:18px;">
+            <button class="action-btn send-btn" style="width:100%; border-radius:12px; height:55px;" onclick="saveProfile()">YADDA SAXLA</button>
         </div>
-        <iframe id="yt-player" allow="autoplay; encrypted-media"></iframe>
-        <video id="hls-player" controls autoplay muted></video>
-    </div>
-
-    <div class="chat-area">
-        <div class="messages" id="msgBox"></div>
-        <div class="footer">
-            <label class="action-btn"><i class="fas fa-plus"></i><input type="file" hidden id="fileInp" onchange="uploadToCloud(this)"></label>
-            <input type="text" id="msgInp" style="flex:1; background:#18181b; border:none; padding:12px; border-radius:20px; color:white" placeholder="Mesaj yazın...">
-            <button class="action-btn" id="voiceBtn" onclick="toggleVoice()"><i class="fas fa-microphone"></i></button>
-            <button class="action-btn" id="camBtn" onclick="toggleCamera()"><i class="fas fa-video"></i></button>
-            <button class="action-btn btn-main" onclick="sendMsg()"><i class="fas fa-paper-plane"></i></button>
-        </div>
-    </div>
-
-    <div id="shortsOverlay" class="full-overlay">
-        <div class="overlay-header"><h2>Shorts Feed</h2><button class="action-btn" onclick="closeFull('shorts')"><i class="fas fa-times"></i></button></div>
-        <div class="shorts-wrapper" id="shortsList"></div>
-    </div>
-
-    <div id="listOverlay" class="full-overlay">
-        <div class="overlay-header"><h2 id="listTitle">Siyahı</h2><button class="action-btn" onclick="closeList()"><i class="fas fa-times"></i></button></div>
-        <div class="scroll-grid" id="listGrid"></div>
-    </div>
-
-    <div id="gamesOverlay" class="full-overlay">
-        <div class="overlay-header"><h2>Oyunlar</h2><button class="action-btn" onclick="closeFull('games')"><i class="fas fa-times"></i></button></div>
-        <div class="scroll-grid">
-            <div class="cat-item" onclick="loadGame('https://m.gamesnacks.com/games/2048/')"><div class="cat-icon">🎮</div><span>2048</span></div>
-            <div class="cat-item" onclick="loadGame('https://m.gamesnacks.com/games/omnomrun/')"><div class="cat-icon">🏃</div><span>Om Nom</span></div>
-            <div class="cat-item" onclick="loadGame('https://m.gamesnacks.com/games/towerbuild/')"><div class="cat-icon">🏗️</div><span>Tower</span></div>
-        </div>
-        <iframe id="gameFrame" style="width:100%; flex:1; display:none; border:none;"></iframe>
     </div>
 
     <script>
-        // FIREBASE SETUP
+        // --- INITIALIZATION & FIREBASE ---
         const conf = { apiKey: "AIzaSyCtrVliO1bmdg7r0juWz-Yj2EaEGNsz2j8", databaseURL: "https://ecopix-118c6-default-rtdb.europe-west1.firebasedatabase.app", projectId: "ecopix-118c6" };
         firebase.initializeApp(conf);
         const db = firebase.database();
 
-        let nick = localStorage.getItem('v_nick') || "User_" + Math.floor(Math.random()*9999);
+        let nick = localStorage.getItem('v_nick') || "Qonaq_" + Math.floor(Math.random()*9999);
+        let avatar = localStorage.getItem('v_avatar') || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
         let room = localStorage.getItem('v_room') || "Lobby";
-        let notifActive = localStorage.getItem('notif') === 'true';
-        
+
+        document.getElementById('myAvatar').src = avatar;
+        document.getElementById('editAvatar').src = avatar;
+        document.getElementById('nickInp').value = nick;
+
         const peer = new Peer(nick.replace(/\s+/g,'_') + "_" + room);
         let myStream = null;
 
-        // --- NOTIFICATION SYSTEM ---
-        function toggleNotif() {
-            notifActive = !notifActive;
-            localStorage.setItem('notif', notifActive);
-            document.getElementById('notifBtn').style.color = notifActive ? "var(--accent)" : "white";
-            if(notifActive) Notification.requestPermission();
-        }
+        // --- VOICE RECORDER LOGIC (YENİ) ---
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
 
-        function pushNotif(user, text) {
-            if(notifActive && document.hidden) {
-                new Notification(user, { body: text, icon: 'https://cdn-icons-png.flaticon.com/512/2598/2598851.png' });
+        async function toggleVoiceRecord() {
+            const btn = document.getElementById('micBtn');
+            if (!isRecording) {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+                    uploadAudioFile(audioBlob);
+                };
+                mediaRecorder.start();
+                isRecording = true;
+                btn.classList.add('recording-active');
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                btn.classList.remove('recording-active');
             }
         }
 
-        // --- CAMERA & DRAGGABLE LOGIC ---
-        async function toggleCamera() {
+        async function uploadAudioFile(blob) {
+            const fd = new FormData();
+            fd.append('file', blob);
+            fd.append('upload_preset', 'ml_default');
+            const res = await fetch('https://api.cloudinary.com/v1_1/dyrfkit3x/auto/upload', {method:'POST', body:fd});
+            const data = await res.json();
+            db.ref(`rooms/${room}/msgs`).push({user: nick, url: data.secure_url, type: 'audio'});
+        }
+
+        // --- CAMERA & DRAGGABLE ---
+        async function toggleCam() {
             if(!myStream) {
                 myStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
-                const myCam = document.getElementById('my-cam');
-                myCam.srcObject = myStream;
-                myCam.style.display = 'block';
-                document.getElementById('camBtn').classList.add('active-red');
+                const v = document.getElementById('my-cam');
+                v.srcObject = myStream; v.style.display = 'block';
                 db.ref(`rooms/${room}/users/${nick}`).set({active: true});
-                // Connect to existing users
-                db.ref(`rooms/${room}/users`).once('value', s => {
-                    s.forEach(child => { if(child.key !== nick) peer.call(child.key.replace(/\s+/g,'_') + "_" + room, myStream); });
-                });
             } else {
-                myStream.getTracks().forEach(t => t.stop());
-                myStream = null;
+                myStream.getTracks().forEach(t => t.stop()); myStream = null;
                 document.getElementById('my-cam').style.display = 'none';
-                document.getElementById('camBtn').classList.remove('active-red');
-                db.ref(`rooms/${room}/users/${nick}`).remove();
             }
-        }
-
-        peer.on('call', call => {
-            if(myStream) {
-                call.answer(myStream);
-                call.on('stream', st => addRemoteCam(st, call.peer));
-            }
-        });
-
-        function addRemoteCam(st, id) {
-            if(document.getElementById(id)) return;
-            let v = document.createElement('video');
-            v.id = id; v.className = "p2p-cam"; v.srcObject = st; v.autoplay = true; v.playsinline = true;
-            v.style.top = Math.random()*100 + "px"; v.style.left = Math.random()*100 + "px";
-            v.onclick = () => zoomCam(v);
-            document.getElementById('video-grid').appendChild(v);
-            makeDraggable(v);
-        }
-
-        function zoomCam(el) {
-            el.classList.add('cam-zoomed');
-            document.getElementById('camBackBtn').style.display = 'block';
-        }
-
-        function minimizeCam() {
-            document.querySelectorAll('.p2p-cam').forEach(v => v.classList.remove('cam-zoomed'));
-            document.getElementById('camBackBtn').style.display = 'none';
         }
 
         function makeDraggable(el) {
-            let posX = 0, posY = 0, initialX, initialY;
+            let x = 0, y = 0, x1 = 0, y1 = 0;
             el.ontouchstart = e => {
-                initialX = e.touches[0].clientX - posX; initialY = e.touches[0].clientY - posY;
+                x1 = e.touches[0].clientX; y1 = e.touches[0].clientY;
                 document.ontouchmove = e => {
-                    posX = e.touches[0].clientX - initialX; posY = e.touches[0].clientY - initialY;
-                    el.style.transform = `translate(${posX}px, ${posY}px)`;
+                    x = x1 - e.touches[0].clientX; y = y1 - e.touches[0].clientY;
+                    x1 = e.touches[0].clientX; y1 = e.touches[0].clientY;
+                    el.style.top = (el.offsetTop - y) + "px";
+                    el.style.left = (el.offsetLeft - x) + "px";
                 };
             };
             el.ontouchend = () => document.ontouchmove = null;
         }
         makeDraggable(document.getElementById('my-cam'));
 
-        // --- SHORTS & GAMES ---
-        function openFull(type) {
-            document.getElementById(type+'Overlay').style.display = 'flex';
-            if(type === 'shorts') {
-                const wrap = document.getElementById('shortsList');
-                wrap.innerHTML = "";
-                ["v64pP7_r9-0", "5_XDiB66P7s", "3D099N-jNHA", "YoHD9XEInc0"].forEach(id => {
-                    wrap.innerHTML += `<div class="short-item"><iframe src="https://www.youtube.com/embed/${id}?autoplay=1&loop=1&playlist=${id}&controls=0"></iframe></div>`;
-                });
+        // --- SPLIT VIEW ---
+        function expandCam(el) {
+            const split = document.getElementById('splitView');
+            split.style.display = 'flex';
+            const clone = el.cloneNode(); clone.srcObject = el.srcObject; clone.style = "width:100%;height:100%;object-fit:cover;";
+            document.getElementById('splitTarget').innerHTML = ""; 
+            document.getElementById('splitTarget').appendChild(clone);
+            
+            if(myStream) {
+                const myV = document.createElement('video'); myV.srcObject = myStream; myV.autoplay = true; myV.style = "width:100%;height:100%;object-fit:cover;";
+                document.getElementById('splitSelf').innerHTML = ""; 
+                document.getElementById('splitSelf').appendChild(myV);
             }
         }
-        function closeFull(type) { document.getElementById(type+'Overlay').style.display = 'none'; }
-        function loadGame(url) {
-            const f = document.getElementById('gameFrame');
-            f.src = url; f.style.display = 'block';
-        }
+        function closeSplit() { document.getElementById('splitView').style.display = 'none'; }
 
-        // --- CONTENT & SYNC ---
-        const channels = {
-            film: Array.from({length: 20}, (_, i) => ({n: "Kino "+(i+1), id: "YoHD9XEInc0", t: "yt"})),
-            idman: [{n: "CBC Sport", id: "j_SInXN2Fas", t: "yt"}, {n: "TRT Spor", id: "v64pP7_r9-0", t: "yt"}]
+        // --- CONTENT SYSTEM (100+ DATA) ---
+        const dataBank = {
+            film: Array.from({length:100}, (_, i) => ({n: "Premium Film "+(i+1), id: "YoHD9XEInc0", t:"yt"})),
+            tv: Array.from({length:50}, (_, i) => ({n: "Canlı Kanal "+(i+1), id: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8", t:"hls"})),
+            sport: [{n: "CBC Sport", id: "j_SInXN2Fas", t:"yt"}, {n: "TRT Spor", id: "v64pP7_r9-0", t:"yt"}]
         };
 
         function showList(cat) {
-            const grid = document.getElementById('listGrid'); grid.innerHTML = "";
-            document.getElementById('listTitle').innerText = cat.toUpperCase();
-            (channels[cat] || []).forEach(ch => {
-                grid.innerHTML += `<div class="msg" style="cursor:pointer" onclick="selectContent('${ch.t}','${ch.id}')"><b>${ch.n}</b></div>`;
+            const grid = document.getElementById('contentGrid'); grid.innerHTML = "";
+            document.getElementById('overlayTitle').innerText = cat.toUpperCase();
+            dataBank[cat].forEach(i => {
+                grid.innerHTML += `<div class="content-card" onclick="playMedia('${i.t}','${i.id}')">
+                    <img src="${i.t==='yt' ? 'https://img.youtube.com/vi/'+i.id+'/hqdefault.jpg' : 'https://cdn-icons-png.flaticon.com/512/716/716429.png'}">
+                    <p>${i.n}</p>
+                </div>`;
             });
-            document.getElementById('listOverlay').style.display = 'flex';
+            document.getElementById('contentOverlay').style.display = 'flex';
         }
-        function selectContent(type, id) { db.ref(`rooms/${room}/media`).set({type, id}); closeList(); }
-        function closeList() { document.getElementById('listOverlay').style.display = 'none'; }
+        function playMedia(t, id) { db.ref(`rooms/${room}/media`).set({t, id}); closeFull('content'); }
 
         db.ref(`rooms/${room}/media`).on('value', s => {
-            const d = s.val() || {type:'yt', id:'j_SInXN2Fas'};
-            const yt = document.getElementById('yt-player'); const tv = document.getElementById('hls-player');
-            yt.classList.remove('active-view'); tv.classList.remove('active-view');
-            if(d.type==='yt') { yt.src=`https://www.youtube.com/embed/${d.id}?autoplay=1&mute=1`; yt.classList.add('active-view'); }
-            else { tv.classList.add('active-view'); if(Hls.isSupported()){ let h=new Hls(); h.loadSource(d.id); h.attachMedia(tv); }}
+            const d = s.val() || {t:'yt', id:'j_SInXN2Fas'};
+            const yt = document.getElementById('yt-player'); const hls = document.getElementById('hls-player');
+            yt.style.display = 'none'; hls.style.display = 'none';
+            if(d.t === 'yt') { yt.src = `https://www.youtube.com/embed/${d.id}?autoplay=1`; yt.style.display = 'block'; }
+            else { hls.style.display = 'block'; if(Hls.isSupported()){ let h=new Hls(); h.loadSource(d.id); h.attachMedia(hls); }}
         });
 
-        // --- CHAT & FILES ---
-        async function uploadToCloud(input) {
+        // --- MEDIA UPLOAD & CHAT ---
+        async function uploadMedia(input) {
             const file = input.files[0]; if(!file) return;
-            const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', 'ml_default');
-            const res = await fetch(`https://api.cloudinary.com/v1_1/dyrfkit3x/auto/upload`, { method:'POST', body:fd });
-            const data = await res.json();
-            db.ref(`rooms/${room}/msgs`).push({user: nick, url: data.secure_url, type: file.type.split('/')[0], time: Date.now()});
+            const data = new FormData(); data.append('file', file); data.append('upload_preset', 'ml_default');
+            const res = await fetch('https://api.cloudinary.com/v1_1/dyrfkit3x/auto/upload', {method:'POST', body:data});
+            const resData = await res.json();
+            db.ref(`rooms/${room}/msgs`).push({user: nick, url: resData.secure_url, type: file.type.split('/')[0]});
         }
 
         function sendMsg() {
             let i = document.getElementById('msgInp');
-            if(i.value) { db.ref(`rooms/${room}/msgs`).push({user: nick, text: i.value, type: 'text', time: Date.now()}); i.value = ""; }
+            if(i.value) { db.ref(`rooms/${room}/msgs`).push({user: nick, text: i.value, type:'text'}); i.value = ""; }
         }
 
         db.ref(`rooms/${room}/msgs`).limitToLast(20).on('child_added', snap => {
             const d = snap.val();
             const div = document.createElement('div');
             div.className = `msg ${d.user === nick ? 'me' : ''}`;
-            div.innerHTML = `<b>${d.user}</b> ${d.type === 'text' ? d.text : `<img src="${d.url}">`}`;
+            let html = `<b>${d.user}</b>`;
+            if(d.type === 'text') html += d.text;
+            else if(d.type === 'image') html += `<img src="${d.url}" onclick="window.open('${d.url}')">`;
+            else if(d.type === 'audio') html += `<audio src="${d.url}" controls style="width:100%"></audio>`;
+            else if(d.type === 'video') html += `<video src="${d.url}" controls style="width:100%"></video>`;
+            div.innerHTML = html;
             document.getElementById('msgBox').appendChild(div);
             document.getElementById('msgBox').scrollTop = 9999;
-            if(d.user !== nick) pushNotif(d.user, d.text || "Şəkil göndərdi");
         });
 
-        function showRoomsList() {
-            let r = prompt("Yeni otaq adı və ya mövcud otağa keçid:");
-            if(r) { localStorage.setItem('v_room', r); location.reload(); }
+        // --- GOOGLE TRANSLATE ---
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({pageLanguage: 'az'}, 'google_translate_element');
+        }
+
+        // --- PROFILE FUNCTIONS ---
+        function openProfile() { document.getElementById('profileOverlay').style.display = 'flex'; }
+        function closeFull(type) { document.getElementById(type+'Overlay').style.display = 'none'; }
+        async function updateAvatar(input) {
+            const file = input.files[0];
+            const data = new FormData(); data.append('file', file); data.append('upload_preset', 'ml_default');
+            const res = await fetch('https://api.cloudinary.com/v1_1/dyrfkit3x/auto/upload', {method:'POST', body:data});
+            const resData = await res.json();
+            avatar = resData.secure_url;
+            document.getElementById('editAvatar').src = avatar;
+        }
+        function saveProfile() {
+            nick = document.getElementById('nickInp').value;
+            localStorage.setItem('v_nick', nick);
+            localStorage.setItem('v_avatar', avatar);
+            location.reload();
+        }
+        
+        function executeSearch() {
+            alert("Axtarış aktivdir: " + document.getElementById('mainSearch').value);
         }
     </script>
 </body>
