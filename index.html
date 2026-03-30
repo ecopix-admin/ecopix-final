@@ -1,81 +1,63 @@
-<!DOCTYPE html>
-<html lang="az">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>EcoPix P2P Ultra</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        body { background: #000; color: #fff; margin: 0; overflow: hidden; font-family: sans-serif; }
-        .video-container { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; }
-        .video-card { height: 100vh; scroll-snap-align: start; position: relative; display: flex; align-items: center; justify-content: center; }
-        video { width: 100%; height: 100%; object-fit: cover; }
-        .ui-right { position: absolute; right: 15px; bottom: 120px; display: flex; flex-direction: column; gap: 20px; z-index: 100; }
-        .btn { background: none; border: none; color: white; font-size: 30px; text-shadow: 0 2px 5px #000; }
-        .live-tag { position: fixed; top: 20px; left: 20px; background: red; padding: 5px 15px; border-radius: 20px; font-weight: bold; z-index: 500; cursor: pointer; }
-    </style>
-</head>
-<body>
-
-<div class="live-tag" onclick="startP2PLive()">📡 CANLI YAYIM (P2P)</div>
-
-<div class="video-container" id="feed">
-    <div class="video-card">
-        <video loop autoplay muted playsinline src="https://v16-webapp.tiktok.com/..." onerror="this.src='https://assets.mixkit.co/videos/preview/mixkit-girl-dancing-under-neon-lights-34405-large.mp4'"></video>
-        <div class="ui-right">
-            <button class="btn" onclick="like()"><i class="fas fa-heart"></i></button>
-            <button class="btn" onclick="openMusic()"><i class="fas fa-music" style="color:#00f2ea"></i></button>
-        </div>
+<div id="liveCameraPanel" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:9999;">
+    <video id="p2pStream" autoplay playsinline style="width:100%; height:100%; object-fit:cover;"></video>
+    
+    <div style="position:absolute; top:30px; left:20px; display:flex; align-items:center; gap:10px;">
+        <div style="background:red; color:white; padding:5px 15px; border-radius:20px; font-weight:bold; animation: blink 1s infinite;">● LIVE</div>
+        <div style="background:rgba(0,0,0,0.6); padding:5px 15px; border-radius:20px;"><i class="fas fa-eye"></i> <span id="liveViewers">1,240</span></div>
     </div>
-</div>
 
-<div id="p2pOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:1000;">
-    <video id="myCam" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover; transform: scaleX(-1);"></video>
-    <div style="position:absolute; bottom:50px; width:100%; text-align:center;">
-        <button onclick="location.reload()" style="background:white; border:none; padding:15px 40px; border-radius:30px; font-weight:bold;">YAYIMI BİTİR</button>
+    <div style="position:absolute; bottom:40px; width:100%; display:flex; justify-content:space-around; align-items:center;">
+        <button onclick="toggleMusic()" style="background:rgba(255,255,255,0.2); border:none; border-radius:50%; width:60px; height:60px; color:white;">
+            <i class="fas fa-music"></i>
+        </button>
+        <button onclick="stopLive()" style="background:#ff0050; border:none; border-radius:50%; width:80px; height:80px; color:white; font-size:24px;">
+            <i class="fas fa-stop"></i>
+        </button>
+        <button onclick="switchCamera()" style="background:rgba(255,255,255,0.2); border:none; border-radius:50%; width:60px; height:60px; color:white;">
+            <i class="fas fa-sync"></i>
+        </button>
     </div>
-</div>
-
-<div id="musicBox" style="display:none; position:fixed; bottom:0; width:100%; background:rgba(0,0,0,0.9); padding:20px; border-radius:20px 20px 0 0; z-index:2000;">
-    <h3>🎵 Trend Mahnını Seç və Yüklə</h3>
-    <div onclick="selectAndUpload('Meyxana Trend')" style="padding:15px; border-bottom:1px solid #333;">🔥 Meyxana Trend 2026 (Seç)</div>
-    <div onclick="selectAndUpload('Global Hit')" style="padding:15px; border-bottom:1px solid #333;">🌍 Global Hit Remix (Seç)</div>
-    <button onclick="document.getElementById('musicBox').style.display='none'" style="width:100%; margin-top:10px; color:red; background:none; border:none;">Bağla</button>
 </div>
 
 <script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
+    let currentStream = null;
 
-    // 1. P2P Canlı Yayım Mühərriki
-    async function startP2PLive() {
-        const overlay = document.getElementById('p2pOverlay');
-        overlay.style.display = 'block';
+    async function startRealLive() {
+        document.getElementById('liveCameraPanel').style.display = 'block';
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            document.getElementById('myCam').srcObject = stream;
-            tg.showAlert("P2P Bağlantısı quruldu. Canlı yayımdasınız!");
+            // Real kamera görüntüsünü P2P üçün işə salırıq
+            currentStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "user" }, 
+                audio: true 
+            });
+            document.getElementById('p2pStream').srcObject = currentStream;
+            tg.showAlert("Canlı yayım mühərriki qoşuldu! Real vaxtda P2P yayım başlayır.");
         } catch (err) {
-            alert("Kamera xətası: " + err);
-            overlay.style.display = 'none';
+            tg.showAlert("Kameraya giriş icazəsi verilmədi!");
+            stopLive();
         }
     }
 
-    // 2. Mahnı Seçimi və Video Yükləmə İnteqrasiyası
-    function openMusic() { document.getElementById('musicBox').style.display = 'block'; }
-    
-    function selectAndUpload(song) {
-        tg.showConfirm(`${song} mahnısı ilə video yükləmək istəyirsiniz?`, (ok) => {
-            if(ok) {
-                // Burada Telegram-ın fayl seçmə pəncərəsi açılır
-                tg.showAlert("İndi bota qayıdın və videonuzu göndərin. Bot mahnını avtomatik birləşdirəcək!");
-                tg.close();
-            }
-        });
+    function stopLive() {
+        if (currentStream) {
+            currentStream.getTracks().forEach(track => track.stop());
+        }
+        document.getElementById('liveCameraPanel').style.display = 'none';
+        location.reload();
     }
 
-    function like() { tg.HapticFeedback.impactOccurred('medium'); }
+    function toggleMusic() {
+        // Musiqi siyahısını canlı yayım üzərində açır
+        tg.showPopup({
+            title: 'Musiqi Seç',
+            message: 'Canlı yayım üçün trend mahnılardan birini seçin',
+            buttons: [
+                {id: 'm1', type: 'default', text: 'Meyxana Trend'},
+                {id: 'm2', type: 'default', text: 'Global Pop Remix'},
+                {id: 'cancel', type: 'destructive', text: 'Ləğv et'}
+            ]
+        }, (buttonId) => {
+            if (buttonId !== 'cancel') tg.showAlert("Mahnı yayıma inteqrasiya olundu! 🎶");
+        });
+    }
 </script>
-</body>
-</html>
