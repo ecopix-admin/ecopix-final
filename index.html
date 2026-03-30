@@ -3,68 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Çayxana Pro - Live</title>
+    <title>EcoPix Final</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-    <div class="main-container">
-        <div class="top-nav">
-            <div class="header-top">
-                <div class="user-info-block" onclick="openProfile()">
-                    <div class="user-profile-btn"><img id="myAvatar" src=""></div>
-                    <span id="labelNick" class="user-nick-label">Yüklenir...</span>
-                </div>
-                <div class="search-container">
-                    <input type="text" id="mainSearch" placeholder="Kino, Kanal, Otaq...">
-                    <i class="fas fa-search search-btn"></i>
-                </div>
-                <button class="action-btn" onclick="openFull('rooms')"><i class="fas fa-door-open"></i></button>
+    <div class="top-nav">
+        <div class="header-top">
+            <div class="user-info-block">
+                <div class="user-profile-btn"><img id="myAvatar" src="https://cdn-icons-png.flaticon.com/512/149/149071.png"></div>
+                <span id="labelNick" class="user-nick-label">Yüklənir...</span>
             </div>
-            <div class="categories">
-                <div class="cat-item" onclick="openFull('shorts')"><div class="cat-icon" style="color:#ff0050"><i class="fab fa-tiktok"></i></div><span>Shorts</span></div>
-                <div class="cat-item" onclick="showList('film')"><div class="cat-icon"><i class="fas fa-film"></i></div><span>Kinolar</span></div>
-                <div class="cat-item" onclick="showList('tv')"><div class="cat-icon"><i class="fas fa-tv"></i></div><span>TV</span></div>
-                <div class="cat-item" onclick="showList('games')"><div class="cat-icon" style="color:#00ff00"><i class="fas fa-gamepad"></i></div><span>Oyunlar</span></div>
-                <div class="cat-item" onclick="openFull('music')"><div class="cat-icon" style="color:#ff00ff"><i class="fas fa-music"></i></div><span>Musiqi</span></div>
+            <div class="search-container">
+                <input type="text" id="mainSearch" placeholder="Axtarış...">
+                <i class="fas fa-search"></i>
             </div>
+            <button class="action-btn"><i class="fas fa-door-open"></i></button>
         </div>
-
-        <div class="stage">
-            <div id="video-grid">
-                <video id="my-cam" class="p2p-cam" style="display:none; top:10px; left:10px;" autoplay muted playsinline></video>
-            </div>
-            <iframe id="yt-player" style="width:100%; height:100%; border:none; display:none;" allow="autoplay; encrypted-media"></iframe>
-            <video id="hls-player" style="width:100%; height:100%; display:none;" controls autoplay playsinline></video>
+        <div class="categories">
+            <div class="cat-item"><i class="fab fa-tiktok" style="color:#ff0050"></i><span>Shorts</span></div>
+            <div class="cat-item"><i class="fas fa-film"></i><span>Kinolar</span></div>
+            <div class="cat-item"><i class="fas fa-tv"></i><span>TV</span></div>
+            <div class="cat-item"><i class="fas fa-gamepad" style="color:#00ff00"></i><span>Oyunlar</span></div>
+            <div class="cat-item"><i class="fas fa-music" style="color:#ff00ff"></i><span>Musiqi</span></div>
         </div>
+    </div>
 
-        <div class="chat-area">
-            <div class="messages" id="msgBox"></div>
-            <div class="footer">
-                <label class="action-btn"><i class="fas fa-paperclip"></i><input type="file" hidden id="fileInp" onchange="uploadMedia(this)"></label>
-                <input type="text" id="msgInp" style="flex:1; background:#18181b; border:none; padding:12px; border-radius:20px; color:white" placeholder="Mesaj yazın...">
-                <button class="action-btn" id="micBtn" onclick="toggleVoice()"><i class="fas fa-microphone"></i></button>
-                <button class="action-btn" id="camBtn" onclick="toggleCam()"><i class="fas fa-video"></i></button>
-                <button class="action-btn send-btn" onclick="sendMsg()"><i class="fas fa-paper-plane"></i></button>
-            </div>
+    <div class="stage">
+        <iframe id="yt-player" style="width:100%; height:100%; border:none; display:none;" allow="autoplay"></iframe>
+        <video id="hls-player" style="width:100%; height:100%; display:none;" controls autoplay></video>
+        <video id="my-cam" class="p2p-cam" style="display:none; width:120px; position:absolute; right:10px; top:10px; border-radius:10px; border:2px solid cyan;" autoplay muted></video>
+    </div>
+
+    <div class="chat-area">
+        <div class="messages" id="msgBox"></div>
+        <div class="footer">
+            <button class="action-btn"><i class="fas fa-paperclip"></i></button>
+            <input type="text" id="msgInp" placeholder="Mesaj yazın...">
+            <button class="action-btn" id="camBtn" onclick="toggleCam()"><i class="fas fa-video"></i></button>
+            <button class="action-btn send-btn" onclick="sendMsg()"><i class="fas fa-paper-plane"></i></button>
         </div>
     </div>
 
     <script src="js/firebase-config.js"></script>
     <script src="js/chat.js"></script>
     <script src="js/media.js"></script>
-
-    <script>
-        // Ümumi Overlay idarəsi üçün kiçik script
-        function openFull(id) { document.getElementById(id+'Overlay').style.display = 'flex'; }
-        function closeFull(id) { document.getElementById(id+'Overlay').style.display = 'none'; }
-    </script>
 </body>
 </html>
