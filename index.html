@@ -2,194 +2,107 @@
 <html lang="az">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AzTube Premium</title>
-    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>AzTube - Canlı Yayım Portalı</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --main: #ff0000; --bg: #0f0f0f; --panel: #1e1e1e; --text: #ffffff; --glass: rgba(255, 255, 255, 0.05); }
-        body { margin:0; padding:0; background: var(--bg); color: var(--text); font-family: 'Roboto', sans-serif; overflow: hidden; }
+        :root { --tiktok-red: #ff0050; --tiktok-cyan: #00f2ea; }
+        body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; }
         
-        /* App Structure */
-        #app { height: 100vh; display: flex; flex-direction: column; }
+        /* Video Feed */
+        .feed { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; }
+        .post { height: 100vh; scroll-snap-align: start; position: relative; display: flex; align-items: center; justify-content: center; background: #111; }
         
-        /* Yuxarı Panel */
-        header { height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid #333; }
-        .logo { color: var(--main); font-size: 26px; font-weight: bold; letter-spacing: -1px; }
+        /* Sidebar Buttons */
+        .sidebar { position: absolute; right: 15px; bottom: 120px; display: flex; flex-direction: column; gap: 20px; align-items: center; z-index: 10; }
+        .action-btn { background: none; border: none; color: white; font-size: 28px; text-shadow: 1px 1px 5px #000; }
+        .count { font-size: 12px; margin-top: 5px; }
 
-        /* Ana Məzmun Sahəsi */
-        main { flex: 1; overflow-y: auto; padding-bottom: 80px; }
+        /* Live Indicator (Yanıb-sönən) */
+        .live-badge { position: absolute; top: 20px; left: 20px; background: var(--tiktok-red); padding: 5px 12px; border-radius: 5px; font-weight: bold; animation: pulse 1.5s infinite; z-index: 100; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
-        /* TikTok Sürüşdürmə Rejimi (SHORTS) */
-        #shorts-feed { display: none; height: 100%; overflow-y: scroll; scroll-snap-type: y mandatory; }
-        .shorts-card { width: 100%; height: 100%; scroll-snap-align: start; position: relative; background: #000; }
-        .shorts-card video { width: 100%; height: 100%; object-fit: contain; }
+        /* Bottom Nav */
+        .nav { position: fixed; bottom: 0; width: 100%; height: 60px; background: rgba(0,0,0,0.9); display: flex; justify-content: space-around; align-items: center; border-top: 0.5px solid #333; }
+        .plus-btn { background: linear-gradient(to right, var(--tiktok-cyan) 20%, var(--tiktok-red) 80%); padding: 5px 15px; border-radius: 10px; color: black; font-weight: bold; font-size: 20px; }
 
-        /* YouTube Stil Tor Şəbəkə (HOME) */
-        #home-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
-        .grid-item { position: relative; border-radius: 10px; overflow: hidden; background: #222; aspect-ratio: 16/9; }
-        .grid-item video { width: 100%; height: 100%; object-fit: cover; }
-        .grid-item .title { position: absolute; bottom: 5px; left: 5px; font-size: 10px; padding: 2px 5px; background: rgba(0,0,0,0.5); border-radius: 3px; }
-
-        /* Alt Naviqasiya */
-        nav { height: 70px; background: #000; position: fixed; bottom: 0; width: 100%; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #222; }
-        .nav-item { font-size: 22px; color: #666; cursor: pointer; }
-        .nav-item.active { color: white; }
-        .add-btn { background: var(--main); color: white !important; width: 50px; height: 50px; border-radius: 15px; display: flex; align-items: center; justify-content: center; }
-
-        /* Səhifə (Modal) */
-        .page { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: none; flex-direction: column; }
-        
-        /* Mesajlaşma Səhifəsi */
-        #msg-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-        .msg { padding: 8px 12px; border-radius: 12px; max-width: 80%; }
-        .msg.me { align-self: flex-end; background: var(--main); }
-        .msg.them { align-self: flex-start; background: var(--glass); }
-        .msg-input { padding: 10px; background: #111; display: flex; gap: 10px; border-top: 1px solid #333; }
-        .msg-input input { flex: 1; background: var(--glass); border: none; padding: 10px; border-radius: 10px; color: white; outline: none; }
-        
-        /* Şərh Bölməsi */
-        #comments-box { padding: 15px; border-top: 1px solid #333; height: 300px; overflow-y: auto; }
-        
-        /* UI Elementləri */
-        .v-meta-shorts { position: absolute; bottom: 20px; left: 15px; z-index: 10; width: 70%; }
-        .v-actions-shorts { position: absolute; right: 15px; bottom: 50px; display: flex; flex-direction: column; gap: 20px; }
+        /* Upload Overlay */
+        #uploadModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 200; padding: 20px; box-sizing: border-box; }
+        .music-picker { background: #222; padding: 10px; border-radius: 10px; margin: 15px 0; overflow-x: auto; white-space: nowrap; }
+        .genre { display: inline-block; padding: 8px 15px; background: #444; border-radius: 20px; margin-right: 10px; cursor: pointer; }
+        .genre.active { background: var(--tiktok-red); }
     </style>
 </head>
 <body>
 
-    <div id="app">
-        <header>
-            <div class="logo"><i class="fab fa-youtube"></i> AzTube</div>
-            <i class="fas fa-search"></i>
-        </header>
+<div class="live-badge" onclick="showLives()"><i class="fas fa-tower-broadcast"></i> LIVE</div>
 
-        <main id="main-content">
-            <div id="home-grid">
-                <div class="grid-item" onclick="viewVideo('vid_1')">
-                    <video src="https://www.w3schools.com/html/mov_bbb.mp4" muted loop autoplay></video>
-                    <div class="title">Samxal_Hasanov: 4K Görüntü</div>
-                </div>
-            </div>
-
-            <div id="shorts-feed">
-                <div class="shorts-card">
-                    <video src="https://www.w3schools.com/html/mov_bbb.mp4" loop autoplay muted playsinline></video>
-                    <div class="v-meta-shorts">
-                        <h3>@Samxal</h3>
-                        <p>AzTube Shorts: İlk sınaq!</p>
-                    </div>
-                    <div class="v-actions-shorts">
-                        <i class="fas fa-heart" font-size:24px;></i>
-                        <i class="fas fa-comment-dots" font-size:24px; onclick="openComments()"></i>
-                        <i class="fas fa-paper-plane" font-size:24px; onclick="openDM()"></i>
-                    </div>
-                </div>
-            </div>
-        </main>
-
-        <nav>
-            <i class="fas fa-home nav-item active" onclick="switchTab('home')"></i>
-            <i class="fas fa-clapperboard nav-item" onclick="switchTab('shorts')"></i>
-            <div class="add-btn" onclick="startUpload()"><i class="fas fa-plus"></i></div>
-            <i class="fas fa-paper-plane nav-item" onclick="openDM()"></i>
-            <i class="fas fa-user nav-item" onclick="openProfile()"></i>
-        </nav>
-    </div>
-
-    <div id="dmPage" class="page">
-        <div style="padding: 15px; border-bottom: 1px solid #333;"><i class="fas fa-arrow-left" onclick="closePage('dmPage')"></i> Mesajlaşma</div>
-        <div id="msg-box"></div>
-        <div class="msg-input">
-            <input type="text" id="m-inp" placeholder="Mesaj yazın...">
-            <i class="fas fa-paper-plane" onclick="sendMsg()"></i>
+<div class="feed" id="mainFeed">
+    <div class="post">
+        <video width="100%" height="100%" loop autoplay muted playsinline src="https://assets.mixkit.co/videos/preview/mixkit-girl-dancing-under-neon-lights-34405-large.mp4"></video>
+        <div class="sidebar">
+            <button class="action-btn"><i class="fas fa-heart"></i><div class="count">45.2K</div></button>
+            <button class="action-btn"><i class="fas fa-comment"></i><div class="count">1.2K</div></button>
+            <button class="action-btn"><i class="fas fa-share"></i><div class="count">Share</div></button>
         </div>
     </div>
+</div>
 
-    <div id="profilePage" class="page">
-        <div style="padding: 15px; border-bottom: 1px solid #333;"><i class="fas fa-arrow-left" onclick="closePage('profilePage')"></i> Profil</div>
-        <div style="text-align: center; padding: 20px;">
-            <div style="width: 80px; height: 80px; background: #333; border-radius: 50%; margin: 0 auto; border: 2px solid var(--main);"></div>
-            <h2 id="pName">Samxal</h2>
-            <p id="pBio" style="opacity: 0.6;">Daha yaxşı bilirsən...</p>
-        </div>
+<nav class="nav">
+    <i class="fas fa-home" style="font-size: 24px;"></i>
+    <i class="fas fa-search" style="font-size: 24px;"></i>
+    <div class="plus-btn" onclick="openUpload()"><i class="fas fa-plus"></i></div>
+    <i class="fas fa-message" style="font-size: 24px;"></i>
+    <i class="fas fa-user" style="font-size: 24px;"></i>
+</nav>
+
+<div id="uploadModal">
+    <h2 style="text-align: center;">Yeni Paylaşım</h2>
+    <div id="videoPreview" style="width: 100%; height: 200px; border: 2px dashed #444; border-radius: 15px; display: flex; align-items: center; justify-content: center;">
+        Video Seçin
+    </div>
+    <input type="file" id="vInput" accept="video/*" hidden>
+    
+    <h3>Musiqi Seçimi (Trend)</h3>
+    <div class="music-picker">
+        <div class="genre" onclick="playMusic('meyxana')">🔥 Meyxana Trend</div>
+        <div class="genre" onclick="playMusic('pop')">🎵 Pop Azərbaycan</div>
+        <div class="genre" onclick="playMusic('retro')">📻 Klassik 80-ci illər</div>
+        <div class="genre" onclick="playMusic('dance')">💃 Rəqs Mix</div>
     </div>
 
-    <div id="commentPage" class="page" style="height: fit-content; bottom: 0; top: auto;">
-        <div style="padding: 15px; border-bottom: 1px solid #333;">Şərhlər</div>
-        <div id="comments-box"></div>
-        <div class="msg-input"><input type="text" placeholder="Şərh yazın..."></div>
-    </div>
+    <textarea placeholder="Açıqlama yazın... #ustalar #aztube #baku" style="width: 100%; height: 80px; background: #222; color: #fff; border: none; border-radius: 10px; padding: 10px;"></textarea>
+    
+    <button onclick="publishPost()" style="width: 100%; background: var(--tiktok-red); color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; margin-top: 20px;">Paylaş</button>
+    <button onclick="closeUpload()" style="width: 100%; background: none; color: #888; border: none; margin-top: 10px;">Ləğv et</button>
+</div>
 
-    <script>
-        // Firebase Bağlantısı (Problemi Düzəltdik)
-        const firebaseConfig = { 
-            apiKey: "AIzaSyCtrVliO1bmdg7r0juWz-Yj2EaEGNsz2j8", 
-            databaseURL: "https://ecopix-118c6-default-rtdb.europe-west1.firebasedatabase.app", 
-            projectId: "ecopix-118c6" 
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
 
-        // UI Nizamlamaları
-        function switchTab(tab) {
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-            document.getElementById('home-grid').style.display = 'none';
-            document.getElementById('shorts-feed').style.display = 'none';
-            
-            if(tab === 'home') { 
-                document.getElementById('home-grid').style.display = 'grid'; 
-                document.querySelector('.fa-home').classList.add('active'); 
-            } else { 
-                document.getElementById('shorts-feed').style.display = 'block'; 
-                document.querySelector('.fa-clapperboard').classList.add('active'); 
+    function openUpload() { document.getElementById('uploadModal').style.display = 'block'; }
+    function closeUpload() { document.getElementById('uploadModal').style.display = 'none'; }
+
+    function playMusic(genre) {
+        tg.HapticFeedback.impactOccurred('medium');
+        tg.showAlert(genre + " janrında musiqi videoya tətbiq edildi!");
+    }
+
+    function publishPost() {
+        tg.showConfirm("Videonuz trendlərə əlavə edilsin?", (res) => {
+            if(res) {
+                tg.showAlert("Təbriklər! Videonuz paylaşıldı.");
+                closeUpload();
             }
-        }
-
-        // Modal İdarəetməsi
-        function openDM() { document.getElementById('dmPage').style.display = 'flex'; }
-        function openProfile() { document.getElementById('profilePage').style.display = 'flex'; }
-        function openComments() { document.getElementById('commentPage').style.display = 'block'; }
-        function closePage(id) { document.getElementById(id).style.display = 'none'; }
-
-        // Mesajlaşma
-        function sendMsg() {
-            const inp = document.getElementById('m-inp');
-            if(inp.value.trim()) {
-                db.ref('aztube_premium_chats').push({ t: inp.value, u: 'me', ts: Date.now() });
-                inp.value = "";
-            }
-        }
-        db.ref('aztube_premium_chats').limitToLast(10).on('child_added', s => {
-            const d = s.val();
-            const b = document.getElementById('msg-box');
-            const m = document.createElement('div');
-            m.className = `msg ${d.u === 'me' ? 'me' : 'them'}`;
-            m.innerText = d.t;
-            b.appendChild(m);
-            b.scrollTop = b.scrollHeight;
         });
+    }
 
-        // Professional Video Yükləmə (Problemlərin Həlli)
-        async function startUpload() {
-            const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'video/*';
-            inp.onchange = async (e) => {
-                alert("AzTube Premium: Video emal olunur...");
-                const fd = new FormData();
-                fd.append('file', e.target.files[0]);
-                fd.append('upload_preset', 'ml_default');
-                try {
-                    const res = await fetch('https://api.cloudinary.com/v1_1/dyrfkit3x/video/upload', {method:'POST', body:fd});
-                    const d = await res.json();
-                    if(d.secure_url) {
-                        db.ref('aztube_premium_feed').push({ url: d.secure_url, ts: Date.now() });
-                        alert("Yayımlandı! 🇦🇿");
-                    }
-                } catch(err) { alert("Bulud Server Xətası! (Cloudinary Limit)"); }
-            };
-            inp.click();
-        }
-    </script>
+    // P2P Canlı Yayım Siyahısı (Simulyasiya)
+    function showLives() {
+        tg.showAlert("Hazırda 12 nəfər canlı yayındadır. Sürüşdürərək keçid edin.");
+    }
+</script>
 </body>
 </html>
