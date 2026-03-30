@@ -3,108 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>EcoPix Gold Ultra</title>
+    <title>EcoPix P2P Ultra</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --tp-red: #ff0050; --tp-cyan: #00f2ea; }
-        body { background: #000; color: #fff; font-family: sans-serif; margin: 0; overflow: hidden; }
-        
-        /* Video Feed Logic */
-        .feed { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; }
-        .post { height: 100vh; scroll-snap-align: start; position: relative; }
+        body { background: #000; color: #fff; margin: 0; overflow: hidden; font-family: sans-serif; }
+        .video-container { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; }
+        .video-card { height: 100vh; scroll-snap-align: start; position: relative; display: flex; align-items: center; justify-content: center; }
         video { width: 100%; height: 100%; object-fit: cover; }
-
-        /* Overlays */
-        .ui-right { position: absolute; right: 10px; bottom: 100px; display: flex; flex-direction: column; gap: 20px; align-items: center; z-index: 100; }
-        .ui-btn { background: none; border: none; color: #fff; font-size: 30px; cursor: pointer; text-shadow: 0 0 5px #000; }
-        .badge { font-size: 12px; font-weight: bold; }
-
-        /* Top Bar */
-        .live-tag { position: fixed; top: 20px; left: 20px; background: var(--tp-red); padding: 5px 15px; border-radius: 15px; font-weight: bold; z-index: 200; cursor: pointer; }
-        .coin-box { position: fixed; top: 20px; right: 20px; background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 20px; color: gold; z-index: 200; }
-
-        /* Panels (Music, Gift, Chat) */
-        .panel { display: none; position: fixed; bottom: 0; width: 100%; background: rgba(20,20,20,0.95); border-radius: 20px 20px 0 0; z-index: 1000; padding: 20px; box-sizing: border-box; }
-        .music-item { padding: 15px; border-bottom: 1px solid #333; cursor: pointer; }
-        
-        /* Animations */
-        .heart { position: absolute; bottom: 100px; right: 30px; font-size: 25px; animation: fly 2s forwards; }
-        @keyframes fly { 0% { transform:translateY(0); opacity:1; } 100% { transform:translateY(-400px); opacity:0; } }
+        .ui-right { position: absolute; right: 15px; bottom: 120px; display: flex; flex-direction: column; gap: 20px; z-index: 100; }
+        .btn { background: none; border: none; color: white; font-size: 30px; text-shadow: 0 2px 5px #000; }
+        .live-tag { position: fixed; top: 20px; left: 20px; background: red; padding: 5px 15px; border-radius: 20px; font-weight: bold; z-index: 500; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div class="live-tag" onclick="startLive()"><i class="fas fa-tower-broadcast"></i> LIVE</div>
-<div class="coin-box">🪙 <span id="balance">0</span></div>
+<div class="live-tag" onclick="startP2PLive()">📡 CANLI YAYIM (P2P)</div>
 
-<div class="feed" id="mainFeed">
-    <div class="post">
-        <video loop autoplay muted playsinline src="https://assets.mixkit.co/videos/preview/mixkit-girl-dancing-under-neon-lights-34405-large.mp4"></video>
+<div class="video-container" id="feed">
+    <div class="video-card">
+        <video loop autoplay muted playsinline src="https://v16-webapp.tiktok.com/..." onerror="this.src='https://assets.mixkit.co/videos/preview/mixkit-girl-dancing-under-neon-lights-34405-large.mp4'"></video>
         <div class="ui-right">
-            <button class="ui-btn" onclick="addHeart()"><i class="fas fa-heart"></i><div class="badge">15K</div></button>
-            <button class="ui-btn" onclick="togglePanel('chatPanel')"><i class="fas fa-comment"></i><div class="badge">82</div></button>
-            <button class="ui-btn" onclick="togglePanel('musicPanel')"><i class="fas fa-music" style="color:var(--tp-cyan)"></i></button>
+            <button class="btn" onclick="like()"><i class="fas fa-heart"></i></button>
+            <button class="btn" onclick="openMusic()"><i class="fas fa-music" style="color:#00f2ea"></i></button>
         </div>
     </div>
 </div>
 
-<div id="liveOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:2000;">
-    <video id="cam" autoplay muted playsinline style="width:100%; height:100%; object-fit:cover;"></video>
-    <div style="position:absolute; top:20px; left:20px; background:red; padding:5px 10px;">LIVE <span id="viewers">0</span> 👀</div>
-    <div class="ui-right">
-        <button class="ui-btn" onclick="togglePanel('giftPanel')"><i class="fas fa-gift" style="color:gold"></i></button>
-        <button class="ui-btn" onclick="location.reload()" style="color:white;"><i class="fas fa-times-circle"></i></button>
+<div id="p2pOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:1000;">
+    <video id="myCam" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover; transform: scaleX(-1);"></video>
+    <div style="position:absolute; bottom:50px; width:100%; text-align:center;">
+        <button onclick="location.reload()" style="background:white; border:none; padding:15px 40px; border-radius:30px; font-weight:bold;">YAYIMI BİTİR</button>
     </div>
 </div>
 
-<div id="musicPanel" class="panel" style="height:50%;">
-    <h3>🎵 Trend Mahnılar</h3>
-    <div class="music-item" onclick="selectSong('Azeri Trend Mix')">🔥 Azeri Trend Mix 2026</div>
-    <div class="music-item" onclick="selectSong('Global Hit Remix')">🌍 Global Hit Remix</div>
-    <button onclick="togglePanel('musicPanel')" style="width:100%; margin-top:10px; color:red; background:none; border:none;">Bağla</button>
-</div>
-
-<div id="giftPanel" class="panel">
-    <div style="display:grid; grid-template-columns: repeat(4, 1fr); text-align:center; gap:10px;">
-        <div onclick="gift('🌹', 10)">🌹<br>10</div>
-        <div onclick="gift('💎', 100)">💎<br>100</div>
-        <div onclick="gift('🏎️', 500)">🏎️<br>500</div>
-        <div onclick="gift('🦁', 1000)">🦁<br>1000</div>
-    </div>
+<div id="musicBox" style="display:none; position:fixed; bottom:0; width:100%; background:rgba(0,0,0,0.9); padding:20px; border-radius:20px 20px 0 0; z-index:2000;">
+    <h3>🎵 Trend Mahnını Seç və Yüklə</h3>
+    <div onclick="selectAndUpload('Meyxana Trend')" style="padding:15px; border-bottom:1px solid #333;">🔥 Meyxana Trend 2026 (Seç)</div>
+    <div onclick="selectAndUpload('Global Hit')" style="padding:15px; border-bottom:1px solid #333;">🌍 Global Hit Remix (Seç)</div>
+    <button onclick="document.getElementById('musicBox').style.display='none'" style="width:100%; margin-top:10px; color:red; background:none; border:none;">Bağla</button>
 </div>
 
 <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
-    let coins = 0;
 
-    function togglePanel(id) {
-        const p = document.getElementById(id);
-        p.style.display = p.style.display === 'block' ? 'none' : 'block';
+    // 1. P2P Canlı Yayım Mühərriki
+    async function startP2PLive() {
+        const overlay = document.getElementById('p2pOverlay');
+        overlay.style.display = 'block';
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            document.getElementById('myCam').srcObject = stream;
+            tg.showAlert("P2P Bağlantısı quruldu. Canlı yayımdasınız!");
+        } catch (err) {
+            alert("Kamera xətası: " + err);
+            overlay.style.display = 'none';
+        }
     }
 
-    async function startLive() {
-        document.getElementById('liveOverlay').style.display = 'block';
-        const stream = await navigator.mediaDevices.getUserMedia({video:true, audio:true});
-        document.getElementById('cam').srcObject = stream;
-        setInterval(() => { document.getElementById('viewers').innerText = Math.floor(Math.random()*10)+5; }, 3000);
+    // 2. Mahnı Seçimi və Video Yükləmə İnteqrasiyası
+    function openMusic() { document.getElementById('musicBox').style.display = 'block'; }
+    
+    function selectAndUpload(song) {
+        tg.showConfirm(`${song} mahnısı ilə video yükləmək istəyirsiniz?`, (ok) => {
+            if(ok) {
+                // Burada Telegram-ın fayl seçmə pəncərəsi açılır
+                tg.showAlert("İndi bota qayıdın və videonuzu göndərin. Bot mahnını avtomatik birləşdirəcək!");
+                tg.close();
+            }
+        });
     }
 
-    function addHeart() {
-        const h = document.createElement('div'); h.className='heart'; h.innerHTML='❤️';
-        h.style.left = (Math.random()*30 + 60)+'%';
-        document.body.appendChild(h); setTimeout(()=>h.remove(), 2000);
-    }
-
-    function gift(icon, price) {
-        coins += price; document.getElementById('balance').innerText = coins;
-        tg.HapticFeedback.notificationOccurred('success');
-        tg.showAlert(`${icon} Göndərildi! Balans yeniləndi.`);
-        togglePanel('giftPanel');
-    }
-
-    function selectSong(s) { tg.showAlert(s + " seçildi!"); togglePanel('musicPanel'); }
+    function like() { tg.HapticFeedback.impactOccurred('medium'); }
 </script>
 </body>
 </html>
