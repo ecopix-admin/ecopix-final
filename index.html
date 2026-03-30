@@ -3,106 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>AzTube - Canlı Yayım Portalı</title>
+    <title>EcoPix Gold - Live, Chat & Gift</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --tiktok-red: #ff0050; --tiktok-cyan: #00f2ea; }
+        :root { --tp-red: #ff0050; --tp-cyan: #00f2ea; --glass: rgba(255, 255, 255, 0.1); }
         body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; }
         
-        /* Video Feed */
-        .feed { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; }
-        .post { height: 100vh; scroll-snap-align: start; position: relative; display: flex; align-items: center; justify-content: center; background: #111; }
-        
-        /* Sidebar Buttons */
-        .sidebar { position: absolute; right: 15px; bottom: 120px; display: flex; flex-direction: column; gap: 20px; align-items: center; z-index: 10; }
-        .action-btn { background: none; border: none; color: white; font-size: 28px; text-shadow: 1px 1px 5px #000; }
-        .count { font-size: 12px; margin-top: 5px; }
+        /* Video & Live Feed */
+        .main-container { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; }
+        .slide { height: 100vh; scroll-snap-align: start; position: relative; background: #000; }
+        video { width: 100%; height: 100%; object-fit: cover; }
 
-        /* Live Indicator (Yanıb-sönən) */
-        .live-badge { position: absolute; top: 20px; left: 20px; background: var(--tiktok-red); padding: 5px 12px; border-radius: 5px; font-weight: bold; animation: pulse 1.5s infinite; z-index: 100; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        /* Floating Comments (Şəffaf Rəylər) */
+        .floating-comments { position: absolute; bottom: 150px; left: 15px; width: 70%; max-height: 200px; overflow: hidden; pointer-events: none; }
+        .comment-item { background: rgba(0,0,0,0.3); padding: 5px 10px; border-radius: 10px; margin-bottom: 5px; font-size: 13px; animation: slideIn 0.5s ease; }
+        @keyframes slideIn { from { transform: translateX(-50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-        /* Bottom Nav */
-        .nav { position: fixed; bottom: 0; width: 100%; height: 60px; background: rgba(0,0,0,0.9); display: flex; justify-content: space-around; align-items: center; border-top: 0.5px solid #333; }
-        .plus-btn { background: linear-gradient(to right, var(--tiktok-cyan) 20%, var(--tiktok-red) 80%); padding: 5px 15px; border-radius: 10px; color: black; font-weight: bold; font-size: 20px; }
+        /* UI Overlays */
+        .side-bar { position: absolute; right: 10px; bottom: 100px; display: flex; flex-direction: column; gap: 20px; align-items: center; }
+        .ui-btn { background: none; border: none; color: #fff; font-size: 28px; text-shadow: 0 0 10px #000; }
+        .badge { font-size: 12px; font-weight: bold; }
 
-        /* Upload Overlay */
-        #uploadModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 200; padding: 20px; box-sizing: border-box; }
-        .music-picker { background: #222; padding: 10px; border-radius: 10px; margin: 15px 0; overflow-x: auto; white-space: nowrap; }
-        .genre { display: inline-block; padding: 8px 15px; background: #444; border-radius: 20px; margin-right: 10px; cursor: pointer; }
-        .genre.active { background: var(--tiktok-red); }
+        /* Live Overlay & Viewer Count */
+        #liveOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; background: #000; }
+        .viewer-count { position: absolute; top: 20px; left: 80px; background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 15px; font-size: 12px; }
+        .live-status { position: absolute; top: 20px; left: 20px; background: var(--tp-red); padding: 5px 10px; border-radius: 5px; font-weight: bold; font-size: 12px; }
+
+        /* Chat Modal */
+        #chatBox { display: none; position: fixed; bottom: 0; width: 100%; height: 50%; background: #111; z-index: 2000; border-radius: 20px 20px 0 0; padding: 20px; box-sizing: border-box; }
+        .chat-input { width: 100%; background: #222; border: none; color: #fff; padding: 15px; border-radius: 10px; margin-top: 10px; }
+
+        /* Gift Panel */
+        .gift-panel { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.9); display: none; grid-template-columns: repeat(4, 1fr); padding: 20px; z-index: 3000; }
+        .gift-btn { text-align: center; color: gold; font-size: 12px; }
+
+        /* Hearts */
+        .heart { position: absolute; bottom: 100px; right: 30px; font-size: 24px; animation: flyUp 2s linear forwards; }
+        @keyframes flyUp { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-500px) scale(2); opacity: 0; } }
     </style>
 </head>
 <body>
 
-<div class="live-badge" onclick="showLives()"><i class="fas fa-tower-broadcast"></i> LIVE</div>
-
-<div class="feed" id="mainFeed">
-    <div class="post">
-        <video width="100%" height="100%" loop autoplay muted playsinline src="https://assets.mixkit.co/videos/preview/mixkit-girl-dancing-under-neon-lights-34405-large.mp4"></video>
-        <div class="sidebar">
-            <button class="action-btn"><i class="fas fa-heart"></i><div class="count">45.2K</div></button>
-            <button class="action-btn"><i class="fas fa-comment"></i><div class="count">1.2K</div></button>
-            <button class="action-btn"><i class="fas fa-share"></i><div class="count">Share</div></button>
+<div class="main-container" id="feed">
+    <div class="slide">
+        <video id="v1" loop autoplay muted playsinline src="https://assets.mixkit.co/videos/preview/mixkit-girl-dancing-under-neon-lights-34405-large.mp4"></video>
+        <div class="floating-comments" id="comments-v1"></div>
+        <div class="side-bar">
+            <button class="ui-btn" onclick="sendHeart()"><i class="fas fa-heart"></i><div class="badge">4.5K</div></button>
+            <button class="ui-btn" onclick="openChat()"><i class="fas fa-comment"></i><div class="badge">120</div></button>
+            <button class="ui-btn"><i class="fas fa-share"></i></button>
         </div>
     </div>
 </div>
 
-<nav class="nav">
-    <i class="fas fa-home" style="font-size: 24px;"></i>
-    <i class="fas fa-search" style="font-size: 24px;"></i>
-    <div class="plus-btn" onclick="openUpload()"><i class="fas fa-plus"></i></div>
-    <i class="fas fa-message" style="font-size: 24px;"></i>
-    <i class="fas fa-user" style="font-size: 24px;"></i>
-</nav>
-
-<div id="uploadModal">
-    <h2 style="text-align: center;">Yeni Paylaşım</h2>
-    <div id="videoPreview" style="width: 100%; height: 200px; border: 2px dashed #444; border-radius: 15px; display: flex; align-items: center; justify-content: center;">
-        Video Seçin
+<div id="liveOverlay">
+    <video id="localVideo" autoplay muted playsinline style="width:100%; height:100%; object-fit:cover;"></video>
+    <div class="live-status">LIVE</div>
+    <div class="viewer-count" id="viewerCounter"><i class="fas fa-eye"></i> 0</div>
+    <div class="side-bar">
+        <button class="ui-btn" onclick="toggleGifts()"><i class="fas fa-gift" style="color:gold"></i></button>
+        <button class="ui-btn" onclick="sendHeart()"><i class="fas fa-heart" style="color:red"></i></button>
+        <button class="ui-btn" onclick="stopLive()" style="color:white"><i class="fas fa-times-circle"></i></button>
     </div>
-    <input type="file" id="vInput" accept="video/*" hidden>
-    
-    <h3>Musiqi Seçimi (Trend)</h3>
-    <div class="music-picker">
-        <div class="genre" onclick="playMusic('meyxana')">🔥 Meyxana Trend</div>
-        <div class="genre" onclick="playMusic('pop')">🎵 Pop Azərbaycan</div>
-        <div class="genre" onclick="playMusic('retro')">📻 Klassik 80-ci illər</div>
-        <div class="genre" onclick="playMusic('dance')">💃 Rəqs Mix</div>
+    <div class="gift-panel" id="giftPanel">
+        <div class="gift-btn" onclick="giveGift('🌹', 10)">🌹<br>10</div>
+        <div class="gift-btn" onclick="giveGift('🎁', 50)">🎁<br>50</div>
+        <div class="gift-btn" onclick="giveGift('💎', 100)">💎<br>100</div>
+        <div class="gift-btn" onclick="giveGift('🏎️', 500)">🏎️<br>500</div>
     </div>
+</div>
 
-    <textarea placeholder="Açıqlama yazın... #ustalar #aztube #baku" style="width: 100%; height: 80px; background: #222; color: #fff; border: none; border-radius: 10px; padding: 10px;"></textarea>
-    
-    <button onclick="publishPost()" style="width: 100%; background: var(--tiktok-red); color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; margin-top: 20px;">Paylaş</button>
-    <button onclick="closeUpload()" style="width: 100%; background: none; color: #888; border: none; margin-top: 10px;">Ləğv et</button>
+<div id="chatBox">
+    <h3>Şərhlər / Mesajlar</h3>
+    <div id="chatMessages" style="height: 70%; overflow-y: auto; font-size: 14px; border-bottom: 1px solid #333;"></div>
+    <input type="text" class="chat-input" id="chatInput" placeholder="Mesaj yazın...">
 </div>
 
 <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
+    let balance = 0;
+    let viewers = 0;
 
-    function openUpload() { document.getElementById('uploadModal').style.display = 'block'; }
-    function closeUpload() { document.getElementById('uploadModal').style.display = 'none'; }
-
-    function playMusic(genre) {
-        tg.HapticFeedback.impactOccurred('medium');
-        tg.showAlert(genre + " janrında musiqi videoya tətbiq edildi!");
-    }
-
-    function publishPost() {
-        tg.showConfirm("Videonuz trendlərə əlavə edilsin?", (res) => {
-            if(res) {
-                tg.showAlert("Təbriklər! Videonuz paylaşıldı.");
-                closeUpload();
-            }
+    // Canlı Yayım Başlat (P2P Simulyasiya)
+    function startLive() {
+        document.getElementById('liveOverlay').style.display = 'block';
+        navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(s => {
+            document.getElementById('localVideo').srcObject = s;
+            // Baxış sayğacını simulyasiya edək
+            setInterval(() => {
+                viewers += Math.floor(Math.random() * 5);
+                document.getElementById('viewerCounter').innerHTML = `<i class="fas fa-eye"></i> ${viewers}`;
+            }, 3000);
         });
     }
 
-    // P2P Canlı Yayım Siyahısı (Simulyasiya)
-    function showLives() {
-        tg.showAlert("Hazırda 12 nəfər canlı yayındadır. Sürüşdürərək keçid edin.");
+    function stopLive() {
+        const s = document.getElementById('localVideo').srcObject;
+        if(s) s.getTracks().forEach(t => t.stop());
+        document.getElementById('liveOverlay').style.display = 'none';
     }
+
+    // Üzən Ürəklər
+    function sendHeart() {
+        const h = document.createElement('div');
+        h.className = 'heart';
+        h.innerHTML = '❤️';
+        h.style.left = (Math.random() * 30 + 60) + '%';
+        document.body.appendChild(h);
+        setTimeout(() => h.remove(), 2000);
+    }
+
+    // Hədiyyə Sistemi
+    function toggleGifts() {
+        const p = document.getElementById('giftPanel');
+        p.style.display = p.style.display === 'grid' ? 'none' : 'grid';
+    }
+
+    function giveGift(icon, price) {
+        balance += price;
+        tg.HapticFeedback.notificationOccurred('success');
+        tg.showAlert(`Hədiyyə Qəbul Edildi: ${icon} (+${price} Coin)`);
+        toggleGifts();
+    }
+
+    // Şəxsi Mesajlaşma Aç
+    function openChat() {
+        document.getElementById('chatBox').style.display = 'block';
+    }
+
+    // Avtomatik şəffaf rəylər (Simulyasiya)
+    const mockComments = ["Əla!", "Usta, salam!", "Bu nə mahnıdır?", "EcoPix superdir!", "🔥🚀"];
+    setInterval(() => {
+        const container = document.getElementById('comments-v1');
+        const c = document.createElement('div');
+        c.className = 'comment-item';
+        c.innerText = "User" + Math.floor(Math.random()*100) + ": " + mockComments[Math.floor(Math.random()*mockComments.length)];
+        container.appendChild(c);
+        if(container.childNodes.length > 5) container.removeChild(container.firstChild);
+    }, 4000);
+
+    // Play/Pause və Sürüşdürmə avtomatik işləyir (CSS snap)
 </script>
 </body>
 </html>
