@@ -1,0 +1,32 @@
+let myStream = null;
+
+async function toggleCam() {
+    const v = document.getElementById('my-cam');
+    if(!myStream) {
+        try {
+            myStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
+            v.srcObject = myStream;
+            v.style.display = 'block';
+            document.getElementById('camBtn').style.color = 'var(--accent)';
+        } catch(e) { alert("Kameraya giriş qadağan edildi!"); }
+    } else {
+        myStream.getTracks().forEach(t => t.stop());
+        myStream = null;
+        v.style.display = 'none';
+        document.getElementById('camBtn').style.color = 'white';
+    }
+}
+
+// YouTube və HLS Player idarəsi
+db.ref(`rooms/${room}/media`).on('value', s => {
+    const d = s.val() || {t:'yt', id:'j_SInXN2Fas'};
+    const yt = document.getElementById('yt-player');
+    const hls = document.getElementById('hls-player');
+    if(d.t === 'yt') {
+        yt.src = `https://www.youtube.com/embed/${d.id}?autoplay=1`;
+        yt.style.display = 'block'; hls.style.display = 'none';
+    } else {
+        hls.style.display = 'block'; yt.style.display = 'none';
+        if(Hls.isSupported()){ let h=new Hls(); h.loadSource(d.id); h.attachMedia(hls); }
+    }
+});
