@@ -3,163 +3,193 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AzTube - Professional Video Network</title>
+    <title>AzTube Premium</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --main: #ff0000; --bg: #050505; --glass: rgba(255, 255, 255, 0.1); }
-        body { margin:0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+        :root { --main: #ff0000; --bg: #0f0f0f; --panel: #1e1e1e; --text: #ffffff; --glass: rgba(255, 255, 255, 0.05); }
+        body { margin:0; padding:0; background: var(--bg); color: var(--text); font-family: 'Roboto', sans-serif; overflow: hidden; }
         
-        /* App Container */
+        /* App Structure */
         #app { height: 100vh; display: flex; flex-direction: column; }
+        
+        /* Yuxarı Panel */
+        header { height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid #333; }
+        .logo { color: var(--main); font-size: 26px; font-weight: bold; letter-spacing: -1px; }
 
-        /* Full Screen Video Feed */
-        #feed { flex: 1; overflow-y: scroll; scroll-snap-type: y mandatory; background: #000; }
-        .video-card { width: 100%; height: 100vh; scroll-snap-align: start; position: relative; }
-        video { width: 100%; height: 100%; object-fit: cover; }
+        /* Ana Məzmun Sahəsi */
+        main { flex: 1; overflow-y: auto; padding-bottom: 80px; }
 
-        /* UI Overlays */
-        .overlay { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(0deg, rgba(0,0,0,0.7) 0%, transparent 40%); }
-        .v-meta { position: absolute; bottom: 100px; left: 15px; pointer-events: auto; }
-        .side-actions { position: absolute; right: 15px; bottom: 120px; display: flex; flex-direction: column; gap: 20px; pointer-events: auto; }
-        .icon-btn { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; }
-        .icon-btn i { font-size: 30px; text-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        /* TikTok Sürüşdürmə Rejimi (SHORTS) */
+        #shorts-feed { display: none; height: 100%; overflow-y: scroll; scroll-snap-type: y mandatory; }
+        .shorts-card { width: 100%; height: 100%; scroll-snap-align: start; position: relative; background: #000; }
+        .shorts-card video { width: 100%; height: 100%; object-fit: contain; }
 
-        /* Mesajlaşma Bölməsi (DM) */
-        #dm-page { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: none; flex-direction: column; }
-        #chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-        .msg { padding: 10px 15px; border-radius: 15px; max-width: 80%; width: fit-content; }
-        .msg.me { align-self: flex-end; background: var(--main); }
-        .msg.them { align-self: flex-start; background: var(--glass); }
-        .chat-input { padding: 15px; background: #111; display: flex; gap: 10px; align-items: center; }
-        input { flex: 1; background: var(--glass); border: none; padding: 10px; border-radius: 20px; color: white; outline: none; }
+        /* YouTube Stil Tor Şəbəkə (HOME) */
+        #home-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
+        .grid-item { position: relative; border-radius: 10px; overflow: hidden; background: #222; aspect-ratio: 16/9; }
+        .grid-item video { width: 100%; height: 100%; object-fit: cover; }
+        .grid-item .title { position: absolute; bottom: 5px; left: 5px; font-size: 10px; padding: 2px 5px; background: rgba(0,0,0,0.5); border-radius: 3px; }
 
         /* Alt Naviqasiya */
-        nav { height: 70px; background: rgba(0,0,0,0.9); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #222; }
-        .nav-item { font-size: 20px; color: #777; cursor: pointer; }
-        .nav-item.active { color: var(--main); }
-        .upload-circle { background: white; color: black; width: 45px; height: 35px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+        nav { height: 70px; background: #000; position: fixed; bottom: 0; width: 100%; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #222; }
+        .nav-item { font-size: 22px; color: #666; cursor: pointer; }
+        .nav-item.active { color: white; }
+        .add-btn { background: var(--main); color: white !important; width: 50px; height: 50px; border-radius: 15px; display: flex; align-items: center; justify-content: center; }
 
-        /* Profil Səhifəsi */
-        #profile-page { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: none; padding: 20px; }
+        /* Səhifə (Modal) */
+        .page { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: none; flex-direction: column; }
+        
+        /* Mesajlaşma Səhifəsi */
+        #msg-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .msg { padding: 8px 12px; border-radius: 12px; max-width: 80%; }
+        .msg.me { align-self: flex-end; background: var(--main); }
+        .msg.them { align-self: flex-start; background: var(--glass); }
+        .msg-input { padding: 10px; background: #111; display: flex; gap: 10px; border-top: 1px solid #333; }
+        .msg-input input { flex: 1; background: var(--glass); border: none; padding: 10px; border-radius: 10px; color: white; outline: none; }
+        
+        /* Şərh Bölməsi */
+        #comments-box { padding: 15px; border-top: 1px solid #333; height: 300px; overflow-y: auto; }
+        
+        /* UI Elementləri */
+        .v-meta-shorts { position: absolute; bottom: 20px; left: 15px; z-index: 10; width: 70%; }
+        .v-actions-shorts { position: absolute; right: 15px; bottom: 50px; display: flex; flex-direction: column; gap: 20px; }
     </style>
 </head>
 <body>
 
     <div id="app">
-        <div id="feed">
-            <div class="video-card">
-                <video src="https://www.w3schools.com/html/mov_bbb.mp4" loop autoplay muted playsinline></video>
-                <div class="overlay"></div>
-                <div class="v-meta">
-                    <h3 id="display-name">@Samxal_Hasanov</h3>
-                    <p id="display-bio">AzTube: Gələcəyin Sosial Şəbəkəsi 🇦🇿</p>
-                </div>
-                <div class="side-actions">
-                    <div class="icon-btn"><i class="fas fa-heart"></i><span>8.4K</span></div>
-                    <div class="icon-btn" onclick="toggleDM()"><i class="fas fa-comment-dots"></i><span>124</span></div>
-                    <div class="icon-btn"><i class="fas fa-share"></i><span>Paylaş</span></div>
+        <header>
+            <div class="logo"><i class="fab fa-youtube"></i> AzTube</div>
+            <i class="fas fa-search"></i>
+        </header>
+
+        <main id="main-content">
+            <div id="home-grid">
+                <div class="grid-item" onclick="viewVideo('vid_1')">
+                    <video src="https://www.w3schools.com/html/mov_bbb.mp4" muted loop autoplay></video>
+                    <div class="title">Samxal_Hasanov: 4K Görüntü</div>
                 </div>
             </div>
-        </div>
+
+            <div id="shorts-feed">
+                <div class="shorts-card">
+                    <video src="https://www.w3schools.com/html/mov_bbb.mp4" loop autoplay muted playsinline></video>
+                    <div class="v-meta-shorts">
+                        <h3>@Samxal</h3>
+                        <p>AzTube Shorts: İlk sınaq!</p>
+                    </div>
+                    <div class="v-actions-shorts">
+                        <i class="fas fa-heart" font-size:24px;></i>
+                        <i class="fas fa-comment-dots" font-size:24px; onclick="openComments()"></i>
+                        <i class="fas fa-paper-plane" font-size:24px; onclick="openDM()"></i>
+                    </div>
+                </div>
+            </div>
+        </main>
 
         <nav>
-            <i class="fas fa-home nav-item active" onclick="home()"></i>
-            <i class="fas fa-search nav-item"></i>
-            <div class="upload-circle" onclick="triggerUpload()"><i class="fas fa-plus"></i></div>
-            <i class="fas fa-paper-plane nav-item" onclick="toggleDM()"></i>
-            <i class="fas fa-user nav-item" onclick="toggleProfile()"></i>
+            <i class="fas fa-home nav-item active" onclick="switchTab('home')"></i>
+            <i class="fas fa-clapperboard nav-item" onclick="switchTab('shorts')"></i>
+            <div class="add-btn" onclick="startUpload()"><i class="fas fa-plus"></i></div>
+            <i class="fas fa-paper-plane nav-item" onclick="openDM()"></i>
+            <i class="fas fa-user nav-item" onclick="openProfile()"></i>
         </nav>
     </div>
 
-    <div id="dm-page">
-        <div style="padding: 15px; border-bottom: 1px solid #222; display: flex; align-items: center; gap: 15px;">
-            <i class="fas fa-arrow-left" onclick="toggleDM()"></i>
-            <h3>Mesajlar</h3>
-        </div>
-        <div id="chat-box"></div>
-        <div class="chat-input">
-            <i class="fas fa-camera" onclick="alert('Şəkil seçin...')"></i>
-            <input type="text" id="msg-input" placeholder="Mesaj yazın...">
-            <i class="fas fa-microphone" id="rec-btn"></i>
-            <i class="fas fa-paper-plane" style="color: var(--main);" onclick="sendMsg()"></i>
+    <div id="dmPage" class="page">
+        <div style="padding: 15px; border-bottom: 1px solid #333;"><i class="fas fa-arrow-left" onclick="closePage('dmPage')"></i> Mesajlaşma</div>
+        <div id="msg-box"></div>
+        <div class="msg-input">
+            <input type="text" id="m-inp" placeholder="Mesaj yazın...">
+            <i class="fas fa-paper-plane" onclick="sendMsg()"></i>
         </div>
     </div>
 
-    <div id="profile-page">
-        <i class="fas fa-arrow-left" onclick="toggleProfile()" style="font-size: 24px;"></i>
-        <div style="text-align: center; margin-top: 30px;">
-            <div style="width: 90px; height: 90px; background: var(--glass); border-radius: 50%; margin: 0 auto; border: 2px solid var(--main);"></div>
-            <h2 id="userName">İstifadəçi Adı</h2>
-            <p id="userBio" style="opacity: 0.6;">Bioqrafiya bura yazılır...</p>
-            <button onclick="updateProfile()" style="background: white; color: black; border: none; padding: 10px 25px; border-radius: 20px; font-weight: bold;">Profili Yenilə</button>
+    <div id="profilePage" class="page">
+        <div style="padding: 15px; border-bottom: 1px solid #333;"><i class="fas fa-arrow-left" onclick="closePage('profilePage')"></i> Profil</div>
+        <div style="text-align: center; padding: 20px;">
+            <div style="width: 80px; height: 80px; background: #333; border-radius: 50%; margin: 0 auto; border: 2px solid var(--main);"></div>
+            <h2 id="pName">Samxal</h2>
+            <p id="pBio" style="opacity: 0.6;">Daha yaxşı bilirsən...</p>
         </div>
+    </div>
+
+    <div id="commentPage" class="page" style="height: fit-content; bottom: 0; top: auto;">
+        <div style="padding: 15px; border-bottom: 1px solid #333;">Şərhlər</div>
+        <div id="comments-box"></div>
+        <div class="msg-input"><input type="text" placeholder="Şərh yazın..."></div>
     </div>
 
     <script>
-        // Firebase Konfiqurasiyası
-        const config = { 
+        // Firebase Bağlantısı (Problemi Düzəltdik)
+        const firebaseConfig = { 
             apiKey: "AIzaSyCtrVliO1bmdg7r0juWz-Yj2EaEGNsz2j8", 
             databaseURL: "https://ecopix-118c6-default-rtdb.europe-west1.firebasedatabase.app", 
             projectId: "ecopix-118c6" 
         };
-        firebase.initializeApp(config);
+        firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // 1. Profil İdarəetməsi
-        function updateProfile() {
-            const name = prompt("Adınız:");
-            const bio = prompt("Haqqınızda:");
-            if(name) {
-                document.getElementById('userName').innerText = name;
-                document.getElementById('display-name').innerText = "@" + name.replace(/\s/g, '');
-                document.getElementById('userBio').innerText = bio;
-                db.ref('aztube_users/myID').set({ name, bio });
+        // UI Nizamlamaları
+        function switchTab(tab) {
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            document.getElementById('home-grid').style.display = 'none';
+            document.getElementById('shorts-feed').style.display = 'none';
+            
+            if(tab === 'home') { 
+                document.getElementById('home-grid').style.display = 'grid'; 
+                document.querySelector('.fa-home').classList.add('active'); 
+            } else { 
+                document.getElementById('shorts-feed').style.display = 'block'; 
+                document.querySelector('.fa-clapperboard').classList.add('active'); 
             }
         }
 
-        // 2. Mesajlaşma Sistemi (Real-Time)
-        function sendMsg() {
-            const inp = document.getElementById('msg-input');
-            if(!inp.value) return;
-            db.ref('aztube_chats').push({ text: inp.value, user: 'me', time: Date.now() });
-            inp.value = "";
-        }
+        // Modal İdarəetməsi
+        function openDM() { document.getElementById('dmPage').style.display = 'flex'; }
+        function openProfile() { document.getElementById('profilePage').style.display = 'flex'; }
+        function openComments() { document.getElementById('commentPage').style.display = 'block'; }
+        function closePage(id) { document.getElementById(id).style.display = 'none'; }
 
-        db.ref('aztube_chats').on('child_added', s => {
+        // Mesajlaşma
+        function sendMsg() {
+            const inp = document.getElementById('m-inp');
+            if(inp.value.trim()) {
+                db.ref('aztube_premium_chats').push({ t: inp.value, u: 'me', ts: Date.now() });
+                inp.value = "";
+            }
+        }
+        db.ref('aztube_premium_chats').limitToLast(10).on('child_added', s => {
             const d = s.val();
-            const box = document.getElementById('chat-box');
+            const b = document.getElementById('msg-box');
             const m = document.createElement('div');
-            m.className = `msg ${d.user === 'me' ? 'me' : 'them'}`;
-            m.innerText = d.text;
-            box.appendChild(m);
-            box.scrollTop = box.scrollHeight;
+            m.className = `msg ${d.u === 'me' ? 'me' : 'them'}`;
+            m.innerText = d.t;
+            b.appendChild(m);
+            b.scrollTop = b.scrollHeight;
         });
 
-        // 3. Professional Video Yükləmə
-        async function triggerUpload() {
-            const inp = document.createElement('input');
-            inp.type = 'file'; inp.accept = 'video/*';
+        // Professional Video Yükləmə (Problemlərin Həlli)
+        async function startUpload() {
+            const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'video/*';
             inp.onchange = async (e) => {
-                alert("AzTube: Video emal olunur...");
+                alert("AzTube Premium: Video emal olunur...");
                 const fd = new FormData();
                 fd.append('file', e.target.files[0]);
                 fd.append('upload_preset', 'ml_default');
                 try {
                     const res = await fetch('https://api.cloudinary.com/v1_1/dyrfkit3x/video/upload', {method:'POST', body:fd});
-                    const data = await res.json();
-                    db.ref('aztube_feed').push({ url: data.secure_url, user: 'User', ts: Date.now() });
-                    alert("Video yayımlandı! 🇦🇿");
-                } catch(err) { alert("Xəta!"); }
+                    const d = await res.json();
+                    if(d.secure_url) {
+                        db.ref('aztube_premium_feed').push({ url: d.secure_url, ts: Date.now() });
+                        alert("Yayımlandı! 🇦🇿");
+                    }
+                } catch(err) { alert("Bulud Server Xətası! (Cloudinary Limit)"); }
             };
             inp.click();
         }
-
-        // UI Keçidləri
-        function toggleDM() { const p = document.getElementById('dm-page'); p.style.display = p.style.display === 'flex' ? 'none' : 'flex'; }
-        function toggleProfile() { const p = document.getElementById('profile-page'); p.style.display = p.style.display === 'block' ? 'none' : 'block'; }
-        function home() { toggleDM(); toggleProfile(); }
     </script>
 </body>
 </html>
