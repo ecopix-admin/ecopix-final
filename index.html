@@ -3,56 +3,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EcoPix Final</title>
-    
+    <title>EcoPix Live Paint</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --bg: #000; --accent: #00f2ff; --grad: linear-gradient(135deg, #00f2ff, #0072ff); }
+        body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); color: white; font-family: sans-serif; overflow: hidden; }
+        
+        /* Video Container - Full Screen */
+        .v-container { width: 100%; height: 100vh; position: relative; overflow: hidden; }
+        #v-player { width: 100%; height: 100%; object-fit: cover; }
 
-    <link rel="stylesheet" href="css/style.css">
+        /* CANLI YAZI QATI (Dünyada İlk: Canlı Qraffiti) */
+        #paint-canvas { position: absolute; inset: 0; pointer-events: none; z-index: 80; }
+        .live-text { position: absolute; font-size: 24px; font-weight: bold; color: white; text-shadow: 0 0 10px var(--accent), 0 0 20px black; animation: fadeOut 4s forwards; }
+
+        /* Yazı Yazma Düyməsi */
+        .text-btn { position: absolute; top: 20px; right: 20px; z-index: 100; background: rgba(0,242,255,0.3); border: 2px solid var(--accent); color: white; padding: 10px; border-radius: 50%; font-size: 18px; cursor: pointer; backdrop-filter: blur(5px); }
+
+        /* Sağ Panel: Emoji Düymələri */
+        .side-bar { position: absolute; right: 10px; bottom: 120px; display: flex; flex-direction: column; gap: 20px; z-index: 100; }
+        .m-btn { font-size: 32px; filter: drop-shadow(0 0 10px rgba(0,0,0,0.8)); cursor: pointer; transition: 0.2s; }
+        .m-btn:active { transform: scale(1.4); }
+
+        /* Uçan Emojilər (100-lərlə gələ bilər) */
+        .vibe { position: absolute; bottom: 50px; pointer-events: none; animation: fly 3s linear forwards; font-size: 24px; z-index: 50; }
+
+        /* İdarəetmə Düymələri */
+        .controls { position: absolute; bottom: 30px; left: 0; width: 100%; display: flex; justify-content: center; gap: 30px; z-index: 100; }
+        .c-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 15px; border-radius: 50%; font-size: 20px; backdrop-filter: blur(5px); }
+
+        .upload-zone { position: absolute; top: 20px; left: 20px; z-index: 100; }
+        #status { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); padding: 15px; border-radius: 10px; display: none; z-index: 1000; border: 1px solid var(--accent); }
+
+        @keyframes fly { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80vh) opacity: 0; } }
+        @keyframes fadeOut { 0% { opacity: 1; transform: scale(1); } 80% { opacity: 1; } 100% { opacity: 0; transform: scale(1.5); } }
+    </style>
 </head>
 <body>
 
-    <div class="top-nav">
-        <div class="header-top">
-            <div class="user-info-block">
-                <div class="user-profile-btn"><img id="myAvatar" src="https://cdn-icons-png.flaticon.com/512/149/149071.png"></div>
-                <span id="labelNick" class="user-nick-label">Yüklənir...</span>
-            </div>
-            <div class="search-container">
-                <input type="text" id="mainSearch" placeholder="Axtarış...">
-                <i class="fas fa-search"></i>
-            </div>
-            <button class="action-btn"><i class="fas fa-door-open"></i></button>
-        </div>
-        <div class="categories">
-            <div class="cat-item"><i class="fab fa-tiktok" style="color:#ff0050"></i><span>Shorts</span></div>
-            <div class="cat-item"><i class="fas fa-film"></i><span>Kinolar</span></div>
-            <div class="cat-item"><i class="fas fa-tv"></i><span>TV</span></div>
-            <div class="cat-item"><i class="fas fa-gamepad" style="color:#00ff00"></i><span>Oyunlar</span></div>
-            <div class="cat-item"><i class="fas fa-music" style="color:#ff00ff"></i><span>Musiqi</span></div>
-        </div>
+    <div id="status">Video Yüklənir...</div>
+
+    <button class="text-btn" onclick="openTextInput()"><i class="fas fa-comment-dots"></i></button>
+
+    <div class="upload-zone">
+        <button class="c-btn" onclick="document.getElementById('fileInp').click()"><i class="fas fa-plus"></i></button>
+        <input type="file" id="fileInp" hidden accept="video/*" onchange="upload(this)">
     </div>
 
-    <div class="stage">
-        <iframe id="yt-player" style="width:100%; height:100%; border:none; display:none;" allow="autoplay"></iframe>
-        <video id="hls-player" style="width:100%; height:100%; display:none;" controls autoplay></video>
-        <video id="my-cam" class="p2p-cam" style="display:none; width:120px; position:absolute; right:10px; top:10px; border-radius:10px; border:2px solid cyan;" autoplay muted></video>
-    </div>
+    <div class="v-container">
+        <video id="v-player" loop playsinline src=""></video>
+        
+        <div id="paint-canvas"></div>
 
-    <div class="chat-area">
-        <div class="messages" id="msgBox"></div>
-        <div class="footer">
-            <button class="action-btn"><i class="fas fa-paperclip"></i></button>
-            <input type="text" id="msgInp" placeholder="Mesaj yazın...">
-            <button class="action-btn" id="camBtn" onclick="toggleCam()"><i class="fas fa-video"></i></button>
-            <button class="action-btn send-btn" onclick="sendMsg()"><i class="fas fa-paper-plane"></i></button>
+        <div class="side-bar">
+            <div class="m-btn" onclick="vibe('🔥')">🔥</div>
+            <div class="m-btn" onclick="vibe('❤️')">❤️</div>
+            <div class="m-btn" onclick="vibe('😂')">😂</div>
+            <div class="m-btn" onclick="vibe('😮')">😮</div>
+        </div>
+        
+        <div class="controls">
+            <button class="c-btn" onclick="prev()"><i class="fas fa-step-backward"></i></button>
+            <button class="c-btn" id="p-btn" onclick="togglePlay()"><i class="fas fa-pause"></i></button>
+            <button class="c-btn" onclick="next()"><i class="fas fa-step-forward"></i></button>
         </div>
     </div>
 
-    <script src="js/firebase-config.js"></script>
-    <script src="js/chat.js"></script>
-    <script src="js/media.js"></script>
+    <script>
+        // Firebase Konfiqurasiyası
+        const conf = { 
+            apiKey: "AIzaSyCtrVliO1bmdg7r0juWz-Yj2EaEGNsz2j8", 
+            databaseURL: "https://ecopix-118c6-default-rtdb.europe-west1.firebasedatabase.app", 
+            projectId: "ecopix-118c6" 
+        };
+        firebase.initializeApp(conf);
+        const db = firebase.database();
+
+        const v = document.getElementById('v-player');
+        const canvas = document.getElementById('paint-canvas');
+        let videos = [];
+        let curIdx = 0;
+        let lastVib = 0;
+
+        // 1. Videoları Dinlə (Sinxron İzləmə)
+        db.ref('stream_videos').on('value', s => {
+            const data = s.val();
+            if(data) {
+                videos = Object.values(data);
+                if(!v.src) loadVideo(0);
+            }
+        });
+
+        function loadVideo(idx) {
+            if(videos[idx]) {
+                v.src = videos[idx].url;
+                v.play();
+                curIdx = idx;
+                document.getElementById('p-btn').innerHTML = '<i class="fas fa-pause"></i>';
+                // Video dəyişəndə köhnə yazıları təmizlə
+                canvas.innerHTML = ""; 
+            }
+        }
+
+        function next() { curIdx++; if(curIdx >= videos.length) curIdx = 0; loadVideo(curIdx); }
+        function prev() { curIdx--; if(curIdx < 0) curIdx = videos.length - 1; loadVideo(curIdx); }
+        function togglePlay() {
+            if(v.paused) { v.play(); document.getElementById('p-btn').innerHTML = '<i class="fas fa-pause"></i>'; }
+            else { v.pause(); document.getElementById('p-btn').innerHTML = '<i class="fas fa-play"></i>'; }
+        }
+
+        // 2. Canlı Yazı Sistemi (Dünyada İlk)
+        function openTextInput() {
+            const text = prompt("Videonun üzərinə nə yazmaq istəyirsən?");
+            if(text && text.trim()) {
+                // Təsadüfi mövqe
+                const x = Math.random() * 60 + 20; // 20% - 80% arası
+                const y = Math.random() * 60 + 20;
+                const size = Math.random() * 10 + 20; // 20px - 30px arası
+
+                db.ref('live_paint').push({
+                    t: text,
+                    x: x,
+                    y: y,
+                    s: size,
+                    ts: Date.now()
+                });
+            }
+        }
+
+        // Canlı Yazıları Dinləmək
+        db.ref('live_paint').limitToLast(1).on('child_added', s => {
+            const d = s.val();
+            const txt = document.createElement('div');
+            txt.className = 'live-text';
+            txt.innerHTML = d.t;
+            txt.style.left = d.x + '%';
+            txt.style.top = d.y + '%';
+            txt.style.fontSize = d.s + 'px';
+            txt.style.color = `hsl(${Math.random()*360}, 100%, 70%)`; // Təsadüfi rəng
+
+            canvas.appendChild(txt);
+            
+            // 4 saniyə sonra yazını sil
+            setTimeout(() => txt.remove(), 4000);
+        });
+
+        // 3. Emoji Vibe Sistemi (100-lərlə emoji dəstəyi)
+        function vibe(e) {
+            db.ref('global_vibe').push({ e: e, x: Math.random() * 80 + 10 });
+            if(navigator.vibrate) navigator.vibrate(50);
+        }
+
+        db.ref('global_vibe').limitToLast(1).on('child_added', s => {
+            const d = s.val();
+            const el = document.createElement('div');
+            el.className = 'vibe';
+            el.innerHTML = d.e;
+            el.style.left = d.x + '%';
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 3000);
+
+            // Ağıllı Vibrasiya Filteri
+            let now = Date.now();
+            if(now - lastVib > 1500) {
+                if(navigator.vibrate) navigator.vibrate([40, 100, 40]);
+                lastVib = now;
+            }
+        });
+
+        // 4. Video Yükləmə (Cloudinary 4K)
+        async function upload(inp) {
+            if(!inp.files[0]) return;
+            document.getElementById('status').style.display = 'block';
+            const fd = new FormData();
+            fd.append('file', inp.files[0]);
+            fd.append('upload_preset', 'ml_default');
+            try {
+                const res = await fetch('https://api.cloudinary.com/v1_1/dyrfkit3x/video/upload', {method:'POST', body:fd});
+                const d = await res.json();
+                db.ref('stream_videos').push({ url: d.secure_url });
+                document.getElementById('status').style.display = 'none';
+            } catch(e) { alert("Xəta!"); document.getElementById('status').style.display = 'none'; }
+        }
+    </script>
 </body>
 </html>
