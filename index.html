@@ -3,45 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AzChat - İnternetsiz Rabitə</title>
+    <title>AzChat Pro - V1.0</title>
     <script src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: white; text-align: center; margin: 0; padding: 20px; }
-        .container { max-width: 400px; margin: auto; background: #1e293b; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .status { color: #10b981; font-weight: bold; margin: 20px 0; }
-        .btn { width: 100%; padding: 15px; margin: 10px 0; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-call { background: #22c55e; color: white; }
-        .btn-msg { background: #3b82f6; color: white; }
+        :root { --bg: #0b141a; --header: #202c33; --green: #00a884; --text: #e9edef; --active: #2a3942; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; overflow-x: hidden; }
         
-        /* GİZLİ REKLAM LOQOSU (Dahiyanə Hiylə) */
-        #az-smart-logo { 
-            width: 45px; height: 45px; position: fixed; bottom: 20px; right: 20px; 
-            border-radius: 50%; overflow: hidden; border: 2px solid #334155; z-index: 1000;
-        }
-        #ad-layer { opacity: 0.01; transform: scale(0.01); position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        .header { background: var(--header); padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
+        .nav-tabs { display: flex; background: var(--header); border-bottom: 1px solid #313d45; }
+        .tab { flex: 1; text-align: center; padding: 15px; cursor: pointer; color: #8696a0; font-weight: 500; }
+        .tab.active { color: var(--green); border-bottom: 3px solid var(--green); }
+
+        .section { display: none; padding: 0; animation: fadeIn 0.3s; }
+        .section.active { display: block; }
+        @keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
+
+        .item { display: flex; align-items: center; padding: 15px; border-bottom: 0.5px solid #222d34; cursor: pointer; }
+        .item:active { background: var(--active); }
+        .avatar { width: 50px; height: 50px; background: #6a7175; border-radius: 50%; margin-right: 15px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .info { flex: 1; }
+        .name { font-weight: 500; font-size: 17px; }
+        .sub { color: #8696a0; font-size: 13px; margin-top: 3px; }
+
+        .fab { position: fixed; bottom: 25px; right: 25px; background: var(--green); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: pointer; }
+        
+        /* Profil Redaktə Paneli */
+        .profile-card { background: var(--header); margin: 15px; padding: 20px; border-radius: 15px; text-align: center; }
+        input, textarea { background: #2a3942; border: none; color: white; padding: 10px; width: 90%; border-radius: 8px; margin: 10px 0; }
+        .save-btn { background: var(--green); color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>AzChat</h1>
-        <p>Dünyanın İlk Radio-Mesh Şəbəkəsi</p>
-        <div id="my-id" class="status">Anten Qoşulur...</div>
-        <button class="btn btn-call" onclick="startCall()">Görüntülü Zəng</button>
-        <button class="btn btn-msg" onclick="sendMsg()">Mesaj Göndər</button>
+
+    <div class="header">
+        <span style="font-size: 22px; font-weight: 600;">AzChat</span>
+        <div style="text-align: right;">
+            <div id="my-id" style="font-size: 12px; color: var(--green);">ID: Alınır...</div>
+        </div>
     </div>
 
-    <div id="az-smart-logo">
-        <img src="https://via.placeholder.com/45/22c55e/ffffff?text=AZ" style="width:100%;">
-        <div id="ad-layer">
+    <div class="nav-tabs">
+        <div class="tab active" onclick="showTab('chats')">Söhbət</div>
+        <div class="tab" onclick="showTab('contacts')">Kontakt</div>
+        <div class="tab" onclick="showTab('calls')">Zəng</div>
+        <div class="tab" onclick="showTab('profile')">Profil</div>
+    </div>
+
+    <div id="chats" class="section active">
+        <div class="item">
+            <div class="avatar"><i class="fas fa-satellite-dish"></i></div>
+            <div class="info"><div class="name">Mesh Şəbəkəsi</div><div class="sub">Yaxınlıqdakı aktiv antenlər axtarılır...</div></div>
+        </div>
+    </div>
+
+    <div id="contacts" class="section">
+        <div id="contact-list"></div>
+        <div class="fab" onclick="addContact()"><i class="fas fa-user-plus"></i></div>
+    </div>
+
+    <div id="calls" class="section">
+        <div id="call-history-list"></div>
+    </div>
+
+    <div id="profile" class="section">
+        <div class="profile-card">
+            <div class="avatar" style="width: 80px; height: 80px; margin: 0 auto 15px;" onclick="uploadAvatar()">
+                <img id="user-img" src="https://via.placeholder.com/80/00a884/ffffff?text=U" alt="P">
             </div>
+            <input type="text" id="user-name" placeholder="Adınız">
+            <input type="text" id="user-bio" placeholder="Bio (Məs: Usta)">
+            <input type="text" id="user-phone" placeholder="Sim Nömrəniz (+994...)">
+            <button class="save-btn" onclick="saveProfile()">Yadda Saxla</button>
+        </div>
     </div>
 
     <script src="app.js"></script>
-    <script src="p2p-engine.js"></script>
     <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('service-worker.js');
+        function showTab(tabId) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
         }
+
+        // Profil funksiyaları
+        function saveProfile() {
+            const profile = {
+                name: document.getElementById('user-name').value,
+                bio: document.getElementById('user-bio').value,
+                phone: document.getElementById('user-phone').value,
+                img: document.getElementById('user-img').src
+            };
+            localStorage.setItem('azchat_profile', JSON.stringify(profile));
+            alert("Profil yeniləndi!");
+        }
+
+        function loadProfile() {
+            const data = JSON.parse(localStorage.getItem('azchat_profile') || '{}');
+            if(data.name) document.getElementById('user-name').value = data.name;
+            if(data.bio) document.getElementById('user-bio').value = data.bio;
+            if(data.phone) document.getElementById('user-phone').value = data.phone;
+        }
+        
+        window.onload = () => { loadProfile(); renderContacts(); renderCalls(); };
     </script>
 </body>
 </html>
