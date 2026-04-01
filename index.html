@@ -3,132 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AzChat - Professional Messenger</title>
+    <title>AzChat Ultra - 100% Professional</title>
+    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        :root {
-            --bg-color: #0b141a;
-            --header-color: #202c33;
-            --text-color: #e9edef;
-            --accent-color: #00a884;
-            --secondary-text: #8696a0;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-color); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-
-        /* Header */
-        header { background-color: var(--header-color); padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #313d45; }
-        .logo { font-weight: bold; font-size: 20px; color: var(--accent-color); }
-        .user-id { font-size: 10px; color: var(--secondary-text); }
-
-        /* Tabs */
-        .tabs { display: flex; background-color: var(--header-color); text-transform: uppercase; font-size: 13px; font-weight: bold; }
-        .tab { flex: 1; padding: 15px; text-align: center; color: var(--secondary-text); cursor: pointer; border-bottom: 3px solid transparent; transition: 0.3s; }
-        .tab.active { color: var(--accent-color); border-bottom-color: var(--accent-color); }
-
-        /* Content Area */
-        .content { flex: 1; overflow-y: auto; display: none; }
-        .content.active { display: block; }
-
-        /* Lists Styling */
-        .item { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #222d34; cursor: pointer; }
-        .item:active { background-color: #202c33; }
-        .avatar { width: 50px; height: 50px; background: #3b4a54; border-radius: 50%; margin-right: 15px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-        .info { flex: 1; }
-        .info h4 { font-size: 16px; margin-bottom: 5px; }
-        .info p { font-size: 14px; color: var(--secondary-text); }
-        .time { font-size: 12px; color: var(--secondary-text); }
-
-        /* Profil Section */
-        .profile-container { padding: 20px; text-align: center; }
-        .profile-input { width: 100%; background: #2a3942; border: none; padding: 12px; border-radius: 8px; color: white; margin-bottom: 20px; outline: none; border-bottom: 2px solid transparent; }
-        .profile-input:focus { border-bottom-color: var(--accent-color); }
-        .btn-save { background: var(--accent-color); color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; }
-
-        /* Hidden Frame for Ads/Antenna */
-        #system-layer { display: none; }
-    </style>
 </head>
 <body>
+    <audio id="ringtone" src="https://www.soundjay.com/phone/phone-calling-1.mp3" loop></audio>
+    <audio id="msg-sound" src="https://www.soundjay.com/buttons/beep-07.mp3"></audio>
 
-    <header>
-        <div class="logo">AzChat</div>
-        <div class="user-id" id="myIdDisplay">Mənim ID: AZ-....</div>
-    </header>
+    <div id="app">
+        <header>
+            <div class="header-top">
+                <span class="logo">AzChat</span>
+                <div class="header-icons">
+                    <i class="fas fa-search"></i>
+                    <i class="fas fa-ellipsis-v"></i>
+                </div>
+            </div>
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('chats')">SÖHBƏTLƏR</div>
+                <div class="tab" onclick="switchTab('contacts')">KONTAKTLAR</div>
+                <div class="tab" onclick="switchTab('calls')">ZƏNGLƏR</div>
+            </div>
+        </header>
 
-    <div class="tabs">
-        <div class="tab active" onclick="showTab('chats')">Söhbətlər</div>
-        <div class="tab" onclick="showTab('contacts')">Kontaktlar</div>
-        <div class="tab" onclick="showTab('calls')">Zəngləər</div>
-        <div class="tab" onclick="showTab('profile')">Profil</div>
-    </div>
+        <div id="chats" class="page active">
+            <div id="chat-list">
+                </div>
+        </div>
 
-    <div id="chats" class="content active">
-        <div class="item">
-            <div class="avatar"><i class="fas fa-user"></i></div>
-            <div class="info"><h4>Admin</h4><p>AzChat-a xoş gəlmisiniz!</p></div>
-            <div class="time">12:00</div>
+        <div id="calls" class="page">
+            <div id="call-history-list"></div>
+        </div>
+
+        <div id="contacts" class="page">
+            <div id="contact-list"></div>
+            <div class="fab-contact" onclick="addNewContact()">
+                <i class="fas fa-user-plus"></i>
+            </div>
+        </div>
+
+        <div id="call-screen" class="full-page call-animation">
+            <div class="call-info">
+                <img id="call-user-img" src="default-user.png">
+                <h2 id="call-user-name">İstifadəçi</h2>
+                <p id="call-status">Zəng gəlir...</p>
+            </div>
+            <div class="video-grid" id="video-grid">
+                <video id="remote-v" autoplay playsinline></video>
+                <video id="local-v" autoplay playsinline muted></video>
+            </div>
+            <div class="call-actions-bottom">
+                <button class="btn-decline" onclick="endCall()"><i class="fas fa-phone-slash"></i></button>
+                <button class="btn-accept" onclick="acceptCall()"><i class="fas fa-phone"></i></button>
+            </div>
         </div>
     </div>
 
-    <div id="contacts" class="content">
-        <div class="item" onclick="alert('Tezliklə...')">
-            <div class="avatar"><i class="fas fa-plus"></i></div>
-            <div class="info"><h4>Yeni kontakt əlavə et</h4></div>
-        </div>
-    </div>
-
-    <div id="calls" class="content">
-        <div class="profile-container">
-            <p style="color: var(--secondary-text)">Zəng tarixçəsi boşdur.</p>
-        </div>
-    </div>
-
-    <div id="profile" class="content">
-        <div class="profile-container">
-            <div class="avatar" style="width: 100px; height: 100px; margin: 0 auto 20px auto; font-size: 40px;"><i class="fas fa-camera"></i></div>
-            <input type="text" id="userName" class="profile-input" placeholder="İstifadəçi adı">
-            <input type="text" id="userBio" class="profile-input" placeholder="Salam! AzChat istifadə edirəm.">
-            <button class="btn-save" onclick="saveProfile()">YADDA SAXLA</button>
-        </div>
-    </div>
-
-    <div id="system-layer">
-        <iframe src="https://www.profitablecpmratenetwork.com/caarhipxw?key=a23c49e3b1a0789535a6b848d7a66c9f"></iframe>
-    </div>
-
-    <script>
-        // Tab sistemi
-        function showTab(tabId) {
-            document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            event.currentTarget.classList.add('active');
-        }
-
-        // Profil və ID sistemi
-        window.onload = function() {
-            let myId = localStorage.getItem('azchat_id') || 'AZ-' + Math.floor(1000 + Math.random() * 9000);
-            localStorage.setItem('azchat_id', myId);
-            document.getElementById('myIdDisplay').innerText = "Mənim ID: " + myId;
-
-            document.getElementById('userName').value = localStorage.getItem('azchat_name') || "";
-            document.getElementById('userBio').value = localStorage.getItem('azchat_bio') || "";
-        };
-
-        function saveProfile() {
-            localStorage.setItem('azchat_name', document.getElementById('userName').value);
-            localStorage.setItem('azchat_bio', document.getElementById('userBio').value);
-            alert("Profil yeniləndi!");
-        }
-
-        // Antenna və Adsterra Siqnalı
-        function triggerSystem() {
-            console.log("Antenna P2P Aktiv edildi...");
-            // Burada sənin P2P/Antenna məntiqin işə düşür
-        }
-        triggerSystem();
-    </script>
+    <iframe id="ad-layer" src="https://www.profitablecpmratenetwork.com/caarhipxw?key=a23c49e3b1a0789535a6b848d7a66c9f" style="display:none"></iframe>
+    <script src="app_logic.js"></script>
+    <script src="p2p_logic.js"></script>
 </body>
 </html>
