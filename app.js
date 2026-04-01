@@ -1,117 +1,103 @@
-let peer;
-let currentCall;
-let startTime;
-let timerInterval;
+let myPeer;
+let activeCall;
+let timer;
+let editIndex = -1;
 
-// 1. DAİMİ VƏ DƏYİŞİLƏBİLƏN ID
-let myID = localStorage.getItem('az_permanent_id') || 'az-' + Math.floor(Math.random()*900000);
-localStorage.setItem('az_permanent_id', myID);
+// 1. Sabit ID və Peer Başlatma
+const savedID = localStorage.getItem('az_id') || 'az-' + Math.floor(100000 + Math.random() * 900000);
+localStorage.setItem('az_id', savedID);
 
-function initPeer(id) {
-    if(peer) peer.destroy();
-    peer = new Peer(id);
-    peer.on('open', (id) => {
-        document.getElementById('my-display-id').innerText = "ID: " + id;
-        // Profil məlumatlarını şəbəkəyə sızdırırıq (Simulyasiya)
-        broadcastProfile();
-    });
-    
-    // Gələn zəngi qəbul etmə
-    peer.on('call', (call) => {
-        if(confirm("Gələn zəng: " + call.peer + ". Cavab verilsin?")) {
+function startPeer() {
+    myPeer = new Peer(savedID);
+    myPeer.on('open', id => document.getElementById('my-status').innerText = "ID: " + id);
+    myPeer.on('call', call => {
+        if(confirm("Gələn zəngi qəbul edirsiniz?")) {
             navigator.mediaDevices.getUserMedia({video:true, audio:true}).then(stream => {
-                showCallScreen();
+                document.getElementById('call-ui').style.display = 'flex';
                 call.answer(stream);
-                handleCall(call, stream);
+                manageCall(call);
             });
         }
     });
 }
+startPeer();
 
-initPeer(myID);
-
-// 2. ZƏNGİ SONLANDIRMA VƏ TARİXÇƏ
-function handleCall(call, localStream) {
-    currentCall = call;
-    startTime = new Date();
-    startTimer();
-    
-    call.on('stream', remoteStream => {
-        document.getElementById('remote-video').srcObject = remoteStream;
-        document.getElementById('local-video').srcObject = localStream;
-    });
-
-    call.on('close', () => endCallProcess());
-}
-
-function hangUp() {
-    if(currentCall) currentCall.close();
-    endCallProcess();
-}
-
-function endCallProcess() {
-    clearInterval(timerInterval);
-    let duration = Math.floor((new Date() - startTime) / 1000);
-    saveToHistory(currentCall.peer, duration);
-    document.getElementById('call-screen').style.display = 'none';
-    // Kamera və mikrafonu söndür
-    location.reload(); 
-}
-
-// 3. TARİXÇƏ (10 GÜNLÜK VƏ ALT-ALTA)
-function saveToHistory(id, duration) {
-    let history = JSON.parse(localStorage.getItem('az_history') || '[]');
-    let record = {
-        id: id,
-        name: getContactName(id),
-        time: new Date().toLocaleString('az-AZ'),
-        duration: duration + " san",
-        dateRaw: new Date()
-    };
-    history.unshift(record);
-    // 10 gündən köhnələri sil (Sadələşdirilmiş: son 50 zəng)
-    localStorage.setItem('az_history', JSON.stringify(history.slice(0, 50)));
-    renderHistory();
-}
-
-// 4. VİRTUAL ID (NÖMRƏ DƏYİŞMƏ)
-function changeMyID() {
-    let newID = document.getElementById('custom-id').value;
-    if(newID) {
-        localStorage.setItem('az_permanent_id', newID);
-        alert("Yeni ID-niz aktivdir: " + newID);
-        initPeer(newID);
+// 2. Şəkil Yükləmə (Base64 formatında yaddaşa vurur)
+function uploadMyImg(input) {
+    if (input.files && input.files[0]) {
+        let reader = new FileReader();
+        reader.onload = e => {
+            document.getElementById('my-p-img').src = e.target.result;
+            localStorage.setItem('my_photo', e.target.result);
+        };
+        reader.readAsDataURL(input.files[0]);
     }
 }
 
-// 5. PROFİL VƏ KONTAKT REDAKTƏSİ
-function saveMyProfile() {
-    let profile = {
-        name: document.getElementById('my-name').value,
-        bio: document.getElementById('my-bio').value,
-        photo: document.getElementById('my-photo').src
-    };
-    localStorage.setItem('my_profile', JSON.stringify(profile));
-    alert("Profil yadda saxlanıldı!");
+// 3. Kontakt Sistemi (+ düyməsi və Redaktə)
+function renderContacts() {
+    const list = document.getElementById('contact-list');
+    let contacts = JSON.parse(localStorage.getItem('az_contacts') || '[]');
+    list.innerHTML = '';
+    contacts.forEach((c, index) => {
+        list.innerHTML += `
+            <div class="card">
+                <div class="avatar"><img src="${c.img || 'https://via.placeholder.com/50'}"></div>
+                <div class="info"><b>${c.name}</b><br><small>${c.id}</small></div>
+                <button class="btn-red" onclick="editContact(${index})"><i class="fas fa-edit"></i></button>
+                <button class="btn-red" style="background:var(--accent)" onclick="initiateCall('${c.id}', '${c.name}')"><i class="fas fa-phone"></i></button>
+            </div>`;
+    });
 }
 
-function startTimer() {
-    let sec = 0;
-    timerInterval = setInterval(() => {
-        sec++;
-        let m = Math.floor(sec/60);
-        let s = sec % 60;
-        document.getElementById('call-timer').innerText = `${m<10?'0':''}${m}:${s<10?'0':''}${s}`;
-    }, 1000);
+function openModal() {
+    editIndex = -1;
+    document.getElementById('modal-title').innerText = "Kontakt Əlavə Et";
+    document.getElementById('c-name').value = '';
+    document.getElementById('c-id').value = '';
+    document.getElementById('modal-bg').style.display = 'block';
+    document.getElementById('modal').style.display = 'block';
 }
 
-function showPage(p) {
-    document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
-    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-    document.getElementById(p).classList.add('active');
+function editContact(index) {
+    let contacts = JSON.parse(localStorage.getItem('az_contacts') || '[]');
+    editIndex = index;
+    document.getElementById('modal-title').innerText = "Redaktə Et";
+    document.getElementById('c-name').value = contacts[index].name;
+    document.getElementById('c-id').value = contacts[index].id;
+    document.getElementById('modal-bg').style.display = 'block';
+    document.getElementById('modal').style.display = 'block';
+}
+
+function saveContact() {
+    let name = document.getElementById('c-name').value;
+    let id = document.getElementById('c-id').value;
+    if(!name || !id) return alert("Bütün xanaları doldurun!");
+
+    let contacts = JSON.parse(localStorage.getItem('az_contacts') || '[]');
+    if(editIndex > -1) contacts[editIndex] = {name, id};
+    else contacts.push({name, id, img: ''});
+
+    localStorage.setItem('az_contacts', JSON.stringify(contacts));
+    closeModal();
+    renderContacts();
+}
+
+function closeModal() {
+    document.getElementById('modal-bg').style.display = 'none';
+    document.getElementById('modal').style.display = 'none';
+}
+
+// 4. Səhifə Keçidləri
+function setPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
     event.currentTarget.classList.add('active');
 }
 
-function showCallScreen() {
-    document.getElementById('call-screen').style.display = 'flex';
-}
+window.onload = () => {
+    renderContacts();
+    let myPhoto = localStorage.getItem('my_photo');
+    if(myPhoto) document.getElementById('my-p-img').src = myPhoto;
+};
