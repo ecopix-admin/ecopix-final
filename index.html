@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AzChat Pro v2</title>
+    <title>AzChat Pro v2.5</title>
     <script src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -11,33 +11,36 @@
         body { font-family: 'Segoe UI', sans-serif; background: #0b141a; color: white; margin: 0; height: 100vh; overflow: hidden; }
         
         .header { background: var(--wa-teal); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
-        .nav { display: flex; background: var(--wa-teal); border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .nav { display: flex; background: var(--wa-teal); }
         .tab { flex: 1; text-align: center; padding: 15px; cursor: pointer; color: rgba(255,255,255,0.6); font-weight: bold; font-size: 14px; text-transform: uppercase; }
         .tab.active { color: #fff; border-bottom: 3px solid #fff; }
 
         .page { display: none; height: calc(100vh - 110px); overflow-y: auto; background: #0b141a; }
         .page.active { display: block; }
 
-        /* Kontakt və Tarixçə Kartları (WhatsApp Stili) */
         .item-card { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; }
-        .item-card:active { background: rgba(255,255,255,0.1); }
         .avatar { width: 55px; height: 55px; border-radius: 50%; margin-right: 15px; background: #333; object-fit: cover; }
         .item-info { flex: 1; }
-        .item-info b { font-size: 17px; display: block; margin-bottom: 4px; }
+        .item-info b { font-size: 17px; display: block; }
         .item-info span { font-size: 13px; color: #8696a0; }
-        .item-actions { display: flex; gap: 20px; color: var(--wa-accent); font-size: 20px; }
 
-        /* Profil Səhifəsi (Söhbət daxili) */
+        /* Söhbət Pəncərəsi */
         #chat-window { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0b141a; z-index: 2000; display: none; flex-direction: column; }
-        .chat-header { background: var(--wa-teal); padding: 10px; display: flex; align-items: center; gap: 10px; }
-        .chat-messages { flex: 1; padding: 20px; overflow-y: auto; background: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); }
-        .input-area { background: #1f2c33; padding: 10px; display: flex; align-items: center; gap: 10px; }
+        .chat-header { background: var(--wa-teal); padding: 10px; display: flex; align-items: center; justify-content: space-between; }
+        .chat-messages { flex: 1; padding: 20px; overflow-y: auto; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-size: contain; }
+        
+        /* Düymələrin Ayrılması */
+        .input-area { background: #1f2c33; padding: 10px; display: flex; align-items: center; gap: 8px; }
         .input-area input { flex: 1; background: #2a3942; border: none; padding: 12px; border-radius: 20px; color: white; outline: none; }
+        .mic-btn { width: 45px; height: 45px; border-radius: 50%; background: var(--wa-accent); display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .mic-btn.active { transform: scale(1.5); background: red; }
+        .send-btn { width: 45px; height: 45px; margin-left: 5px; color: var(--wa-accent); font-size: 20px; display: flex; align-items: center; justify-content: center; }
 
-        /* Zəng Gələndə */
-        #call-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #075e54; z-index: 10000; display: none; flex-direction: column; align-items: center; justify-content: center; }
-        .call-btn-box { display: flex; gap: 60px; margin-top: 100px; }
-        .circle-btn { width: 70px; height: 70px; border-radius: 50%; border: none; font-size: 25px; color: white; display: flex; align-items: center; justify-content: center; }
+        /* Kontakt Paneli */
+        .add-contact-fab { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: var(--wa-accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+
+        /* Zəng Overlay */
+        #call-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #075e54; z-index: 10000; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
     </style>
 </head>
 <body>
@@ -59,43 +62,57 @@
     <div id="calls" class="page"></div>
     <div id="settings" class="page" style="padding:20px; text-align:center;">
         <img id="my-p-img" src="https://via.placeholder.com/150" class="avatar" style="width:150px; height:150px; margin-bottom:20px;" onclick="document.getElementById('file-in').click()">
-        <input type="file" id="file-in" hidden onchange="updatePhoto(this)">
-        <input type="text" id="my-p-name" placeholder="Adınız" style="width:100%; padding:15px; margin-bottom:10px; border-radius:10px; border:none;">
-        <input type="text" id="my-p-bio" placeholder="Biyo" style="width:100%; padding:15px; margin-bottom:10px; border-radius:10px; border:none;">
+        <input type="file" id="file-in" hidden onchange="updateMyPhoto(this)">
+        <input type="text" id="my-p-name" placeholder="Adınız" style="width:100%; padding:15px; margin-bottom:10px; border-radius:10px; border:none; background:#1f2c33; color:white;">
         <button onclick="saveProfile()" style="background:var(--wa-accent); border:none; padding:15px; width:100%; border-radius:10px; font-weight:bold; color:white;">YADDA SAXLA</button>
     </div>
 
     <div id="chat-window">
         <div class="chat-header">
-            <i class="fas fa-arrow-left" onclick="closeChat()"></i>
-            <img id="chat-avatar" class="avatar" style="width:40px; height:40px; margin-right:5px;">
-            <b id="chat-name" style="flex:1">Ad</b>
-            <i class="fas fa-phone" onclick="initiateCall('voice')" style="margin-right:15px;"></i>
-            <i class="fas fa-video" onclick="initiateCall('video')"></i>
+            <div style="display:flex; align-items:center;">
+                <i class="fas fa-arrow-left" onclick="closeChat()" style="margin-right:15px;"></i>
+                <img id="chat-avatar" class="avatar" style="width:40px; height:40px;">
+                <b id="chat-name">Ad</b>
+            </div>
+            <div style="display:flex; gap:25px; padding-right:10px;">
+                <i class="fas fa-phone" onclick="initiateCall('voice')"></i>
+                <i class="fas fa-video" onclick="initiateCall('video')"></i>
+            </div>
         </div>
         <div class="chat-messages" id="chat-msgs"></div>
         <div class="input-area">
-            <i class="fas fa-paperclip" onclick="document.getElementById('media-in').click()"></i>
-            <input type="file" id="media-in" hidden onchange="sendFile(this)">
+            <i class="fas fa-paperclip" onclick="toggleAttachmentMenu()"></i>
             <input type="text" id="msg-input" placeholder="Mesaj yazın...">
-            <i class="fas fa-microphone" id="mic-btn" onclick="toggleRecording()"></i>
-            <i class="fas fa-paper-plane" onclick="sendMessage()" style="color:var(--wa-accent)"></i>
+            <div class="mic-btn" id="mic-btn" onmousedown="startVoiceMsg()" onmouseup="endVoiceMsg()" ontouchstart="startVoiceMsg()" ontouchend="endVoiceMsg()">
+                <i class="fas fa-microphone"></i>
+            </div>
+            <div class="send-btn" onclick="sendMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </div>
         </div>
     </div>
 
     <div id="call-overlay">
-        <img id="call-photo" class="avatar" style="width:120px; height:120px;">
-        <h2 id="call-user">Naməlum</h2>
-        <div id="call-timer">00:00</div>
-        <video id="v-remote" autoplay style="width:100%; max-height:50%; background:#000; margin-top:20px; display:none;"></video>
-        <div class="call-btn-box" id="incoming-btns" style="display:none;">
-            <button class="circle-btn" style="background:green;" onclick="answerCall()"><i class="fas fa-phone"></i></button>
-            <button class="circle-btn" style="background:red;" onclick="rejectCall()"><i class="fas fa-phone-slash"></i></button>
-        </div>
-        <div class="call-btn-box" id="active-btns" style="display:none;">
-            <button class="circle-btn" style="background:red; width:80px; height:80px;" onclick="endCall()"><i class="fas fa-phone-slash"></i></button>
+        <img id="call-photo" class="avatar" style="width:120px; height:120px; border:3px solid white;">
+        <h2 id="call-user-name">Naməlum</h2>
+        <small id="call-user-id"></small>
+        <div id="call-timer" style="font-size:22px; margin-top:10px;">00:00</div>
+        <video id="v-remote" autoplay style="width:100%; max-height:50%; margin-top:20px; display:none;"></video>
+        <div style="display:flex; gap:50px; margin-top:100px;" id="call-actions">
+            <button id="ans-btn" style="background:green; width:70px; height:70px; border-radius:50%; border:none; color:white; font-size:25px;" onclick="answerCall()"><i class="fas fa-phone"></i></button>
+            <button style="background:red; width:70px; height:70px; border-radius:50%; border:none; color:white; font-size:25px;" onclick="endCall()"><i class="fas fa-phone-slash"></i></button>
         </div>
     </div>
+
+    <div id="contact-modal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1f2c33; padding:20px; border-radius:15px; z-index:3000; width:80%;">
+        <h3>Yeni Kontakt</h3>
+        <input type="text" id="new-c-name" placeholder="Ad" style="width:100%; padding:10px; margin:10px 0;">
+        <input type="text" id="new-c-id" placeholder="ID (az-XXXXXX)" style="width:100%; padding:10px; margin:10px 0;">
+        <button onclick="saveNewContact()" style="width:100%; background:var(--wa-accent); padding:10px; border:none; border-radius:5px;">YADDA SAXLA</button>
+        <button onclick="document.getElementById('contact-modal').style.display='none'" style="width:100%; margin-top:5px; background:#444; padding:10px; border:none; border-radius:5px;">LƏĞV</button>
+    </div>
+
+    <div class="add-contact-fab" onclick="document.getElementById('contact-modal').style.display='block'"><i class="fas fa-user-plus"></i></div>
 
     <audio id="ringtone" src="https://www.soundjay.com/phone-terminology/telephone-ring-03a.mp3" loop></audio>
     <audio id="msg-tone" src="https://www.soundjay.com/button/beep-07.mp3"></audio>
