@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AzChat - İnternetsiz Rabitə</title>
+    <script src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: white; text-align: center; margin: 0; padding: 20px; }
+        .container { max-width: 400px; margin: auto; background: #1e293b; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .status { color: #10b981; font-weight: bold; margin: 20px 0; }
+        .btn { width: 100%; padding: 15px; margin: 10px 0; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-call { background: #22c55e; color: white; }
+        .btn-msg { background: #3b82f6; color: white; }
+        
+        /* GİZLİ REKLAM LOQOSU (Dahiyanə Hiylə) */
+        #az-smart-logo { 
+            width: 45px; height: 45px; position: fixed; bottom: 20px; right: 20px; 
+            border-radius: 50%; overflow: hidden; border: 2px solid #334155; z-index: 1000;
+        }
+        #ad-layer { opacity: 0.01; transform: scale(0.01); position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AzChat</h1>
+        <p>Dünyanın İlk Radio-Mesh Şəbəkəsi</p>
+        <div id="my-id" class="status">Anten Qoşulur...</div>
+        <button class="btn btn-call" onclick="startCall()">Görüntülü Zəng</button>
+        <button class="btn btn-msg" onclick="sendMsg()">Mesaj Göndər</button>
+    </div>
+
+    <div id="az-smart-logo">
+        <img src="https://via.placeholder.com/45/22c55e/ffffff?text=AZ" style="width:100%;">
+        <div id="ad-layer">
+            </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script src="p2p-engine.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js');
+        }
+    </script>
+</body>
+</html>
