@@ -3,111 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AzChat Pro - V1.0</title>
+    <title>AzChat Pro - Global Mesh</title>
     <script src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --bg: #0b141a; --header: #202c33; --green: #00a884; --text: #e9edef; --active: #2a3942; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; overflow-x: hidden; }
+        :root { --bg: #0b141a; --header: #202c33; --green: #00a884; --text: #e9edef; --danger: #ea0038; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; overflow: hidden; }
         
-        .header { background: var(--header); padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
-        .nav-tabs { display: flex; background: var(--header); border-bottom: 1px solid #313d45; }
-        .tab { flex: 1; text-align: center; padding: 15px; cursor: pointer; color: #8696a0; font-weight: 500; }
+        /* Naviqasiya */
+        .header { background: var(--header); padding: 15px; display: flex; justify-content: space-between; }
+        .nav { display: flex; background: var(--header); border-bottom: 1px solid #313d45; }
+        .tab { flex: 1; text-align: center; padding: 15px; cursor: pointer; color: #8696a0; }
         .tab.active { color: var(--green); border-bottom: 3px solid var(--green); }
 
-        .section { display: none; padding: 0; animation: fadeIn 0.3s; }
-        .section.active { display: block; }
-        @keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
+        /* Səhifələr */
+        .page { display: none; height: calc(100vh - 110px); overflow-y: auto; }
+        .page.active { display: block; }
 
-        .item { display: flex; align-items: center; padding: 15px; border-bottom: 0.5px solid #222d34; cursor: pointer; }
-        .item:active { background: var(--active); }
-        .avatar { width: 50px; height: 50px; background: #6a7175; border-radius: 50%; margin-right: 15px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        /* Zəng Ekranı (Overlay) */
+        #call-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 5000; display: none; flex-direction: column; align-items: center; justify-content: space-around; }
+        .video-container { width: 100%; height: 70%; position: relative; }
+        #remote-video { width: 100%; height: 100%; object-fit: cover; }
+        #local-video { width: 100px; height: 150px; position: absolute; top: 20px; right: 20px; border: 2px solid white; }
+        .call-controls { display: flex; gap: 30px; margin-bottom: 50px; }
+        .end-call { width: 70px; height: 70px; background: var(--danger); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; cursor: pointer; }
+
+        /* Siyahılar */
+        .item { display: flex; align-items: center; padding: 15px; border-bottom: 0.5px solid #222d34; }
+        .avatar { width: 50px; height: 50px; border-radius: 50%; background: #6a7175; margin-right: 15px; overflow: hidden; }
         .avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .info { flex: 1; }
-        .name { font-weight: 500; font-size: 17px; }
-        .sub { color: #8696a0; font-size: 13px; margin-top: 3px; }
-
-        .fab { position: fixed; bottom: 25px; right: 25px; background: var(--green); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: pointer; }
         
-        /* Profil Redaktə Paneli */
-        .profile-card { background: var(--header); margin: 15px; padding: 20px; border-radius: 15px; text-align: center; }
-        input, textarea { background: #2a3942; border: none; color: white; padding: 10px; width: 90%; border-radius: 8px; margin: 10px 0; }
-        .save-btn { background: var(--green); color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; }
+        /* Mesajlaşma Overlay */
+        #chat-page { position: fixed; top: 0; left: 100%; width: 100%; height: 100%; background: var(--bg); z-index: 4000; transition: 0.3s; display: flex; flex-direction: column; }
+        #chat-page.open { left: 0; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <span style="font-size: 22px; font-weight: 600;">AzChat</span>
-        <div style="text-align: right;">
-            <div id="my-id" style="font-size: 12px; color: var(--green);">ID: Alınır...</div>
-        </div>
+        <b>AzChat</b>
+        <span id="my-display-id" style="color: var(--green); font-size: 12px;">ID: ...</span>
     </div>
 
-    <div class="nav-tabs">
-        <div class="tab active" onclick="showTab('chats')">Söhbət</div>
-        <div class="tab" onclick="showTab('contacts')">Kontakt</div>
-        <div class="tab" onclick="showTab('calls')">Zəng</div>
-        <div class="tab" onclick="showTab('profile')">Profil</div>
+    <div class="nav">
+        <div class="tab active" onclick="showPage('chats')">Söhbət</div>
+        <div class="tab" onclick="showPage('contacts')">Kontakt</div>
+        <div class="tab" onclick="showPage('calls')">Zəng</div>
+        <div class="tab" onclick="showPage('settings')">Ayarlar</div>
     </div>
 
-    <div id="chats" class="section active">
-        <div class="item">
-            <div class="avatar"><i class="fas fa-satellite-dish"></i></div>
-            <div class="info"><div class="name">Mesh Şəbəkəsi</div><div class="sub">Yaxınlıqdakı aktiv antenlər axtarılır...</div></div>
-        </div>
-    </div>
-
-    <div id="contacts" class="section">
+    <div id="chats" class="page active"></div>
+    <div id="contacts" class="page">
         <div id="contact-list"></div>
-        <div class="fab" onclick="addContact()"><i class="fas fa-user-plus"></i></div>
+        <button onclick="openContactEditor()" style="position:fixed; bottom:20px; right:20px; border-radius:50%; width:60px; height:60px; background:var(--green); border:none; color:white;"><i class="fas fa-plus"></i></button>
     </div>
-
-    <div id="calls" class="section">
-        <div id="call-history-list"></div>
-    </div>
-
-    <div id="profile" class="section">
-        <div class="profile-card">
-            <div class="avatar" style="width: 80px; height: 80px; margin: 0 auto 15px;" onclick="uploadAvatar()">
-                <img id="user-img" src="https://via.placeholder.com/80/00a884/ffffff?text=U" alt="P">
+    <div id="calls" class="page"></div>
+    <div id="settings" class="page">
+        <div style="padding: 20px; text-align: center;">
+            <div class="avatar" style="width:100px; height:100px; margin: 0 auto;" onclick="document.getElementById('img-input').click()">
+                <img id="my-photo" src="https://via.placeholder.com/100">
             </div>
-            <input type="text" id="user-name" placeholder="Adınız">
-            <input type="text" id="user-bio" placeholder="Bio (Məs: Usta)">
-            <input type="text" id="user-phone" placeholder="Sim Nömrəniz (+994...)">
-            <button class="save-btn" onclick="saveProfile()">Yadda Saxla</button>
+            <input type="file" id="img-input" hidden onchange="uploadPhoto(this)">
+            <input type="text" id="my-name" placeholder="Adınız" style="width:90%; margin:10px 0; padding:10px; background:#2a3942; border:none; color:white;">
+            <textarea id="my-bio" placeholder="Bio" style="width:90%; padding:10px; background:#2a3942; border:none; color:white;"></textarea>
+            <hr>
+            <p>Virtual ID (Yeni nömrə almaq):</p>
+            <input type="text" id="custom-id" placeholder="Yeni ID yazın">
+            <button onclick="changeMyID()" style="background:var(--green); border:none; color:white; padding:10px; border-radius:5px;">ID-ni Dəyiş</button>
+            <br><br>
+            <button onclick="saveMyProfile()" style="background:var(--green); width:90%; padding:15px; border:none; color:white; font-weight:bold;">YADDA SAXLA</button>
+        </div>
+    </div>
+
+    <div id="call-screen">
+        <div class="video-container">
+            <video id="remote-video" autoplay playsinline></video>
+            <video id="local-video" autoplay muted playsinline></video>
+        </div>
+        <div id="call-info">Zəng edilir... <span id="call-timer">00:00</span></div>
+        <div class="call-controls">
+            <div class="end-call" onclick="hangUp()"><i class="fas fa-phone-slash"></i></div>
         </div>
     </div>
 
     <script src="app.js"></script>
-    <script>
-        function showTab(tabId) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            event.currentTarget.classList.add('active');
-        }
-
-        // Profil funksiyaları
-        function saveProfile() {
-            const profile = {
-                name: document.getElementById('user-name').value,
-                bio: document.getElementById('user-bio').value,
-                phone: document.getElementById('user-phone').value,
-                img: document.getElementById('user-img').src
-            };
-            localStorage.setItem('azchat_profile', JSON.stringify(profile));
-            alert("Profil yeniləndi!");
-        }
-
-        function loadProfile() {
-            const data = JSON.parse(localStorage.getItem('azchat_profile') || '{}');
-            if(data.name) document.getElementById('user-name').value = data.name;
-            if(data.bio) document.getElementById('user-bio').value = data.bio;
-            if(data.phone) document.getElementById('user-phone').value = data.phone;
-        }
-        
-        window.onload = () => { loadProfile(); renderContacts(); renderCalls(); };
-    </script>
 </body>
 </html>
