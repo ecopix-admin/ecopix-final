@@ -1,65 +1,117 @@
-// SABİT ID SİSTEMİ
-let myPermanentID = localStorage.getItem('azchat_id');
-if (!myPermanentID) {
-    myPermanentID = 'az-' + Math.floor(Math.random() * 900000 + 100000);
-    localStorage.setItem('azchat_id', myPermanentID);
-}
+let peer;
+let currentCall;
+let startTime;
+let timerInterval;
 
-const peer = new Peer(myPermanentID);
+// 1. DAİMİ VƏ DƏYİŞİLƏBİLƏN ID
+let myID = localStorage.getItem('az_permanent_id') || 'az-' + Math.floor(Math.random()*900000);
+localStorage.setItem('az_permanent_id', myID);
 
-peer.on('open', (id) => {
-    document.getElementById('my-id').innerText = "ID: " + id;
-});
-
-// KONTAKT SİSTEMİ (AD VƏ ID BAĞLANTISI)
-function renderContacts() {
-    const list = document.getElementById('contact-list');
-    let contacts = JSON.parse(localStorage.getItem('azContacts') || '[]');
-    list.innerHTML = '';
-    contacts.forEach(c => {
-        list.innerHTML += `
-            <div class="item">
-                <div class="avatar"><i class="fas fa-user"></i></div>
-                <div class="info" onclick="startChat('${c.id}')"><div class="name">${c.name}</div><div class="sub">${c.id}</div></div>
-                <i class="fas fa-video" style="color: var(--green); padding: 10px;" onclick="startCall('${c.id}')"></i>
-            </div>`;
+function initPeer(id) {
+    if(peer) peer.destroy();
+    peer = new Peer(id);
+    peer.on('open', (id) => {
+        document.getElementById('my-display-id').innerText = "ID: " + id;
+        // Profil məlumatlarını şəbəkəyə sızdırırıq (Simulyasiya)
+        broadcastProfile();
+    });
+    
+    // Gələn zəngi qəbul etmə
+    peer.on('call', (call) => {
+        if(confirm("Gələn zəng: " + call.peer + ". Cavab verilsin?")) {
+            navigator.mediaDevices.getUserMedia({video:true, audio:true}).then(stream => {
+                showCallScreen();
+                call.answer(stream);
+                handleCall(call, stream);
+            });
+        }
     });
 }
 
-function addContact() {
-    const name = prompt("Kontaktın Adı:");
-    const id = prompt("Anten ID-si:");
-    if(name && id) {
-        let contacts = JSON.parse(localStorage.getItem('azContacts') || '[]');
-        contacts.push({name, id});
-        localStorage.setItem('azContacts', JSON.stringify(contacts));
-        renderContacts();
+initPeer(myID);
+
+// 2. ZƏNGİ SONLANDIRMA VƏ TARİXÇƏ
+function handleCall(call, localStream) {
+    currentCall = call;
+    startTime = new Date();
+    startTimer();
+    
+    call.on('stream', remoteStream => {
+        document.getElementById('remote-video').srcObject = remoteStream;
+        document.getElementById('local-video').srcObject = localStream;
+    });
+
+    call.on('close', () => endCallProcess());
+}
+
+function hangUp() {
+    if(currentCall) currentCall.close();
+    endCallProcess();
+}
+
+function endCallProcess() {
+    clearInterval(timerInterval);
+    let duration = Math.floor((new Date() - startTime) / 1000);
+    saveToHistory(currentCall.peer, duration);
+    document.getElementById('call-screen').style.display = 'none';
+    // Kamera və mikrafonu söndür
+    location.reload(); 
+}
+
+// 3. TARİXÇƏ (10 GÜNLÜK VƏ ALT-ALTA)
+function saveToHistory(id, duration) {
+    let history = JSON.parse(localStorage.getItem('az_history') || '[]');
+    let record = {
+        id: id,
+        name: getContactName(id),
+        time: new Date().toLocaleString('az-AZ'),
+        duration: duration + " san",
+        dateRaw: new Date()
+    };
+    history.unshift(record);
+    // 10 gündən köhnələri sil (Sadələşdirilmiş: son 50 zəng)
+    localStorage.setItem('az_history', JSON.stringify(history.slice(0, 50)));
+    renderHistory();
+}
+
+// 4. VİRTUAL ID (NÖMRƏ DƏYİŞMƏ)
+function changeMyID() {
+    let newID = document.getElementById('custom-id').value;
+    if(newID) {
+        localStorage.setItem('az_permanent_id', newID);
+        alert("Yeni ID-niz aktivdir: " + newID);
+        initPeer(newID);
     }
 }
 
-// ZƏNG VƏ TARİXÇƏ
-function startCall(peerId) {
-    navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(stream => {
-        const call = peer.call(peerId, stream);
-        addCallToHistory(peerId);
-        // Video pəncərəsi məntiqi burada
-        alert("Zəng edilir: " + peerId);
-    });
+// 5. PROFİL VƏ KONTAKT REDAKTƏSİ
+function saveMyProfile() {
+    let profile = {
+        name: document.getElementById('my-name').value,
+        bio: document.getElementById('my-bio').value,
+        photo: document.getElementById('my-photo').src
+    };
+    localStorage.setItem('my_profile', JSON.stringify(profile));
+    alert("Profil yadda saxlanıldı!");
 }
 
-function addCallToHistory(id) {
-    let history = JSON.parse(localStorage.getItem('azCallHistory') || '[]');
-    history.unshift({id, time: new Date().toLocaleTimeString()});
-    localStorage.setItem('azCallHistory', JSON.stringify(history.slice(0, 20)));
-    renderCalls();
+function startTimer() {
+    let sec = 0;
+    timerInterval = setInterval(() => {
+        sec++;
+        let m = Math.floor(sec/60);
+        let s = sec % 60;
+        document.getElementById('call-timer').innerText = `${m<10?'0':''}${m}:${s<10?'0':''}${s}`;
+    }, 1000);
 }
 
-function renderCalls() {
-    const list = document.getElementById('call-history-list');
-    let history = JSON.parse(localStorage.getItem('azCallHistory') || '[]');
-    list.innerHTML = history.map(h => `
-        <div class="item">
-            <div class="info"><div class="name">${h.id}</div><div class="sub">${h.time}</div></div>
-            <i class="fas fa-phone-alt"></i>
-        </div>`).join('');
+function showPage(p) {
+    document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.getElementById(p).classList.add('active');
+    event.currentTarget.classList.add('active');
+}
+
+function showCallScreen() {
+    document.getElementById('call-screen').style.display = 'flex';
 }
