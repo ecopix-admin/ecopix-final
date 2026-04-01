@@ -3,119 +3,397 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AzChat Pro Inqilab</title>
-    <script src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>AzChat Pro - Tam İşlək</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root { --wa-teal: #075e54; --wa-bg: #0b141a; --wa-accent: #25d366; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--wa-bg); color: white; margin: 0; height: 100vh; overflow: hidden; }
-        
-        /* Header & Nav */
-        .header { background: var(--wa-teal); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
-        .nav { display: flex; background: var(--wa-teal); border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .tab { flex: 1; text-align: center; padding: 15px; cursor: pointer; color: rgba(255,255,255,0.6); font-weight: bold; }
-        .tab.active { color: #fff; border-bottom: 3px solid #fff; }
+        :root {
+            --bg: #0b141a; --header: #1f2c34; --accent: #00a884; --msg-in: #202c33;
+            --msg-out: #005c4b; --text: #e9edef; --muted: #8696a0; --danger: #ff2d55;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-        .page { display: none; height: calc(100vh - 110px); overflow-y: auto; }
+        /* HEADER & TABS */
+        .header { background: var(--header); padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .tabs { display: flex; background: var(--header); border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .tab { flex: 1; text-align: center; padding: 15px; color: var(--muted); cursor: pointer; font-weight: bold; }
+        .tab.active { color: var(--accent); border-bottom: 3px solid var(--accent); }
+
+        /* PAGES */
+        .content { flex: 1; overflow-y: auto; position: relative; }
+        .page { display: none; height: 100%; }
         .page.active { display: block; }
 
-        /* Card Styles */
-        .item-card { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .avatar { width: 55px; height: 55px; border-radius: 50%; margin-right: 15px; background: #333; object-fit: cover; }
-        .item-info { flex: 1; }
+        /* LIST ITEMS */
+        .list-item { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #121b22; cursor: pointer; }
+        .avatar { width: 50px; height: 50px; border-radius: 50%; background: #4f5e67; margin-right: 15px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; }
+        .info { flex: 1; }
+        .info h4 { margin-bottom: 5px; display: flex; justify-content: space-between; }
+        .info p { color: var(--muted); font-size: 14px; }
+        .actions i { padding: 10px; font-size: 18px; color: var(--accent); }
+        .del-icon { color: var(--danger) !important; }
 
-        /* Chat Window - Sənin istədiyin düzəlişlər */
-        #chat-window { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0b141a; z-index: 2000; display: none; flex-direction: column; }
-        .chat-header { background: var(--wa-teal); padding: 10px; display: flex; align-items: center; }
-        .header-icons { display: flex; width: 100%; justify-content: space-between; align-items: center; }
+        /* FLOATING BUTTON */
+        .fab { position: absolute; bottom: 20px; right: 20px; width: 56px; height: 56px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 99; }
+
+        /* OVERLAYS */
+        .overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); z-index: 1000; display:none; flex-direction: column; }
+        .overlay.active { display: flex; }
+        .overlay-head { background: var(--header); padding: 15px; display: flex; align-items: center; gap: 20px; }
+
+        /* CHAT ROOM */
+        #msgContainer { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .bubble { padding: 8px 12px; border-radius: 10px; max-width: 80%; position: relative; font-size: 15px; }
+        .bubble.me { align-self: flex-end; background: var(--msg-out); }
+        .bubble.them { align-self: flex-start; background: var(--msg-in); }
         
-        .chat-messages { flex: 1; padding: 15px; overflow-y: auto; background: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); }
-        .msg { margin-bottom: 10px; padding: 8px 12px; border-radius: 10px; max-width: 70%; word-wrap: break-word; }
-        .sent { background: #005c4b; align-self: flex-end; margin-left: auto; }
-        .received { background: #202c33; align-self: flex-start; }
+        .chat-footer { background: var(--header); padding: 10px; display: flex; align-items: center; gap: 10px; }
+        .chat-input { flex: 1; background: #2a3942; border: none; padding: 12px; border-radius: 25px; color: white; outline: none; }
+        
+        /* VOICE RECORDING SECTION */
+        .voice-bar { position: absolute; bottom: 70px; left: 10px; right: 10px; background: var(--header); padding: 10px; border-radius: 15px; display: none; align-items: center; justify-content: space-between; border: 1px solid var(--accent); animation: slideUp 0.3s; }
+        .voice-bar.active { display: flex; }
+        @keyframes slideUp { from {transform: translateY(20px);} to {transform: translateY(0);} }
 
-        /* Input Area - Düymələr arası məsafə */
-        .input-area { background: #1f2c33; padding: 10px; display: flex; align-items: center; gap: 12px; }
-        .input-area input { flex: 1; background: #2a3942; border: none; padding: 12px; border-radius: 20px; color: white; outline: none; }
-        .mic-btn { width: 45px; height: 45px; border-radius: 50%; background: var(--wa-accent); display: flex; align-items: center; justify-content: center; transition: 0.3s; cursor: pointer; }
-        .mic-btn.active { transform: scale(1.6); background: #ff3b30; }
-        .send-btn { width: 40px; height: 40px; color: var(--wa-accent); display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; margin-left: 5px; }
+        /* VIDEO CALL SCREEN */
+        .call-ui { background: black; justify-content: center; align-items: center; }
+        .vid-box { width: 100%; height: 100%; position: relative; display: flex; flex-direction: column; }
+        video { width: 100%; background: #111; object-fit: cover; transition: 0.5s; }
+        .vid-full { height: 100%; }
+        .vid-split { height: 50%; border-bottom: 2px solid #000; }
+        
+        .call-tools { position: absolute; bottom: 30px; width: 100%; display: flex; justify-content: center; gap: 40px; }
+        .c-btn { width: 65px; height: 65px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 25px; color: white; border: none; }
+        .end-call { background: var(--danger); }
+        .start-call { background: var(--accent); }
+        .timer-label { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); padding: 5px 15px; border-radius: 20px; font-size: 18px; }
 
-        /* Attachment Menu (Skripka) */
-        #attach-menu { position: absolute; bottom: 70px; left: 10px; background: #233138; border-radius: 15px; display: none; flex-direction: column; padding: 10px; gap: 15px; z-index: 3000; }
-        .attach-item { display: flex; align-items: center; gap: 10px; cursor: pointer; }
-
-        /* Zəng Overlay */
-        #call-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #075e54; z-index: 10000; display: none; flex-direction: column; align-items: center; justify-content: center; }
+        /* INPUTS */
+        .form-group { padding: 20px; }
+        input[type="text"] { width: 100%; background: transparent; border: none; border-bottom: 2px solid var(--accent); color: white; padding: 10px; margin-bottom: 20px; outline: none; font-size: 18px; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <b>AzChat Pro</b>
-        <div id="my-status" style="font-size: 11px;">ID: Yüklənir...</div>
+        <h2 id="appTitle">AzChat</h2>
+        <div id="myIdStatus" style="font-size: 12px; color: var(--accent);"></div>
     </div>
 
-    <div class="nav">
-        <div class="tab active" onclick="setPage('chats')">Söhbətlər</div>
-        <div class="tab" onclick="setPage('contacts')">Kontaktlar</div>
-        <div class="tab" onclick="setPage('calls')">Zənglər</div>
-        <div class="tab" onclick="setPage('settings')">Profil</div>
+    <div class="tabs">
+        <div class="tab active" onclick="showTab('chatsTab')">SÖHBƏTLƏR</div>
+        <div class="tab" onclick="showTab('contactsTab')">KONTAKTLAR</div>
+        <div class="tab" onclick="showTab('callsTab')">ZƏNGLƏR</div>
+        <div class="tab" onclick="showTab('profileTab')">PROFİL</div>
     </div>
 
-    <div id="chats" class="page active"></div>
-    <div id="contacts" class="page"></div>
-    <div id="calls" class="page"></div>
-    
-    <div id="settings" class="page" style="padding:20px; text-align:center;">
-        <img id="my-p-img" src="https://via.placeholder.com/150" class="avatar" style="width:120px; height:120px;" onclick="document.getElementById('file-in').click()">
-        <input type="file" id="file-in" hidden accept="image/*" onchange="updateProfilePhoto(this)">
-        <input type="text" id="my-p-name" placeholder="Ad" style="width:80%; padding:10px; margin:15px; border-radius:5px; border:none;">
-        <button onclick="saveMyProfile()" style="width:85%; padding:12px; background:var(--wa-accent); border:none; border-radius:5px; font-weight:bold;">YADDA SAXLA</button>
-    </div>
-
-    <div id="chat-window">
-        <div class="chat-header">
-            <i class="fas fa-arrow-left" onclick="closeChat()" style="margin-right:15px;"></i>
-            <div class="header-icons">
-                <i class="fas fa-phone" onclick="initiateCall('voice')" style="font-size: 20px;"></i> <div style="text-align:center; flex:1;">
-                    <img id="chat-avatar" class="avatar" style="width:35px; height:35px; margin:0;">
-                    <b id="chat-name">Ad</b>
-                </div>
-                <i class="fas fa-video" onclick="initiateCall('video')" style="font-size: 20px;"></i> </div>
+    <div class="content">
+        <div id="chatsTab" class="page active">
+            <div id="chatsList"></div>
         </div>
-        <div class="chat-messages" id="chat-msgs" style="display:flex; flex-direction:column;"></div>
+
+        <div id="contactsTab" class="page">
+            <div id="contactsList"></div>
+            <div class="fab" onclick="openContactModal()"><i class="fas fa-plus"></i></div>
+        </div>
+
+        <div id="callsTab" class="page">
+            <div id="callHistory"></div>
+        </div>
+
+        <div id="profileTab" class="page">
+            <div class="form-group">
+                <input type="text" id="pName" placeholder="Adınız">
+                <input type="text" id="pBio" placeholder="Haqqınızda">
+                <button class="c-btn start-call" style="width: 100%; border-radius: 10px;" onclick="saveProfile()">YADDA SAXLA</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="contactModal" class="overlay">
+        <div class="overlay-head">
+            <i class="fas fa-arrow-left" onclick="closeOverlay('contactModal')"></i>
+            <h3>Kontakt Əlavə Et / Redaktə</h3>
+        </div>
+        <div class="form-group">
+            <input type="hidden" id="editIdx">
+            <input type="text" id="cName" placeholder="Ad">
+            <input type="text" id="cId" placeholder="Anten ID">
+            <button class="c-btn start-call" style="width: 100%; border-radius: 10px;" onclick="handleContactSave()">SAXLA</button>
+        </div>
+    </div>
+
+    <div id="chatRoom" class="overlay">
+        <div class="overlay-head">
+            <i class="fas fa-arrow-left" onclick="closeOverlay('chatRoom')"></i>
+            <div class="avatar" id="chatAvatar" style="width:35px; height:35px; font-size:14px;">?</div>
+            <div style="flex:1">
+                <div id="chatName" style="font-weight:bold">Ad</div>
+                <div id="chatIdStatus" style="font-size:11px; color:var(--muted)">ID</div>
+            </div>
+            <i class="fas fa-video" style="color:var(--accent); font-size:22px;" onclick="initCallUI(true)"></i>
+        </div>
+        <div id="msgContainer"></div>
         
-        <div id="attach-menu">
-            <div class="attach-item" onclick="triggerFile('image/*')"><i class="fas fa-image" style="color:#bf59cf"></i> Qalereya</div>
-            <div class="attach-item" onclick="triggerFile('video/*')"><i class="fas fa-video" style="color:#ff2d55"></i> Video</div>
-            <div class="attach-item" onclick="sendLocation()"><i class="fas fa-map-marker-alt" style="color:#25d366"></i> Məkan</div>
-            <div class="attach-item" onclick="showContactList()"><i class="fas fa-user" style="color:#007aff"></i> Kontakt</div>
+        <div id="voiceBar" class="voice-bar">
+            <i class="fas fa-trash del-icon" onclick="trashVoice()"></i>
+            <audio id="vPreview" controls style="height: 30px; flex:1; margin: 0 10px;"></audio>
+            <i class="fas fa-paper-plane" style="color:var(--accent); font-size:22px" onclick="commitVoice()"></i>
         </div>
 
-        <div class="input-area">
-            <i class="fas fa-paperclip" onclick="toggleAttach()"></i>
-            <input type="text" id="msg-input" placeholder="Mesaj yazın...">
-            <div class="mic-btn" id="mic-btn"><i class="fas fa-microphone"></i></div>
-            <div class="send-btn" onclick="sendTextMessage()"><i class="fas fa-paper-plane"></i></div>
+        <div class="chat-footer">
+            <input type="text" id="mInput" class="chat-input" placeholder="Mesaj..." oninput="toggleMicBtn()">
+            <button id="sendBtn" class="c-btn start-call" style="width:45px; height:45px; display:none" onclick="sendText()"><i class="fas fa-paper-plane"></i></button>
+            <button id="micBtn" class="c-btn start-call" style="width:45px; height:45px;"><i class="fas fa-microphone"></i></button>
         </div>
     </div>
 
-    <div id="call-overlay">
-        <img id="call-img" class="avatar" style="width:130px; height:130px; border:4px solid white;">
-        <h2 id="call-label">Zəng gəlir...</h2>
-        <div id="call-timer">00:00</div>
-        <video id="v-remote" autoplay style="width:100%; max-height:40vh; display:none;"></video>
-        <div style="display:flex; gap:40px; margin-top:50px;">
-            <button id="ans-btn" style="background:green; width:70px; height:70px; border-radius:50%; border:none; color:white; font-size:25px;" onclick="acceptCall()"><i class="fas fa-phone"></i></button>
-            <button style="background:red; width:70px; height:70px; border-radius:50%; border:none; color:white; font-size:25px;" onclick="hangUp()"><i class="fas fa-phone-slash"></i></button>
+    <div id="callUI" class="overlay call-ui">
+        <div class="vid-box">
+            <div class="timer-label" id="timer">00:00</div>
+            <video id="remoteVid" style="display:none"></video>
+            <video id="localVid" class="vid-full" autoplay playsinline muted></video>
+            
+            <div class="call-tools">
+                <button id="answerBtn" class="c-btn start-call" onclick="answerCall()" style="display:none"><i class="fas fa-phone"></i></button>
+                <button class="c-btn end-call" onclick="hangUp()"><i class="fas fa-phone-slash"></i></button>
+            </div>
         </div>
     </div>
 
-    <input type="file" id="universal-file" hidden onchange="handleFile(this)">
-    <audio id="ring-snd" src="https://www.soundjay.com/phone-terminology/telephone-ring-03a.mp3" loop></audio>
-    <audio id="msg-snd" src="https://www.soundjay.com/button/beep-07.mp3"></audio>
+    <script>
+        // --- DATA ENGINE ---
+        let db = JSON.parse(localStorage.getItem('azchat_v2')) || {
+            me: { name: 'İstifadəçi', bio: 'Salam! AzChat istifadə edirəm.', id: 'AZ-'+Math.floor(Math.random()*9999) },
+            contacts: [],
+            chats: {},
+            calls: []
+        };
 
-    <script src="app.js"></script>
+        function save() { localStorage.setItem('azchat_v2', JSON.stringify(db)); }
+
+        // --- NAVIGATION ---
+        function showTab(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            event.currentTarget.classList.add('active');
+            renderAll();
+        }
+
+        function closeOverlay(id) { document.getElementById(id).classList.remove('active'); }
+
+        // --- PROFILE ---
+        function saveProfile() {
+            db.me.name = document.getElementById('pName').value;
+            db.me.bio = document.getElementById('pBio').value;
+            save(); alert("Profil yeniləndi!");
+        }
+
+        // --- CONTACTS & CALL LOGS ---
+        function openContactModal(idx = null) {
+            if(idx !== null) {
+                let c = db.contacts[idx];
+                document.getElementById('cName').value = c.name;
+                document.getElementById('cId').value = c.id;
+                document.getElementById('editIdx').value = idx;
+            } else {
+                document.getElementById('cName').value = '';
+                document.getElementById('cId').value = '';
+                document.getElementById('editIdx').value = '';
+            }
+            document.getElementById('contactModal').classList.add('active');
+        }
+
+        function handleContactSave() {
+            let n = document.getElementById('cName').value;
+            let i = document.getElementById('cId').value;
+            let idx = document.getElementById('editIdx').value;
+            if(!n || !i) return;
+
+            if(idx !== "") db.contacts[idx] = {name:n, id:i};
+            else db.contacts.push({name:n, id:i});
+            
+            save(); closeOverlay('contactModal'); renderAll();
+        }
+
+        function deleteContact(idx, e) {
+            e.stopPropagation();
+            if(confirm("Silinsin?")) { db.contacts.splice(idx, 1); save(); renderAll(); }
+        }
+
+        // --- CHAT LOGIC ---
+        let activeChatId = null;
+        function openChat(id, name) {
+            activeChatId = id;
+            document.getElementById('chatName').innerText = name;
+            document.getElementById('chatIdStatus').innerText = id;
+            document.getElementById('chatAvatar').innerText = name[0];
+            document.getElementById('chatRoom').classList.add('active');
+            renderMsgs();
+        }
+
+        function toggleMicBtn() {
+            let hasVal = document.getElementById('mInput').value.length > 0;
+            document.getElementById('sendBtn').style.display = hasVal ? 'flex' : 'none';
+            document.getElementById('micBtn').style.display = hasVal ? 'none' : 'flex';
+        }
+
+        function sendText() {
+            let val = document.getElementById('mInput').value;
+            if(!val) return;
+            pushMsg({ type: 'text', content: val, sender: 'me' });
+            document.getElementById('mInput').value = '';
+            toggleMicBtn();
+        }
+
+        function pushMsg(msg) {
+            if(!db.chats[activeChatId]) db.chats[activeChatId] = [];
+            msg.time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            db.chats[activeChatId].push(msg);
+            save(); renderMsgs();
+        }
+
+        function renderMsgs() {
+            let container = document.getElementById('msgContainer');
+            container.innerHTML = '';
+            (db.chats[activeChatId] || []).forEach(m => {
+                let div = document.createElement('div');
+                div.className = `bubble ${m.sender === 'me' ? 'me' : 'them'}`;
+                if(m.type === 'text') div.innerText = m.content;
+                else div.innerHTML = `<audio src="${m.content}" controls style="width:180px; height:30px"></audio>`;
+                container.appendChild(div);
+            });
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // --- VOICE ENGINE (PRO) ---
+        let recorder, chunks = [], stream;
+        const micBtn = document.getElementById('micBtn');
+
+        micBtn.onmousedown = micBtn.ontouchstart = async (e) => {
+            e.preventDefault();
+            stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            recorder = new MediaRecorder(stream);
+            recorder.ondataavailable = e => chunks.push(e.data);
+            recorder.onstop = () => {
+                let blob = new Blob(chunks, { type: 'audio/ogg' });
+                let url = URL.createObjectURL(blob);
+                document.getElementById('vPreview').src = url;
+                document.getElementById('voiceBar').classList.add('active');
+            };
+            chunks = []; recorder.start();
+            micBtn.style.transform = "scale(1.4)";
+            micBtn.style.background = "var(--danger)";
+        };
+
+        micBtn.onmouseup = micBtn.ontouchend = () => {
+            if(recorder) recorder.stop();
+            if(stream) stream.getTracks().forEach(t => t.stop());
+            micBtn.style.transform = "scale(1)";
+            micBtn.style.background = "var(--accent)";
+        };
+
+        function trashVoice() {
+            document.getElementById('voiceBar').classList.remove('active');
+            chunks = [];
+        }
+
+        function commitVoice() {
+            let blob = new Blob(chunks, { type: 'audio/ogg' });
+            let reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onloadend = () => {
+                pushMsg({ type: 'audio', content: reader.result, sender: 'me' });
+                trashVoice();
+            };
+        }
+
+        // --- CALL ENGINE ---
+        let timerInt;
+        function initCallUI(isOutgoing) {
+            document.getElementById('callUI').classList.add('active');
+            document.getElementById('localVid').className = "vid-full";
+            document.getElementById('remoteVid').style.display = "none";
+            document.getElementById('answerBtn').style.display = isOutgoing ? "none" : "flex";
+            
+            navigator.mediaDevices.getUserMedia({video:true, audio:true}).then(s => {
+                document.getElementById('localVid').srcObject = s;
+                if(isOutgoing) setTimeout(answerCall, 2000); // Demo üçün 2 san sonra avtomatik açılır
+            });
+        }
+
+        function answerCall() {
+            document.getElementById('answerBtn').style.display = "none";
+            document.getElementById('localVid').className = "vid-split";
+            document.getElementById('remoteVid').style.display = "block";
+            document.getElementById('remoteVid').className = "vid-split";
+            document.getElementById('remoteVid').srcObject = document.getElementById('localVid').srcObject; // Demo
+
+            let sec = 0;
+            timerInt = setInterval(() => {
+                sec++;
+                let m = Math.floor(sec/60), s = sec%60;
+                document.getElementById('timer').innerText = `${m<10?'0':''}${m}:${s<10?'0':''}${s}`;
+            }, 1000);
+        }
+
+        function hangUp() {
+            clearInterval(timerInt);
+            let tracks = document.getElementById('localVid').srcObject?.getTracks();
+            if(tracks) tracks.forEach(t => t.stop());
+            db.calls.unshift({name: document.getElementById('chatName').innerText || 'Naməlum', time: new Date().toLocaleString(), type: 'Video'});
+            save(); closeOverlay('callUI'); renderAll();
+        }
+
+        // --- RENDER ALL LISTS ---
+        function renderAll() {
+            // My ID
+            document.getElementById('myIdStatus').innerText = "Mənim ID: " + db.me.id;
+            document.getElementById('pName').value = db.me.name;
+            document.getElementById('pBio').value = db.me.bio;
+
+            // Contacts
+            let cl = document.getElementById('contactsList');
+            cl.innerHTML = '';
+            db.contacts.forEach((c, i) => {
+                cl.innerHTML += `<div class="list-item" onclick="openChat('${c.id}', '${c.name}')">
+                    <div class="avatar">${c.name[0]}</div>
+                    <div class="info"><h4>${c.name}</h4><p>${c.id}</p></div>
+                    <div class="actions">
+                        <i class="fas fa-pen" onclick="event.stopPropagation(); openContactModal(${i})"></i>
+                        <i class="fas fa-trash del-icon" onclick="deleteContact(${i}, event)"></i>
+                    </div>
+                </div>`;
+            });
+
+            // Chats List
+            let cxl = document.getElementById('chatsList');
+            cxl.innerHTML = '';
+            Object.keys(db.chats).forEach(id => {
+                let last = db.chats[id].slice(-1)[0];
+                let contact = db.contacts.find(c => c.id === id) || {name: id};
+                cxl.innerHTML += `<div class="list-item" onclick="openChat('${id}', '${contact.name}')">
+                    <div class="avatar">${contact.name[0]}</div>
+                    <div class="info">
+                        <h4>${contact.name} <span>${last.time}</span></h4>
+                        <p>${last.type === 'text' ? last.content : '🎤 Səsli mesaj'}</p>
+                    </div>
+                </div>`;
+            });
+
+            // Call History
+            let hl = document.getElementById('callHistory');
+            hl.innerHTML = '';
+            db.calls.forEach(c => {
+                hl.innerHTML += `<div class="list-item">
+                    <div class="avatar"><i class="fas fa-video"></i></div>
+                    <div class="info"><h4>${c.name}</h4><p>${c.time}</p></div>
+                </div>`;
+            });
+        }
+
+        window.onload = renderAll;
+    </script>
 </body>
 </html>
