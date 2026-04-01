@@ -3,51 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AzChat Pro v2.5</title>
+    <title>AzChat Pro Inqilab</title>
     <script src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --wa-teal: #075e54; --wa-light: #128c7e; --wa-bg: #ece5dd; --wa-accent: #25d366; --wa-blue: #34b7f1; }
-        body { font-family: 'Segoe UI', sans-serif; background: #0b141a; color: white; margin: 0; height: 100vh; overflow: hidden; }
+        :root { --wa-teal: #075e54; --wa-bg: #0b141a; --wa-accent: #25d366; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--wa-bg); color: white; margin: 0; height: 100vh; overflow: hidden; }
         
+        /* Header & Nav */
         .header { background: var(--wa-teal); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
-        .nav { display: flex; background: var(--wa-teal); }
-        .tab { flex: 1; text-align: center; padding: 15px; cursor: pointer; color: rgba(255,255,255,0.6); font-weight: bold; font-size: 14px; text-transform: uppercase; }
+        .nav { display: flex; background: var(--wa-teal); border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .tab { flex: 1; text-align: center; padding: 15px; cursor: pointer; color: rgba(255,255,255,0.6); font-weight: bold; }
         .tab.active { color: #fff; border-bottom: 3px solid #fff; }
 
-        .page { display: none; height: calc(100vh - 110px); overflow-y: auto; background: #0b141a; }
+        .page { display: none; height: calc(100vh - 110px); overflow-y: auto; }
         .page.active { display: block; }
 
-        .item-card { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; }
+        /* Card Styles */
+        .item-card { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .avatar { width: 55px; height: 55px; border-radius: 50%; margin-right: 15px; background: #333; object-fit: cover; }
         .item-info { flex: 1; }
-        .item-info b { font-size: 17px; display: block; }
-        .item-info span { font-size: 13px; color: #8696a0; }
 
-        /* Söhbət Pəncərəsi */
+        /* Chat Window - Sənin istədiyin düzəlişlər */
         #chat-window { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0b141a; z-index: 2000; display: none; flex-direction: column; }
-        .chat-header { background: var(--wa-teal); padding: 10px; display: flex; align-items: center; justify-content: space-between; }
-        .chat-messages { flex: 1; padding: 20px; overflow-y: auto; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-size: contain; }
+        .chat-header { background: var(--wa-teal); padding: 10px; display: flex; align-items: center; }
+        .header-icons { display: flex; width: 100%; justify-content: space-between; align-items: center; }
         
-        /* Düymələrin Ayrılması */
-        .input-area { background: #1f2c33; padding: 10px; display: flex; align-items: center; gap: 8px; }
-        .input-area input { flex: 1; background: #2a3942; border: none; padding: 12px; border-radius: 20px; color: white; outline: none; }
-        .mic-btn { width: 45px; height: 45px; border-radius: 50%; background: var(--wa-accent); display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-        .mic-btn.active { transform: scale(1.5); background: red; }
-        .send-btn { width: 45px; height: 45px; margin-left: 5px; color: var(--wa-accent); font-size: 20px; display: flex; align-items: center; justify-content: center; }
+        .chat-messages { flex: 1; padding: 15px; overflow-y: auto; background: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); }
+        .msg { margin-bottom: 10px; padding: 8px 12px; border-radius: 10px; max-width: 70%; word-wrap: break-word; }
+        .sent { background: #005c4b; align-self: flex-end; margin-left: auto; }
+        .received { background: #202c33; align-self: flex-start; }
 
-        /* Kontakt Paneli */
-        .add-contact-fab { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: var(--wa-accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        /* Input Area - Düymələr arası məsafə */
+        .input-area { background: #1f2c33; padding: 10px; display: flex; align-items: center; gap: 12px; }
+        .input-area input { flex: 1; background: #2a3942; border: none; padding: 12px; border-radius: 20px; color: white; outline: none; }
+        .mic-btn { width: 45px; height: 45px; border-radius: 50%; background: var(--wa-accent); display: flex; align-items: center; justify-content: center; transition: 0.3s; cursor: pointer; }
+        .mic-btn.active { transform: scale(1.6); background: #ff3b30; }
+        .send-btn { width: 40px; height: 40px; color: var(--wa-accent); display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; margin-left: 5px; }
+
+        /* Attachment Menu (Skripka) */
+        #attach-menu { position: absolute; bottom: 70px; left: 10px; background: #233138; border-radius: 15px; display: none; flex-direction: column; padding: 10px; gap: 15px; z-index: 3000; }
+        .attach-item { display: flex; align-items: center; gap: 10px; cursor: pointer; }
 
         /* Zəng Overlay */
-        #call-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #075e54; z-index: 10000; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        #call-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #075e54; z-index: 10000; display: none; flex-direction: column; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <span style="font-size: 20px; font-weight: bold;">AzChat Pro</span>
-        <div id="my-status" style="font-size: 11px; color: var(--wa-accent);">ID: Bağlanır...</div>
+        <b>AzChat Pro</b>
+        <div id="my-status" style="font-size: 11px;">ID: Yüklənir...</div>
     </div>
 
     <div class="nav">
@@ -60,62 +66,55 @@
     <div id="chats" class="page active"></div>
     <div id="contacts" class="page"></div>
     <div id="calls" class="page"></div>
+    
     <div id="settings" class="page" style="padding:20px; text-align:center;">
-        <img id="my-p-img" src="https://via.placeholder.com/150" class="avatar" style="width:150px; height:150px; margin-bottom:20px;" onclick="document.getElementById('file-in').click()">
-        <input type="file" id="file-in" hidden onchange="updateMyPhoto(this)">
-        <input type="text" id="my-p-name" placeholder="Adınız" style="width:100%; padding:15px; margin-bottom:10px; border-radius:10px; border:none; background:#1f2c33; color:white;">
-        <button onclick="saveProfile()" style="background:var(--wa-accent); border:none; padding:15px; width:100%; border-radius:10px; font-weight:bold; color:white;">YADDA SAXLA</button>
+        <img id="my-p-img" src="https://via.placeholder.com/150" class="avatar" style="width:120px; height:120px;" onclick="document.getElementById('file-in').click()">
+        <input type="file" id="file-in" hidden accept="image/*" onchange="updateProfilePhoto(this)">
+        <input type="text" id="my-p-name" placeholder="Ad" style="width:80%; padding:10px; margin:15px; border-radius:5px; border:none;">
+        <button onclick="saveMyProfile()" style="width:85%; padding:12px; background:var(--wa-accent); border:none; border-radius:5px; font-weight:bold;">YADDA SAXLA</button>
     </div>
 
     <div id="chat-window">
         <div class="chat-header">
-            <div style="display:flex; align-items:center;">
-                <i class="fas fa-arrow-left" onclick="closeChat()" style="margin-right:15px;"></i>
-                <img id="chat-avatar" class="avatar" style="width:40px; height:40px;">
-                <b id="chat-name">Ad</b>
-            </div>
-            <div style="display:flex; gap:25px; padding-right:10px;">
-                <i class="fas fa-phone" onclick="initiateCall('voice')"></i>
-                <i class="fas fa-video" onclick="initiateCall('video')"></i>
-            </div>
+            <i class="fas fa-arrow-left" onclick="closeChat()" style="margin-right:15px;"></i>
+            <div class="header-icons">
+                <i class="fas fa-phone" onclick="initiateCall('voice')" style="font-size: 20px;"></i> <div style="text-align:center; flex:1;">
+                    <img id="chat-avatar" class="avatar" style="width:35px; height:35px; margin:0;">
+                    <b id="chat-name">Ad</b>
+                </div>
+                <i class="fas fa-video" onclick="initiateCall('video')" style="font-size: 20px;"></i> </div>
         </div>
-        <div class="chat-messages" id="chat-msgs"></div>
+        <div class="chat-messages" id="chat-msgs" style="display:flex; flex-direction:column;"></div>
+        
+        <div id="attach-menu">
+            <div class="attach-item" onclick="triggerFile('image/*')"><i class="fas fa-image" style="color:#bf59cf"></i> Qalereya</div>
+            <div class="attach-item" onclick="triggerFile('video/*')"><i class="fas fa-video" style="color:#ff2d55"></i> Video</div>
+            <div class="attach-item" onclick="sendLocation()"><i class="fas fa-map-marker-alt" style="color:#25d366"></i> Məkan</div>
+            <div class="attach-item" onclick="showContactList()"><i class="fas fa-user" style="color:#007aff"></i> Kontakt</div>
+        </div>
+
         <div class="input-area">
-            <i class="fas fa-paperclip" onclick="toggleAttachmentMenu()"></i>
+            <i class="fas fa-paperclip" onclick="toggleAttach()"></i>
             <input type="text" id="msg-input" placeholder="Mesaj yazın...">
-            <div class="mic-btn" id="mic-btn" onmousedown="startVoiceMsg()" onmouseup="endVoiceMsg()" ontouchstart="startVoiceMsg()" ontouchend="endVoiceMsg()">
-                <i class="fas fa-microphone"></i>
-            </div>
-            <div class="send-btn" onclick="sendMessage()">
-                <i class="fas fa-paper-plane"></i>
-            </div>
+            <div class="mic-btn" id="mic-btn"><i class="fas fa-microphone"></i></div>
+            <div class="send-btn" onclick="sendTextMessage()"><i class="fas fa-paper-plane"></i></div>
         </div>
     </div>
 
     <div id="call-overlay">
-        <img id="call-photo" class="avatar" style="width:120px; height:120px; border:3px solid white;">
-        <h2 id="call-user-name">Naməlum</h2>
-        <small id="call-user-id"></small>
-        <div id="call-timer" style="font-size:22px; margin-top:10px;">00:00</div>
-        <video id="v-remote" autoplay style="width:100%; max-height:50%; margin-top:20px; display:none;"></video>
-        <div style="display:flex; gap:50px; margin-top:100px;" id="call-actions">
-            <button id="ans-btn" style="background:green; width:70px; height:70px; border-radius:50%; border:none; color:white; font-size:25px;" onclick="answerCall()"><i class="fas fa-phone"></i></button>
-            <button style="background:red; width:70px; height:70px; border-radius:50%; border:none; color:white; font-size:25px;" onclick="endCall()"><i class="fas fa-phone-slash"></i></button>
+        <img id="call-img" class="avatar" style="width:130px; height:130px; border:4px solid white;">
+        <h2 id="call-label">Zəng gəlir...</h2>
+        <div id="call-timer">00:00</div>
+        <video id="v-remote" autoplay style="width:100%; max-height:40vh; display:none;"></video>
+        <div style="display:flex; gap:40px; margin-top:50px;">
+            <button id="ans-btn" style="background:green; width:70px; height:70px; border-radius:50%; border:none; color:white; font-size:25px;" onclick="acceptCall()"><i class="fas fa-phone"></i></button>
+            <button style="background:red; width:70px; height:70px; border-radius:50%; border:none; color:white; font-size:25px;" onclick="hangUp()"><i class="fas fa-phone-slash"></i></button>
         </div>
     </div>
 
-    <div id="contact-modal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1f2c33; padding:20px; border-radius:15px; z-index:3000; width:80%;">
-        <h3>Yeni Kontakt</h3>
-        <input type="text" id="new-c-name" placeholder="Ad" style="width:100%; padding:10px; margin:10px 0;">
-        <input type="text" id="new-c-id" placeholder="ID (az-XXXXXX)" style="width:100%; padding:10px; margin:10px 0;">
-        <button onclick="saveNewContact()" style="width:100%; background:var(--wa-accent); padding:10px; border:none; border-radius:5px;">YADDA SAXLA</button>
-        <button onclick="document.getElementById('contact-modal').style.display='none'" style="width:100%; margin-top:5px; background:#444; padding:10px; border:none; border-radius:5px;">LƏĞV</button>
-    </div>
-
-    <div class="add-contact-fab" onclick="document.getElementById('contact-modal').style.display='block'"><i class="fas fa-user-plus"></i></div>
-
-    <audio id="ringtone" src="https://www.soundjay.com/phone-terminology/telephone-ring-03a.mp3" loop></audio>
-    <audio id="msg-tone" src="https://www.soundjay.com/button/beep-07.mp3"></audio>
+    <input type="file" id="universal-file" hidden onchange="handleFile(this)">
+    <audio id="ring-snd" src="https://www.soundjay.com/phone-terminology/telephone-ring-03a.mp3" loop></audio>
+    <audio id="msg-snd" src="https://www.soundjay.com/button/beep-07.mp3"></audio>
 
     <script src="app.js"></script>
 </body>
