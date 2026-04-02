@@ -1,75 +1,81 @@
-let contacts = JSON.parse(localStorage.getItem('azchat_contacts')) || [];
-let calls = JSON.parse(localStorage.getItem('azchat_calls')) || [];
+let callLogs = JSON.parse(localStorage.getItem('az_calls')) || [];
 
-// Zəng Səsi funksiyası
+// Səsləri işə salmaq üçün mütləqdir
+function initAudio() {
+    console.log("Audio sistemi aktivdir.");
+}
+
 function playRingtone() {
-    document.getElementById('ringtone').play().catch(e => console.log("Səs üçün toxunuş lazımdır"));
+    const ring = document.getElementById('ringtone');
+    ring.play().catch(e => console.log("Səs üçün istifadəçi hərəkəti lazımdır"));
 }
 
 function stopRingtone() {
-    document.getElementById('ringtone').pause();
-    document.getElementById('ringtone').currentTime = 0;
+    const ring = document.getElementById('ringtone');
+    ring.pause();
+    ring.currentTime = 0;
 }
 
-// Mesaj Səsi funksiyası (Bildiriş)
-function playMsgSound() {
-    document.getElementById('msg-sound').play();
-    if (Notification.permission === "granted") {
-        new Notification("AzChat", { body: "Yeni mesajınız var!" });
-    }
-}
-
-// Zəng Başlatma (Gedən)
-async function startCall(name, type) {
-    document.getElementById('call-user-name').innerText = name;
+// Zəng funksiyası
+async function startCall(name, isVideo) {
+    document.getElementById('call-name').innerText = name;
     document.getElementById('call-screen').style.display = 'flex';
-    document.getElementById('call-status').innerText = "Zəng edilir...";
-    
-    playRingtone(); // Zəng səsi başlasın
+    playRingtone();
 
-    // Tarixçəyə əlavə et
-    const newCall = { name, type, time: new Date().toLocaleString(), id: Date.now() };
-    calls.unshift(newCall);
-    localStorage.setItem('azchat_calls', JSON.stringify(calls));
-    renderCalls();
+    // Tarixçəyə yaz
+    const callData = { name, time: new Date().toLocaleTimeString(), date: new Date().toLocaleDateString(), id: Date.now() };
+    callLogs.unshift(callData);
+    localStorage.setItem('az_calls', JSON.stringify(callLogs));
+    renderCallLogs();
 
-    if(type === 'video') {
+    if(isVideo) {
+        document.getElementById('video-box').style.display = 'block';
         const stream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
-        document.getElementById('local-v').srcObject = stream;
-        document.getElementById('video-grid').style.display = 'grid'; // Ekranı iki yerə böl
+        document.getElementById('local-video').srcObject = stream;
     }
 }
 
 function endCall() {
     stopRingtone();
     document.getElementById('call-screen').style.display = 'none';
-    const stream = document.getElementById('local-v').srcObject;
+    const stream = document.getElementById('local-video').srcObject;
     stream?.getTracks().forEach(t => t.stop());
 }
 
-// Zəng Tarixçəsini Göstər və Sil
-function renderCalls() {
-    const list = document.getElementById('call-history-list');
-    list.innerHTML = calls.map((c, index) => `
-        <div class="call-item">
-            <div class="call-meta">
-                <h4>${c.name}</h4>
-                <p>${c.time}</p>
+// Bildiriş Göndərmə
+function sendNotification(title, msg) {
+    document.getElementById('msg-sound').play();
+    if (Notification.permission === "granted") {
+        new Notification(title, { body: msg, icon: 'logo.png' });
+    }
+}
+
+// Tarixçəni göstər
+function renderCallLogs() {
+    const logDiv = document.getElementById('call-log');
+    logDiv.innerHTML = callLogs.map((c, i) => `
+        <div style="display:flex; justify-content:space-between; padding:15px; border-bottom:1px solid #222;">
+            <div>
+                <b>${c.name}</b><br>
+                <small>${c.date} ${c.time}</small>
             </div>
-            <div class="call-btns">
-                <i class="fas fa-phone-alt" onclick="startCall('${c.name}', 'audio')"></i>
-                <i class="fas fa-trash" onclick="deleteCall(${index})"></i>
+            <div>
+                <i class="fas fa-phone" onclick="startCall('${c.name}', false)" style="color:var(--green); margin-right:20px;"></i>
+                <i class="fas fa-trash" onclick="deleteLog(${i})" style="color:red;"></i>
             </div>
         </div>
     `).join('');
 }
 
-function deleteCall(index) {
-    calls.splice(index, 1);
-    localStorage.setItem('azchat_calls', JSON.stringify(calls));
-    renderCalls();
+function deleteLog(index) {
+    callLogs.splice(index, 1);
+    localStorage.setItem('az_calls', JSON.stringify(callLogs));
+    renderCallLogs();
 }
 
-// Bildiriş icazəsi al
-Notification.requestPermission();
-renderCalls();
+// İcazə istə
+if (Notification.permission !== "granted") {
+    Notification.requestPermission();
+}
+
+renderCallLogs();
