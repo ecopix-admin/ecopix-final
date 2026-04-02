@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AzChat Ultra - 100% Professional</title>
+    <title>AzChat Ultra Pro</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body>
-    <audio id="ringtone" src="https://www.soundjay.com/phone/phone-calling-1.mp3" loop></audio>
+<body onclick="initAudio()"> <audio id="ringtone" src="https://www.soundjay.com/phone/phone-calling-1.mp3" loop></audio>
     <audio id="msg-sound" src="https://www.soundjay.com/buttons/beep-07.mp3"></audio>
 
     <div id="app">
@@ -16,6 +15,7 @@
             <div class="header-top">
                 <span class="logo">AzChat</span>
                 <div class="header-icons">
+                    <i class="fas fa-camera"></i>
                     <i class="fas fa-search"></i>
                     <i class="fas fa-ellipsis-v"></i>
                 </div>
@@ -27,40 +27,43 @@
             </div>
         </header>
 
-        <div id="chats" class="page active">
-            <div id="chat-list">
+        <main>
+            <div id="chats" class="page active">
+                <div id="chat-list"></div>
+            </div>
+
+            <div id="contacts" class="page">
+                <div id="contact-list"></div>
+                <div class="fab" onclick="addNewContact()"><i class="fas fa-user-plus"></i></div>
+            </div>
+
+            <div id="calls" class="page">
+                <div id="call-log"></div>
+            </div>
+        </main>
+
+        <div id="call-screen" class="call-overlay">
+            <div class="call-header">
+                <i class="fas fa-lock"></i> Uc-uca şifrələnib
+            </div>
+            <div class="call-body">
+                <div class="avatar-container">
+                    <img id="call-img" src="https://cdn-icons-png.flaticon.com/512/149/149071.png">
                 </div>
-        </div>
-
-        <div id="calls" class="page">
-            <div id="call-history-list"></div>
-        </div>
-
-        <div id="contacts" class="page">
-            <div id="contact-list"></div>
-            <div class="fab-contact" onclick="addNewContact()">
-                <i class="fas fa-user-plus"></i>
+                <h2 id="call-name">İstifadəçi</h2>
+                <p id="call-timer">Zəng edilir...</p>
             </div>
-        </div>
-
-        <div id="call-screen" class="full-page call-animation">
-            <div class="call-info">
-                <img id="call-user-img" src="default-user.png">
-                <h2 id="call-user-name">İstifadəçi</h2>
-                <p id="call-status">Zəng gəlir...</p>
+            <div class="video-container" id="video-box">
+                <video id="remote-video" autoplay playsinline></video>
+                <video id="local-video" autoplay playsinline muted></video>
             </div>
-            <div class="video-grid" id="video-grid">
-                <video id="remote-v" autoplay playsinline></video>
-                <video id="local-v" autoplay playsinline muted></video>
-            </div>
-            <div class="call-actions-bottom">
-                <button class="btn-decline" onclick="endCall()"><i class="fas fa-phone-slash"></i></button>
-                <button class="btn-accept" onclick="acceptCall()"><i class="fas fa-phone"></i></button>
+            <div class="call-footer">
+                <button class="call-btn end" onclick="endCall()"><i class="fas fa-phone-slash"></i></button>
+                <button class="call-btn accept" id="accept-btn" onclick="acceptCall()"><i class="fas fa-phone"></i></button>
             </div>
         </div>
     </div>
 
-    <iframe id="ad-layer" src="https://www.profitablecpmratenetwork.com/caarhipxw?key=a23c49e3b1a0789535a6b848d7a66c9f" style="display:none"></iframe>
     <script src="app_logic.js"></script>
     <script src="p2p_logic.js"></script>
 </body>
